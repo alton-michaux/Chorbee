@@ -1,0 +1,40 @@
+<div class="container-lg container-fluid bg-light bg-gradient">
+
+<p id="notice"><%= notice %></p>
+
+<h1 class="text-muted row px-3">Chores</h1>
+
+<div class="row">
+  <table class="table table-striped table-hover table-bordered">
+    <thead>
+      <tr class="table-dark text-center">
+        <th>Job</th>
+        <th>Description</th>
+        <th colspan="3">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% @chores.each do |chore| %>
+        <tr class="text-center">
+          <td><%= chore.job %></td>
+          <td><%= chore.description %></td>
+          <td><%= link_to 'View', chore %></td>
+          <td><%= link_to 'Edit', edit_chore_path(chore) %></td>
+          <td><%= link_to 'Delete', chore, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div> <!--/row-->
+
+<br>
+
+<div class="row">
+  <div class="col mx-4">
+    <%= link_to 'New Chore', new_chore_path %>
+    <%= link_to 'Children', children_path %>
+  </div> 
+</div> <!--row-->
+
+</div> <!--/container-->

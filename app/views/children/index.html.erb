@@ -1,0 +1,46 @@
+<div class="container-lg container-fluid bg-light bg-gradient">
+
+<p id="notice"><%= notice %></p>
+
+<h1 class="text-muted row px-3">Children</h1>
+
+<div class="row">
+  <table class="table table-striped table-hover table-bordered">
+    <thead>
+      <tr class="table-dark text-center">
+        <th>Name</th>
+        <th>Age</th>
+        <th>Job</th>
+        <th colspan="3">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% @children.each do |child| %>
+        <tr class="text-center">
+          <td><%= child.name %></td>
+          <td><%= child.age %></td>
+          <td class="mark">
+            <% if child.chores.present? %>
+              <strong><%= render partial: 'chores/convert', locals: { chores: child.chores } %></strong>
+            <% end %>
+          </td>
+          <td><%= link_to 'View', child %></td>
+          <td><%= link_to 'Edit', edit_child_path(child) %></td>
+          <td><%= link_to 'Delete', child, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div> <!--/row-->
+
+<br>
+
+<div class="row">
+  <div class="col mx-3">
+    <%= link_to 'New Child', new_child_path %> |
+    <%= link_to 'Chores', chores_path %>
+  </div>
+</div> <!--row-->
+
+</div> <!--/container-->
