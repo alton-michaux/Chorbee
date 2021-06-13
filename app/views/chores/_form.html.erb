@@ -18,7 +18,7 @@
         <%= f.label :child_id %>
       </div>
       <div class="form-control-sm">
-        <%= f.select :child_id, options_for_select(Child.all.map { | child | [child.name, child.id]}) %>
+        <%= f.select :child_id, options_for_select(Child.all.map { | child | [child.name, child.id]}), { multiple: true } %>
       </div>
 
       <div class="form-label">
