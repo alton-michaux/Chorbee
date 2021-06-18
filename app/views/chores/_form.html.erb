@@ -1,9 +1,8 @@
 <div class="row">
   <div class="mb-3">
-
     <%= form_for(chore) do |f| %>
       <% if chore.errors.any? %>
-        <div id="error_explanation">
+        <div class="alert alert-warning col-lg-6" id="error_explanation">
           <h2><%= pluralize(chore.errors.count, "error") %> prohibited this chore from being saved:</h2>
 
           <ul>
@@ -14,28 +13,28 @@
         </div>
       <% end %>
 
-      <div class="form-label">
+      <div class="form-label col-lg-4">
         <%= f.label :child_id %>
       </div>
-      <div class="form-control-sm">
+      <div class="form-control-sm col-lg-4">
         <%= f.select :child_id, options_for_select(Child.all.map { | child | [child.name, child.id]}), { multiple: true } %>
       </div>
 
-      <div class="form-label">
+      <div class="form-label col-lg-4">
         <%= f.label :job %>
       </div>
-      <div class="form-control-sm">
+      <div class="form-control-sm col-lg-4">
         <%= f.text_field :job %>
       </div>
 
-      <div class="form-label">
+      <div class="form-label col-lg-4">
         <%= f.label :description %>
       </div>
-      <div class="form-control-sm">
+      <div class="form-control-sm col-lg-4">
         <%= f.text_field :description %>
       </div>
 
-      <div class="actions">
+      <div class="actions col-lg-4">
         <%= f.submit %>
       </div>
     <% end %>
