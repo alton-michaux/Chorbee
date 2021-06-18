@@ -16,7 +16,7 @@ RSpec.describe Chore, type: :model do
     expect(subject).to_not be_valid
   end
   it 'is only valid with a child id' do
-    subject.child_id = nil
+    subject.child_ids = nil
     expect(subject).to_not be_valid
   end
 end

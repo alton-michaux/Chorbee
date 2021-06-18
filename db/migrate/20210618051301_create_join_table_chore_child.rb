@@ -3,8 +3,8 @@
 class CreateJoinTableChoreChild < ActiveRecord::Migration[5.0]
   def change
     create_join_table :chores, :children do |t|
-      # t.index [:chore_id, :child_id]
-      # t.index [:child_id, :chore_id]
+      # t.index [:chore_ids, :child_ids]
+      # t.index [:child_ids, :chore_ids]
     end
   end
 end

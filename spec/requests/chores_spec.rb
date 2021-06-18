@@ -38,14 +38,14 @@ RSpec.describe 'Chores', type: :request do
   describe 'post chores_path with valid data' do
     it 'saves and redirects to the :show path for the chore' do
       child = FactoryBot.create(:child)
-      chore_params = FactoryBot.attributes_for(:chore, child_id: child.id)
+      chore_params = FactoryBot.attributes_for(:chore, child_ids: child.id)
       expect { post chores_path, params: { chore: chore_params } }.to change(Chore, :count)
       expect(response).to redirect_to chore_path(id: Chore.last.id)
     end
   end
   describe 'post chores_path with invalid data' do
     it 'does not save or redirect' do
-      chore_params = FactoryBot.attributes_for(:chore, child_id: 'child.id')
+      chore_params = FactoryBot.attributes_for(:chore, child_ids: 'child.id')
       expect { post chores_path, params: { chore: chore_params } }.to_not change(Chore, :count)
       expect(response).to render_template(:new)
     end

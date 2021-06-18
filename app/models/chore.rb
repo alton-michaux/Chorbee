@@ -3,8 +3,12 @@
 class Chore < ApplicationRecord
   validates :job, presence: true
   validates :description, presence: true
-  validates :child_id, numericality: { only_integer: true }
-  validates_associated :child
+
+  validates_each :child_ids, allow_blank: false do |record, attr, value|
+    record.errors.add attr, 'not a number' unless !value.to_s.nil?
+  end
+
+  validates_associated :children
 
   has_and_belongs_to_many :children
 end
