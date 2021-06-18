@@ -17,7 +17,11 @@
     <tr class="text-center">
       <td><%= @chore.job %></td>
       <td><%= @chore.description %></td>
-      <td><strong><%= @chore.child.as_json.values_at('name').join(' ') %></strong></td>
+      <td>
+        <% @chore.children.each do |c| %>
+          <strong><%= c.as_json.values_at('name').join(',') %></strong>
+        <% end %>
+      </td>
     </tr>
   </tbody>
 </table>
