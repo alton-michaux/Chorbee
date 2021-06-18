@@ -1,6 +1,10 @@
-<h1>Editing Chore</h1>
+<div class="container-lg container-fluid">
+    <h1 class="text-muted row px-3">Editing Chore</h1>
 
-<%= render 'form', chore: @chore %>
+    <%= render 'form', chore: @chore %>
 
-<%= link_to 'Show', @chore %> |
-<%= link_to 'Back', chores_path %>
+    <div class="col px-3">
+        <%= link_to 'Show', @chore %> |
+        <%= link_to 'Back', chores_path %>
+    </div>
+</div>
