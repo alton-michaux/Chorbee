@@ -12,9 +12,8 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20_210_522_011_148) do
+ActiveRecord::Schema.define(version: 20_210_618_051_301) do
   create_table 'children', force: :cascade do |t|
-    t.integer  'child_id', null: false
     t.string   'name'
     t.datetime 'created_at', null: false
     t.datetime 'updated_at', null: false
@@ -23,13 +22,17 @@ ActiveRecord::Schema.define(version: 20_210_522_011_148) do
     t.index ['chore_id'], name: 'index_children_on_chore_id'
   end
 
+  create_table 'children_chores', id: false, force: :cascade do |t|
+    t.integer 'chore_id', null: false
+    t.integer 'child_id', null: false
+  end
+
   create_table 'chores', force: :cascade do |t|
-    t.integer  'chore_id', null: false
     t.string   'job'
     t.datetime 'created_at',  null: false
     t.datetime 'updated_at',  null: false
-    t.text     'description'
     t.integer  'child_id'
+    t.text     'description'
     t.index ['child_id'], name: 'index_chores_on_child_id'
   end
 end

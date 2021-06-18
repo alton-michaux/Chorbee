@@ -53,7 +53,7 @@ RSpec.describe 'ChildrenControllers', type: :request do
   describe 'put child_path with valid data' do
     it 'updates an entry and redirects to the show path for child' do
       child = FactoryBot.create(:child)
-      expect { put child_path(id: child[:id]), params: { child: {chore_id: 9} } }.to_not change(Child, :count)
+      expect { put child_path(id: child[:id]), params: { child: { chore_id: 9 } } }.to_not change(Child, :count)
       child.reload
       expect(child.chore_id).to eq(9)
       expect(response).to redirect_to(child)
@@ -62,7 +62,7 @@ RSpec.describe 'ChildrenControllers', type: :request do
   describe 'put child_path with invalid data' do
     it 'does not save or redirect' do
       child = FactoryBot.create(:child)
-      expect { put child_path(id: child[:id]), params: { child: {name: ' '} } }.to_not change(Child, :count)
+      expect { put child_path(id: child[:id]), params: { child: { name: ' ' } } }.to_not change(Child, :count)
       child.reload
       expect(response).to render_template(:edit)
     end

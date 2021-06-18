@@ -34,15 +34,14 @@ Things you may want to cover:
         - A table for the kids, where each will be given an id number. 
         - A table for chores where each job will have a unique id number. 
       >migrations
-        - A third table will join the chore id with a child id (with a third column for a completed by date) this will eventually randomize at the beginning of each week, but for now will keep it simple and static.
-        - A fourth table will take the child id and match it with a score for every completed chore that will be displayed by the child's name
+        - A third table will join the chore id with child id's (has many to many association with a third column for a completed by date) this will eventually randomize at the beginning of each week, but for now will keep it simple and static.
 
     - The neccesary models include:
-        - A child model that has_one :chore
+        - A child model that has_many :chores
         - A chore model that belongs_to :child
     
     - The neccesary controllers include:
-        - A controller for child (profile) functions (crud)
+        - A controller for child functions (crud)
         - A controller for chore functions (crud)
 
     - The app will need views for:

@@ -17,7 +17,12 @@
         <%= f.label :child_id %>
       </div>
       <div class="form-control-sm col-lg-4">
-        <%= f.select :child_id, options_for_select(Child.all.map { | child | [child.name, child.id]}), { multiple: true } %>
+        <%= f.collection_check_boxes :child_id, Child.all, :id, :name do |b| %>
+          <div class="collection-check-box">
+            <%= b.check_box %>
+            <%= b.label %>
+          </div>
+        <% end %>
       </div>
 
       <div class="form-label col-lg-4">
@@ -31,7 +36,7 @@
         <%= f.label :description %>
       </div>
       <div class="form-control-sm col-lg-4">
-        <%= f.text_field :description %>
+        <%= f.text_area :description %>
       </div>
 
       <div class="actions col-lg-4">
@@ -41,3 +46,5 @@
 
   </div>
 </div>
+
+<%# <%= f.select :child_id, options_for_select(Child.all.map { | child | [child.name, child.id]}), { multiple: true } %>

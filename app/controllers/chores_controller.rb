@@ -69,7 +69,7 @@ class ChoresController < ApplicationController
 
   # Only allow a list of trusted parameters through.
   def chore_params
-    params.require(:chore).permit(:job, :description, :child_id)
+    params.require(:chore).permit(:job, :description, child_ids: [])
   end
 
   def catch_not_found(e)
