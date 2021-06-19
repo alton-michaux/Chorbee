@@ -3,8 +3,11 @@
 require 'rails_helper'
 
 RSpec.describe Chore, type: :model do
-  subject { FactoryBot.create(:chore) }
-  it 'is valid with valid attributes' do
+  subject do
+    FactoryBot.create(:child, name: 'Jerry', age: 13, id: 2)
+    FactoryBot.create(:chore, job: 'trash', description: 'empty trashcans', child_ids: [2])
+  end
+  it 'is valid with valid attributes', focus: true do
     expect(subject).to be_valid
   end
   it 'is only valid with a job' do

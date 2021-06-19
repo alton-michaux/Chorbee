@@ -5,7 +5,7 @@ class Chore < ApplicationRecord
   validates :description, presence: true
 
   validates_each :child_ids, allow_blank: false do |record, attr, value|
-    record.errors.add attr, 'not a number' unless !value.to_s.nil?
+    record.errors.add attr, 'not a number' if value.to_s.nil?
   end
 
   validates_associated :children
