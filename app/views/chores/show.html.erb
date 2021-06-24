@@ -17,11 +17,7 @@
     <tr class="text-center">
       <td><%= @chore.job %></td>
       <td><%= @chore.description %></td>
-      <td>
-        <% @chore.children.each do |c| %>
-          <strong><%= c.as_json.values_at('name').join(',') %></strong>
-        <% end %>
-      </td>
+      <td><strong><%= render partial: 'children/convert', locals: { children: @chore.children } %></strong></td>
     </tr>
   </tbody>
 </table>
