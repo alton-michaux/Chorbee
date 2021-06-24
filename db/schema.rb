@@ -21,8 +21,8 @@ ActiveRecord::Schema.define(version: 20_210_618_225_857) do
   end
 
   create_table 'children_chores', id: false, force: :cascade do |t|
-    t.integer 'chore_id', null: false
-    t.integer 'child_id', null: false
+    t.integer 'chore_ids', null: false
+    t.integer 'child_ids', null: false
   end
 
   create_table 'chores', force: :cascade do |t|

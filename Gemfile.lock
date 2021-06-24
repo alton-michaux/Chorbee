@@ -57,6 +57,10 @@ GEM
     coffee-script-source (1.12.2)
     concurrent-ruby (1.1.8)
     crass (1.0.6)
+    database_cleaner-active_record (2.0.1)
+      activerecord (>= 5.a)
+      database_cleaner-core (~> 2.0.0)
+    database_cleaner-core (2.0.1)
     diff-lcs (1.4.4)
     erubis (2.7.0)
     execjs (2.7.0)
@@ -203,6 +207,7 @@ DEPENDENCIES
   bootstrap (~> 5.0.1)
   byebug
   coffee-rails (~> 4.2)
+  database_cleaner-active_record
   factory_bot_rails
   faker
   jbuilder (~> 2.5)
@@ -222,4 +227,4 @@ DEPENDENCIES
   web-console
 
 BUNDLED WITH
-   2.2.17
+   2.2.19
