@@ -1,9 +1,3 @@
-<% count = 1 %>
 <% children.each do |child| %>
-    <% if children.length > 1 && count < children.length %>
-    	<%= child.name.to_s + ", " %>
-    <% else %>
-			<%= child.name.to_s %>
-    <% end %>
-		<% count += 1 %>
+    <li class="list-group-item"><%= child.name.to_s %></li>	
 <% end %>
