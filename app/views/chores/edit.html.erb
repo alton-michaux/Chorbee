@@ -1,10 +1,34 @@
-<div class="container-md">
-    <h1 class="text-muted row px-3">Edit Chore</h1>
+<div class="container-md bg-light bg-gradient">
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+        <a class="navbar-brand" href="#">
+            <img class="img-thumbnail" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDP7Dc75L_m9zazv1Kb4rskgQfP9FofKc3tg&usqp=CAU" alt="chorbee" width="30" height="24" class="d-inline-block align-text-top">
+            Chorbee</a></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item dropdown">
+                <a class="nav-link active dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Chore Options
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="new"><%= link_to 'Show', @chore %></a></li>
+                </ul>
+            </li>
+            </ul>
+            <span class="navbar-text">A Chores App for Kids!</span>
+            <%# <form class="d-flex">
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+            </form> %>
+        </div>
+        </div>
+    </nav>
+
+    <h1 class="text-muted row px-3 mt-3">Edit Chore</h1>
 
     <%= render 'form', chore: @chore %>
-
-    <div class="col px-3">
-        <%= link_to 'Show', @chore %> |
-        <%= link_to 'Back', chores_path %>
-    </div>
 </div>
