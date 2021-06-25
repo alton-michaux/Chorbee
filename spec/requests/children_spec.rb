@@ -53,7 +53,11 @@ RSpec.describe 'ChildrenControllers', type: :request do
   describe 'put child_path with valid data' do
     it 'updates an entry and redirects to the show path for child' do
       child = FactoryBot.create(:child)
+<<<<<<< HEAD
       expect { put child_path(id: child[:id]), params: { child: { chore_ids: 9 } } }.to_not change(Child, :count)
+=======
+      expect { put child_path(id: child[:id]), params: { child: { chore_id: 9 } } }.to_not change(Child, :count)
+>>>>>>> 4d1033bd26020902d9d1b77a162a38429de6f274
       child.reload
       expect(child.chore_ids).to eq(9)
       expect(response).to redirect_to(child)
