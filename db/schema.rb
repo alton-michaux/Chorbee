@@ -15,10 +15,10 @@ ActiveRecord::Schema.define(version: 20210626051200) do
   create_table "appointments", force: :cascade do |t|
     t.datetime "start_time"
     t.integer  "chore_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at",                 null: false
+    t.datetime "updated_at",                 null: false
     t.string   "frequency"
-    t.boolean  "done?"
+    t.boolean  "done?",      default: false
     t.index ["chore_id"], name: "index_appointments_on_chore_id"
   end
 
