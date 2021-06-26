@@ -84,7 +84,7 @@
 
   <div class="mt-4">
 
-      <%= month_calendar(events: @appointments) do |date, appointments| %>
+      <%= week_calendar(events: @appointments) do |date, appointments| %>
         <%= date %>
 
         <% appointments.each do |appointment| %>
