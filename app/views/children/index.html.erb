@@ -80,8 +80,14 @@
   </div> <!--/row-->
 
   <div class="mt-4">
-    <%= week_calendar(number_of_weeks: 1) do |date| %>
+    <%= month_calendar(events: @meetings) do |date, meetings| %>
       <%= date %>
+
+      <% meetings.each do |meeting| %>
+        <div>
+          <%= meeting.name %>
+        </div>
+      <% end %>
     <% end %>
   </div>
 
