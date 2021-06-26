@@ -79,17 +79,5 @@
     </table>
   </div> <!--/row-->
 
-  <div class="mt-4">
-    <%= month_calendar(events: @meetings) do |date, meetings| %>
-      <%= date %>
-
-      <% meetings.each do |meeting| %>
-        <div>
-          <%= meeting.name %>
-        </div>
-      <% end %>
-    <% end %>
-  </div>
-
 
 </div> <!--/container-->

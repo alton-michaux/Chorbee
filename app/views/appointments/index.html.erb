@@ -24,6 +24,21 @@
   </tbody>
 </table>
 
+<div class="mt-4">
+
+    <%= month_calendar(events: @appointments) do |date, appointments| %>
+      <%= date %>
+
+      <% appointments.each do |appointment| %>
+        <div>
+          <%= appointment.chore %>
+        </div>
+      <% end %>
+
+    <% end %>
+
+</div>
+
 <br>
 
 <%= link_to 'New Appointment', new_appointment_path %>

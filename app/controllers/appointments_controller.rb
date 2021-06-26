@@ -6,7 +6,7 @@ class AppointmentsController < ApplicationController
   # GET /appointments or /appointments.json
   def index
     start_date = params.fetch(:start_date, Date.today).to_date
-    @appointments = Appointment.where(starts_at: start_date.beginning_of_month.beginning_of_week..start_date.end_of_month.end_of_week)
+    @appointments = Appointment.where(start_time: start_date.beginning_of_month.beginning_of_week..start_date.end_of_month.end_of_week)
   end
 
   # GET /appointments/1 or /appointments/1.json
