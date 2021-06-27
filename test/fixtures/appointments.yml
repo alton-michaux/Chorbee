@@ -1,0 +1,9 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  start_time: 2021-06-25 23:01:34
+  chore_id: one
+
+two:
+  start_time: 2021-06-25 23:01:34
+  chore_id: two

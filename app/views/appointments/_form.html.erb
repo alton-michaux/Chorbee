@@ -1,0 +1,42 @@
+<div class="row mt-4">
+  <div class="mb-3">
+    <%= form_for(appointment) do |f| %>
+    <% if appointment.errors.any? %>
+      <div class="alert alert-warning col-lg-6" id="error_explanation">
+        <h2><%= pluralize(appointment.errors.count, "error") %> prohibited this appointment from being saved:</h2>
+
+        <ul>
+        <% appointment.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="form-label col-lg-4">
+      <%= f.label :start_time %>
+    </div>
+    <div class="form-control-sm col-lg-4">
+      <%= f.datetime_select :start_time %>
+    </div>
+
+    <div class="form-label col-lg-4">
+      <%= f.label :chore_id %>
+    </div>
+    <div class="form-control-sm col-lg-4 dropdown">
+      <%= f.collection_select(:chore_id, Chore.all, :id, :job) %>
+    </div>
+
+    <div class="form-label col-lg-4">
+      <%= f.label :frequency %>
+    </div>
+    <div class="form-control-sm col-lg-4 dropdown">
+      <%= f.select(:frequency, [['Daily'],['Weekly']]) %>
+    </div>
+
+    <div class="actions m-3 col-lg-4">
+      <%= f.submit %>
+    </div>
+    <% end %>
+  </div>
+</div>

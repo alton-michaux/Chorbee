@@ -7,7 +7,5 @@ class Child < ApplicationRecord
 
   has_and_belongs_to_many :chores, dependent: :destroy
 
-  def each(&block)
-    Chldren.each(&block)
-  end
+  def each; end
 end

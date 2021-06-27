@@ -32,6 +32,10 @@ gem 'jbuilder', '~> 2.5'
 
 # Use Capistrano for deployment
 # gem 'capistrano-rails', group: :development
+gem 'grape'
+gem 'grape-active_model_serializers'
+gem 'rack-cors'
+gem 'simple_calendar', '~> 2.4'
 
 group :development do
   # Access an IRB console on exception pages or by using <%= console %> anywhere in the code.
@@ -48,11 +52,11 @@ group :development, :test do
 end
 
 group :test do
+  gem 'database_cleaner-active_record'
   gem 'factory_bot_rails'
   gem 'faker'
   gem 'rails-controller-testing'
   gem 'rspec-rails'
-  gem 'database_cleaner-active_record'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem

@@ -10,5 +10,6 @@ class Chore < ApplicationRecord
 
   validates_associated :children
 
+  has_one :appointment
   has_and_belongs_to_many :children
 end

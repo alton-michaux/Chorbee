@@ -1,0 +1,9 @@
+<% count = 0 %>
+<% children.each do |child| %>
+    <% if children.length > 1 && count < (children.length - 1) %>
+        <%= child.name.to_s + ',' %>
+    <% else %>
+        <%= child.name.to_s %>
+    <% end %>
+    <% count += 1 %>
+<% end %>
