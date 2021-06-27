@@ -5,5 +5,9 @@ class Child < ApplicationRecord
   validates :age,  presence: true
   validates :age, numericality: { only_integer: true }
 
-  has_many :chores, dependent: :destroy
+  has_and_belongs_to_many :chores, dependent: :destroy
+
+  def each(&block)
+    Chldren.each(&block)
+  end
 end

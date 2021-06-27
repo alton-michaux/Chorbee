@@ -70,7 +70,7 @@ class ChildrenController < ApplicationController
 
   # Only allow a list of trusted parameters through.
   def child_params
-    params.require(:child).permit(:name, :age, :chore_id)
+    params.require(:child).permit(:name, :age, chore_ids: [])
   end
 
   def catch_not_found(e)

@@ -1,46 +1,82 @@
-<div class="container-lg container-fluid bg-light bg-gradient">
+<div class="container bg-light bg-gradient">
 
-<p id="notice"><%= notice %></p>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom border-warning shadow-sm">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <img class="img-thumbnail" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDP7Dc75L_m9zazv1Kb4rskgQfP9FofKc3tg&usqp=CAU" alt="chorbee" width="30" height="24" class="d-inline-block align-text-top">
+        Chorbee</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ">
+          <li class="nav-item">
+            <a class="nav-link active" href="chores">Chores</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link active dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Child Menu
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item text-decoration-none" href="#"><%= link_to 'New Child', new_child_path %></a></li>
+            </ul>
+          </li>
+          </ul>
+          <span class="navbar-text">A Chores App for Kids!</span>
+        <%# <form class="d-flex">
+          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+          <button class="btn btn-outline-success" type="submit">Search</button>
+        </form> %>
+      </div>
+    </div>
+  </nav>
 
-<h1 class="text-muted row px-3">Children</h1>
+  <p class="text-success" id="notice"><%= notice %></p>
 
-<div class="row">
-  <table class="table table-striped table-hover table-bordered">
-    <thead>
-      <tr class="table-dark text-center">
-        <th>Name</th>
-        <th>Age</th>
-        <th>Job</th>
-        <th colspan="3">Actions</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      <% @children.each do |child| %>
-        <tr class="text-center">
-          <td><%= child.name %></td>
-          <td><%= child.age %></td>
-          <td class="mark">
-            <% if child.chores.present? %>
-              <strong><%= render partial: 'chores/convert', locals: { chores: child.chores } %></strong>
-            <% end %>
-          </td>
-          <td><%= link_to 'View', child %></td>
-          <td><%= link_to 'Edit', edit_child_path(child) %></td>
-          <td><%= link_to 'Delete', child, method: :delete, data: { confirm: 'Are you sure?' } %></td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-</div> <!--/row-->
-
-<br>
-
-<div class="row">
-  <div class="col mx-3">
-    <%= link_to 'New Child', new_child_path %> |
-    <%= link_to 'Chores', chores_path %>
+  <div class="container-sm row">
+    <h2 class="row mx-auto text-warning shadow-sm">Children</h2>
   </div>
-</div> <!--row-->
+
+  <div class="row">
+    <table class="table table-striped table-hover table-bordered shadow-sm">
+      <thead>
+        <tr class="table-dark text-center">
+          <th>Name</th>
+          <th>Age</th>
+          <th>Chore(s)</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% @children.each do |child| %>
+          <tr class="text-center">
+            <td><%= child.name %></td>
+            <td><%= child.age %></td>
+            <td class="mark">
+              <% if child.chores.present? %>
+                <div class="dropdown">
+                  <%= render partial: 'chores/convert2', locals: { chores: child.chores } %>
+                </div>
+              <% end %>
+            </td>
+            <td>
+              <div class="btn-group text-decoration-none">
+                <button type="button" class="btn btn-warning text-decoration-none"><%= link_to 'View', child %></button>
+                <button type="button" class="btn btn-warning dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                  <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item text-decoration-none" href="#"><%= link_to 'Edit', edit_child_path(child) %></a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item text-decoration-none" href="#"><%= link_to 'Delete', child, method: :delete, data: { confirm: 'Are you sure?' } %></a></li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div> <!--/row-->
 
 </div> <!--/container-->

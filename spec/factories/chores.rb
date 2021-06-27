@@ -4,8 +4,16 @@ FactoryBot.define do
   factory :chore do |f|
     f.job { Faker::Job.field }
     f.description { Faker::Job.title }
-    f.child_id { Faker::Number.unique.number(digits: 2) }
+    f.child_ids { Faker::Number.unique.number(digits: 1) }
 
-    association :child, factory: :child
+    # factory :chore_with_child do
+    #   before(:create) do
+    #     child = create(:child)
+    #     f.child_ids << child[:id]
+    #     f.child_ids.reload
+    #   end
+    # end
+
+    association :children, factory: :child
   end
 end

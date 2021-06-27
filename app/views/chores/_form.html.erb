@@ -1,9 +1,8 @@
-<div class="row">
+<div class="row mt-4 mb-4">
   <div class="mb-3">
-
     <%= form_for(chore) do |f| %>
       <% if chore.errors.any? %>
-        <div id="error_explanation">
+        <div class="alert alert-warning col-lg-6" id="error_explanation">
           <h2><%= pluralize(chore.errors.count, "error") %> prohibited this chore from being saved:</h2>
 
           <ul>
@@ -14,28 +13,33 @@
         </div>
       <% end %>
 
-      <div class="form-label">
-        <%= f.label :child_id %>
+      <div class="form-label col">
+        <%= f.label :child_ids %>
       </div>
-      <div class="form-control-sm">
-        <%= f.select :child_id, options_for_select(Child.all.map { | child | [child.name, child.id]}), { multiple: true } %>
+      <div class="form-control-sm col-lg-4">
+        <%= f.collection_check_boxes :child_ids, Child.all, :id, :name do |b| %>
+          <div class="collection-check-box">
+            <%= b.check_box %>
+            <%= b.label %>
+          </div>
+        <% end %>
       </div>
 
-      <div class="form-label">
+      <div class="form-label col">
         <%= f.label :job %>
       </div>
-      <div class="form-control-sm">
+      <div class="form-control-sm col">
         <%= f.text_field :job %>
       </div>
 
-      <div class="form-label">
+      <div class="form-label col">
         <%= f.label :description %>
       </div>
-      <div class="form-control-sm">
-        <%= f.text_field :description %>
+      <div class="form-control-sm col">
+        <%= f.text_area :description %>
       </div>
 
-      <div class="actions">
+      <div class="actions col">
         <%= f.submit %>
       </div>
     <% end %>

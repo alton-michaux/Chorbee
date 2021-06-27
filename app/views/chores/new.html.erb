@@ -1,5 +1,13 @@
-<h1>New Chore</h1>
+<div class="container-lg">
 
-<%= render 'form', chore: @chore %>
+    <h1 class="row">New Chore</h1>
 
-<%= link_to 'Back', chores_path %>
+    <%= render 'form', chore: @chore %>
+
+    <div class="row">
+        <div class="col">
+            <%= link_to 'Back', chores_path %>
+        </div>
+    </div>
+
+</div>
