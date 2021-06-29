@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+
 class AppointmentsController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :catch_not_found
   rescue_from StandardError, with: :catch_no_method
