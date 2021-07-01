@@ -6,8 +6,8 @@ RSpec.describe Appointment, type: :model do
   child = Child.create(name: 'Aron', age: 14)
   subject do
     Appointment.create(start_time: Date.today, frequency: 'weekly',
-                    chore: Chore.create(job: 'Room', description: 'Clean up',
-                                     child_ids: [child.id]))
+                       chore: Chore.create(job: 'Room', description: 'Clean up',
+                                           child_ids: [child.id]))
   end
   it 'is valid with valid attributes' do
     expect(subject).to be_valid

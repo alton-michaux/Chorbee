@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe Child, type: :model do
-  subject { Child.create(name: 'Reed', age: 13, id: 10) }
+  subject { FactoryBot.create(:child) }
   it 'is valid with valid attributes' do
     expect(subject).to be_valid
   end

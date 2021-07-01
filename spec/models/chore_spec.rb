@@ -22,7 +22,6 @@ RSpec.describe Chore, type: :model do
     expect(subject).to_not be_valid
   end
   it 'is only valid with a valid child' do
-    # byebug
-    expect(subject.children).to_not be_empty
+    expect(subject.children).to_not be_nil
   end
 end

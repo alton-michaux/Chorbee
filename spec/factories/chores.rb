@@ -8,5 +8,10 @@ FactoryBot.define do
     f.description { Faker::Lorem.sentence }
 
     association :children, factory: :child
+
+    after(:create) do |chore|
+      chore.children = FactoryBot.create_list(:child, 2, chore: chore)
+    end
+
   end
 end
