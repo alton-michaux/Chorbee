@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-# This will guess the User class
+require 'faker'
+
 FactoryBot.define do
   factory :child do |f|
     f.name { Faker::Name.first_name }

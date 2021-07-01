@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Child, type: :model, focus: true do
+RSpec.describe Child, type: :model do
   subject { Child.create(name: 'Reed', age: 13, id: 10) }
   it 'is valid with valid attributes' do
     expect(subject).to be_valid
