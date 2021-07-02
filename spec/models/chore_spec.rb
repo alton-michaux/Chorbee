@@ -2,9 +2,9 @@
 
 require 'rails_helper'
 
-RSpec.describe Chore, type: :model do
+RSpec.describe Chore, type: :model, focus: true do
   subject do
-    Chore.new(job: 'Trash', description: 'Empty cans', child_ids: 1)
+    Chore.new(job: 'Trash', description: 'Empty cans', children: [FactoryBot.create(:child)])
   end
   it 'is valid with valid attributes' do
     expect(subject).to be_valid
