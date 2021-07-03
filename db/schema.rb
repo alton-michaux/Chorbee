@@ -12,7 +12,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20_210_626_051_200) do
+ActiveRecord::Schema.define(version: 20_210_703_035_141) do
   create_table 'appointments', force: :cascade do |t|
     t.datetime 'start_time'
     t.integer  'chore_id'
@@ -20,6 +20,7 @@ ActiveRecord::Schema.define(version: 20_210_626_051_200) do
     t.datetime 'updated_at',                 null: false
     t.string   'frequency'
     t.boolean  'done?', default: false
+    t.datetime 'end_time'
     t.index ['chore_id'], name: 'index_appointments_on_chore_id'
   end
 

@@ -8,4 +8,6 @@ class Appointment < ApplicationRecord
   validates_associated :chore
 
   belongs_to :chore
+
+  def each; end
 end

@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Chore, type: :model, focus: true do
+RSpec.describe Chore, type: :model do
   subject do
     Chore.new(job: 'Trash', description: 'Empty cans', children: [FactoryBot.create(:child)])
   end
