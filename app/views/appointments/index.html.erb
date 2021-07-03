@@ -82,7 +82,7 @@
   <% else %>
   <% end %>
 
-  <div class="mt-4">
+  <div class="mt-4 container-lg table table-light table-sm">
 
       <%= week_calendar(number_of_weeks: 2, attribute: :start_time, end_attribute: :end_time, events: @appointments) do |date, appointments| %>
         <%= date %>
