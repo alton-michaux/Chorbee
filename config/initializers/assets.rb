@@ -7,6 +7,7 @@ Rails.application.config.assets.version = '1.0'
 
 # Add additional assets to the asset load path
 # Rails.application.config.assets.paths << Emoji.images_path
+Rails.application.config.assets.paths << '/home/code_gobbler/.rvm/gems/ruby-2.6.5/gems/'
 
 # Precompile additional assets.
 # application.js, application.css, and all non-JS/CSS in app/assets folder are already added.

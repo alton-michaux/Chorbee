@@ -52,10 +52,10 @@ group :development, :test do
 end
 
 group :test do
+  gem 'activesupport'
   gem 'database_cleaner-active_record'
   gem 'factory_bot_rails'
   gem 'faker'
-  gem 'ice_cube'
   gem 'rails-controller-testing'
   gem 'recurring_select'
   gem 'rspec-rails'

@@ -9,9 +9,7 @@ class AppointmentsController < ApplicationController
   def index
     start_date = params.fetch(:start_time, Time.zone.now).to_date
     end_date = params.fetch(:end_time, Time.zone.now).to_date
-    @appointments = Appointment.where(start_time: start_date.beginning_of_month.beginning_of_week..start_date.end_of_month.end_of_week)
-    frequency_weekly = start_date + 7
-    frequency_daily = start_date + 1
+    @appointments = Appointment.where(start_time: start_date.beginning_of_month.beginning_of_week..end_date.end_of_month.end_of_week)
   end
 
   # GET /appointments/1 or /appointments/1.json
