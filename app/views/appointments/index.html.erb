@@ -88,9 +88,15 @@
         <%= date %>
 
         <% appointments.each do |appointment| %>
-          <div>
-            <%= appointment.chore.job %>
-          </div>
+          <% if appointment.frequency === 'Daily' %>
+            <div>
+              <%= appointment.chore.job %>
+            </div>
+          <% else %>
+            <div>
+              <%= appointment.chore.job %>
+            </div>
+          <% end %>
         <% end %>
 
       <% end %>
