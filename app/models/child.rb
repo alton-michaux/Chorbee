@@ -11,14 +11,12 @@ class Child < ApplicationRecord
 
   def each; end
 
-  def -(*args)
-    pp args
-    args
-  end
+  # def -(*args)
+  #   args
+  # end
 
-  def to_ary
-    arr = []
-    arr << self
-    pp arr
-  end
+  # def to_ary
+  #   arr = []
+  #   arr << self
+  # end
 end
