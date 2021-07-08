@@ -1,0 +1,11 @@
+<%= week_calendar(number_of_weeks: 2, attribute: :start_time, end_attribute: :end_time, events: @recurring_events) do |date, events| %>
+    <%= date.day %>
+        <% events.each do |event| %>
+
+            <div>
+                <%= event.chore.job %>
+            </div>
+
+        <% end %>
+
+<% end %>

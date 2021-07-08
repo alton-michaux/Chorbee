@@ -7,8 +7,12 @@ class AppointmentsController < ApplicationController
 
   # GET /appointments or /appointments.json
   def index
-    start_date = params.fetch(:start_date, Date.today).to_date
-    @appointments = Appointment.where(start_time: start_date.beginning_of_month.beginning_of_week..start_date.end_of_month.end_of_week)
+    start_date = params.fetch(:start_time, Time.zone.now).to_date
+    end_date = params.fetch(:end_time, Time.zone.now).to_date
+    @appointments = Appointment.where(start_time: start_date.beginning_of_month.beginning_of_week..end_date.end_of_month.end_of_week)
+    @recurring_events = @appointments.flat_map do |e|
+      e.calendar_events(params.fetch(start_date, Time.zone.now).to_date)
+    end
   end
 
   # GET /appointments/1 or /appointments/1.json
@@ -69,7 +73,7 @@ class AppointmentsController < ApplicationController
 
   # Only allow a list of trusted parameters through.
   def appointment_params
-    params.require(:appointment).permit(:start_time, :chore_id, :frequency)
+    params.require(:appointment).permit(:start_time, :end_time, :chore_id, :frequency)
   end
 
   def catch_not_found(e)

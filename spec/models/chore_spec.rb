@@ -3,8 +3,10 @@
 require 'rails_helper'
 
 RSpec.describe Chore, type: :model do
-  subject { FactoryBot.create(:chore) }
-  it 'is valid with valid attributes', focus: true do
+  subject do
+    Chore.new(job: 'Trash', description: 'Empty cans', children: [FactoryBot.create(:child)])
+  end
+  it 'is valid with valid attributes' do
     expect(subject).to be_valid
   end
   it 'is only valid with a job' do
@@ -16,7 +18,10 @@ RSpec.describe Chore, type: :model do
     expect(subject).to_not be_valid
   end
   it 'is only valid with a child id' do
-    subject.child_ids = nil
+    subject.child_ids = ' '
     expect(subject).to_not be_valid
+  end
+  it 'is only valid with a valid child' do
+    expect(subject.children).to_not be_nil
   end
 end
