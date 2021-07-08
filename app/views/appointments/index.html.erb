@@ -1,4 +1,4 @@
-<div class="container-md bg-light bg-gradient">
+<div class="container-md bg-light bg-gradient mb-5">
 
   <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom border-warning shadow-sm">
     <div class="container">
@@ -77,29 +77,10 @@
       </tbody>
     </table>
 
-  </div>
-
   <% else %>
   <% end %>
 
-  <div class="mt-4 container-lg table table-light table-sm">
-
-      <%= week_calendar(number_of_weeks: 2, attribute: :start_time, end_attribute: :end_time, events: @appointments) do |date, appointments| %>
-        <%= date %>
-
-        <% appointments.each do |appointment| %>
-          <% if appointment.frequency === 'Daily' %>
-            <div>
-              <%= appointment.chore.job %>
-            </div>
-          <% else %>
-            <div>
-              <%= appointment.chore.job %>
-            </div>
-          <% end %>
-        <% end %>
-
-      <% end %>
+    <%= render 'display', appointment: @appointment %>
 
   </div>
 
