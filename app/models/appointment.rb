@@ -5,6 +5,7 @@ require 'active_support/time'
 
 class Appointment < ApplicationRecord
   validates :start_time, presence: true
+  validates :end_time, presence: true
   validates :chore_id, presence: true
   validates :frequency, presence: true
 
@@ -14,7 +15,7 @@ class Appointment < ApplicationRecord
 
   def each; end
 
-  def schedule(start= Time.zone.now.to_date)
+  def schedule(start = Time.zone.now.to_date)
     IceCube::Schedule.new(start) do |s|
       s.add_recurrence_rule IceCube::Rule.daily.until(Date.today + 30) if frequency === 'Daily'
       s.add_recurrence_rule IceCube::Rule.weekly.until(Date.today + 30) if frequency === 'Weekly'

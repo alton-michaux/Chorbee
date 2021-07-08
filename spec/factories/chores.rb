@@ -7,12 +7,8 @@ FactoryBot.define do
     f.job { Faker::Lorem.words }
     f.description { Faker::Lorem.sentence }
 
-    factory :chore_with_child do
-      before(:created) do |chore|
-        chore.children { [FactoryBot.create_list(:child, 5)] }
-        chore.child_ids << chore.children.to_ary
-        chore.association :children, factory: :child
-      end
+    before(:create) do |chore|
+      chore.children { [FactoryBot.create(:child)] }
     end
   end
 end

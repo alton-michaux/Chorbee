@@ -1,10 +1,22 @@
 <%= week_calendar(number_of_weeks: 2, attribute: :start_time, end_attribute: :end_time, events: @recurring_events) do |date, events| %>
+    
     <%= date.day %>
+
         <% events.each do |event| %>
 
-            <div>
-                <%= event.chore.job %>
-            </div>
+            <% if event.frequency == 'Weekly' %>
+
+                <div class='text-warning'>
+                    <%= event.chore.job %>
+                </div>
+
+            <% else %>
+
+                <div class='text-dark'>
+                    <%= event.chore.job %>
+                </div>
+
+            <% end %>
 
         <% end %>
 

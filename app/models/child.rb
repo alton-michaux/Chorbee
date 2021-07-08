@@ -7,11 +7,18 @@ class Child < ApplicationRecord
 
   has_and_belongs_to_many :chores, dependent: :destroy
 
+  # RSPEC(test) methods
+
   def each; end
 
+  def -(*args)
+    pp args
+    args
+  end
+
   def to_ary
-    each do |i|
-      to_a[i].as_json.values_at('id')
-    end
+    arr = []
+    arr << self
+    pp arr
   end
 end

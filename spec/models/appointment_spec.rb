@@ -4,14 +4,18 @@ require 'rails_helper'
 
 RSpec.describe Appointment, type: :model, focus: true do
   subject do
-    Appointment.create(start_time: Date.today, frequency: 'weekly', chore: FactoryBot.create(:chore_with_child))
+    Appointment.create(start_time: Date.today, frequency: 'weekly', end_time: Date.today + 30,
+                       chore: Chore.create(job: 'Rake', description: 'Rake leaves in yard',
+                                           children: Child.create(name: 'Ara', age: 14)))
   end
   it 'is valid with valid attributes' do
     expect(subject).to be_valid
   end
-  it 'is only valid with a start time' do
+  it 'is only valid with a start time and end time' do
     subject.start_time = ' '
     expect(subject).to_not be_valid
+    # subject.end_time = ' '
+    # expect(subject).to_not be valid
   end
   it 'is only valid with a chore id' do
     subject.chore_id = ' '
