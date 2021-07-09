@@ -11,12 +11,9 @@ class Child < ApplicationRecord
 
   def each; end
 
-  # def -(*args)
-  #   args
-  # end
+  # def -(*); end
 
   # def to_ary
-  #   arr = []
-  #   arr << self
+  #   as_json.to_a
   # end
 end
