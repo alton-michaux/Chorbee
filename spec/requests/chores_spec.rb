@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe 'Chores', type: :request, focus: true do
+RSpec.describe 'Chores', type: :request do
   describe 'get chores_path' do
     it 'renders the index view' do
       FactoryBot.create_list(:chore, 10)
