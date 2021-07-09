@@ -1,4 +1,4 @@
-<div class="row mt-4 mb-4">
+<div class="row mt-4">
   <div class="mb-3">
     <%= form_for(chore) do |f| %>
       <% if chore.errors.any? %>
@@ -13,7 +13,7 @@
         </div>
       <% end %>
 
-      <div class="form-label col">
+      <div class="form-label col-lg-4">
         <%= f.label :child_ids %>
       </div>
       <div class="form-control-sm col-lg-4">
@@ -25,22 +25,24 @@
         <% end %>
       </div>
 
-      <div class="form-label col">
+      <div class="form-label col-lg-4">
         <%= f.label :job %>
       </div>
-      <div class="form-control-sm col">
+      <div class="form-control-sm col-lg-4">
         <%= f.text_field :job %>
       </div>
 
-      <div class="form-label col">
+      <div class="form-label col-lg-4">
         <%= f.label :description %>
       </div>
-      <div class="form-control-sm col">
+      <div class="form-control-sm col-lg-4">
         <%= f.text_area :description %>
       </div>
 
-      <div class="actions col">
-        <%= f.submit %>
+      <div class="actions m-3 col-lg-4">
+        <button type="button" class="btn">
+          <%= f.submit %>
+        </button>
       </div>
     <% end %>
 
