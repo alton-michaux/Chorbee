@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe Appointment, type: :model, focus: true do
+RSpec.describe Appointment, type: :model do
   subject { FactoryBot.create(:appointment) }
   it 'is valid with valid attributes' do
     expect(subject).to be_valid
@@ -9,7 +9,7 @@ RSpec.describe Appointment, type: :model, focus: true do
     subject.start_time = ' '
     expect(subject).to_not be_valid
   end
-  it 'is only valid with an end_time' do  
+  it 'is only valid with an end_time' do
     subject.end_time = ' '
     expect(subject).to_not be_valid
   end
