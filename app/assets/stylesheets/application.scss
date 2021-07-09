@@ -14,8 +14,16 @@
  @import "bootstrap";
  @import "simple_calendar";
 
+ * {
+    font-family: 'Oswald', sans-serif;
+ }
+
  a {
      margin-left: 1em;
      text-decoration: none;
      color: black;
+ }
+
+ .navbar-brand {
+    font-family: 'Yellowtail', cursive;
  }

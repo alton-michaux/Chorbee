@@ -1,23 +1,29 @@
-<%= week_calendar(number_of_weeks: 1, attribute: :start_time, end_attribute: :end_time, events: @recurring_events) do |date, events| %>
-    
-    <%= date.day %>
+<div class='container'>
 
-        <% events.each do |event| %>
+    <%= week_calendar(number_of_weeks: 1, attribute: :start_time, end_attribute: :end_time, events: @recurring_events) do |date, events| %>
+        
+        <%= date.day %>
 
-            <% if event.frequency == 'Weekly' %>
+            <% events.each do |event| %>
 
-                <div class='text-warning'>
-                    <%= event.chore.job %>
-                </div>
+                <% if event.frequency == 'Weekly' %>
 
-            <% else %>
+                    <div class='text-warning'>
+                        <%= event.chore.job %>
+                    </div>
 
-                <div class='text-dark'>
-                    <%= event.chore.job %>
-                </div>
+                <% else %>
+
+                    <div class='text-dark'>
+                        <%= event.chore.job %>
+                    </div>
+
+                <% end %>
 
             <% end %>
 
-        <% end %>
+    <% end %>
 
-<% end %>
+    <div class='mt-1 mb-2 blockquote-footer'><i class='float-end'>-Weekly events highlighted in <em class = 'text-warning'>yellow</em></i></div>
+
+</div>

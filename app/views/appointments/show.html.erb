@@ -42,7 +42,7 @@
       <div class="card-body text-center">
 
         <% @appointment.reload %>
-        <h5 class="card-title"><%= @appointment.start_time.strftime("%d/%m/%Y") %></h5>
+        <h5 class="card-title"><%= @appointment.start_time.strftime("%m/%d/%Y") %></h5>
         <p class="card-text"><%= @appointment.chore.job %></p>
         <p class="card-text">Frequency: <%= @appointment.frequency %></p>
 
