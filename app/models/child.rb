@@ -10,10 +10,4 @@ class Child < ApplicationRecord
   # RSPEC(test) methods
 
   def each; end
-
-  # def -(*); end
-
-  # def to_ary
-  #   as_json.to_a
-  # end
 end

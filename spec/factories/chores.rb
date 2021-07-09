@@ -5,6 +5,5 @@ FactoryBot.define do
     f.job { Faker::Lorem.words }
     f.description { Faker::Lorem.sentence }
     f.children { [FactoryBot.create(:child)] }
-
   end
 end
