@@ -8,6 +8,10 @@ Chorbee is a simple way for parents to keep track of their children's productivi
 
 All model and controller specs pass using rspec testing.
 
+* App version:
+
+  This app is version 0.0.1
+
 * Ruby version:
 
   This app runs on Ruby version 2.6.5
