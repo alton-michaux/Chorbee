@@ -1,23 +1,35 @@
 # README
 
-A simple app to keep kids busy:
+Chorbee: A chores app for kids!
 
-Chorbee is a simple way for parents to keep track of their children's productivity when it comes to doing chores. Future versions will allow users(parents) to mark chores as complete and allot monetary amounts toward each child for allowance.
+Chorbee is a simple way for parents to keep track of their children's productivity when it comes to doing chores. The current version allows for admins(parents) to assign chores to each child and assign an appointment schedule that will render a calendar view of the appointment based on a daily or weekly basis.
 
-Testing is still underway.
+*Future versions will allow admins to mark chores complete and allot monetary amounts toward each child for allowance*
 
-* Ruby version
+All model and controller specs pass using rspec testing.
 
-This app runs on Ruby version 2.6.5
+* Ruby version:
 
-* System dependencies
+  This app runs on Ruby version 2.6.5
 
-Chorbee uses several gems to help it do what it does:
+* Rails version:
 
-  -simple_calendar is used to render the calendar for the appointments index page
+  This app runs on Rails 5.0.7.2
 
-  -the recurring_select gem is used to allow users to select and register recurring events(appointments) through a modal
+* System dependencies:
 
-    ->the ice_cube gem is used to register recurring events and mark those dates on each respective calendar day, it is a dependency of the recurring_select gem
+  Chorbee uses several gems to help it do what it does:
 
-  -Chorbee uses the bootstrap gem for css styling and UI purposes
+    -simple_calendar is used to render the calendar for the appointments index page
+
+    -the recurring_select gem is used to allow users to select and register recurring events(appointments) through a modal, this gem also gives us access to the ice_cube gem:
+
+      -the ice_cube gem is used to register recurring events and mark those dates on each respective calendar day, it is a dependency of the recurring_select gem
+
+    -Chorbee uses the bootstrap gem for css styling and UI purposes
+
+* Testing:
+
+  Software: Rspec
+  Number of tests: 45
+  Type of testing: Model and Controller(request)
