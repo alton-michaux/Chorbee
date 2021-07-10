@@ -37,17 +37,16 @@ RSpec.describe 'Appointments', type: :request do
   describe 'post appointments_path with valid data' do
     it 'saves a new entry and redirects to the show path for the entry' do
       appointment_attributes = FactoryBot.attributes_for(:appointment)
-      # byebug
       expect do
         post appointments_path, params: { appointment: appointment_attributes.as_json }
       end.to change(Appointment, :count).by(1)
-      expect(response).to redirect_to appointment_path(id: appointment.last.id)
+      expect(response).to redirect_to appointment_path(id: Appointment.last.id)
     end
   end
   describe 'post appointments_path with invalid data' do
     it 'does not save a new entry or redirect' do
       appointment_attributes = FactoryBot.attributes_for(:appointment)
-      appointment_attributes.delete(:job)
+      appointment_attributes.delete(:start_time)
       expect do
         post appointments_path, params: { appointment: appointment_attributes }
       end.to_not change(Appointment, :count)
