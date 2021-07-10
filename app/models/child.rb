@@ -10,13 +10,4 @@ class Child < ApplicationRecord
   # RSPEC(test) methods
 
   def each; end
-
-  # def -(*args)
-  #   args
-  # end
-
-  # def to_ary
-  #   arr = []
-  #   arr << self
-  # end
 end

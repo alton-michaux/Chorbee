@@ -35,6 +35,7 @@ class AppointmentsController < ApplicationController
         format.html { redirect_to @appointment, notice: 'Appointment was successfully created.' }
         format.json { render :show, status: :created, location: @appointment }
       else
+        pp "save error: #{@appointment.errors.to_a} \n error on: #{@appointment.as_json}"
         format.html { render :new, status: :unprocessable_entity }
         format.json { render json: @appointment.errors, status: :unprocessable_entity }
       end
