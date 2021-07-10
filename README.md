@@ -34,6 +34,10 @@ All model and controller specs pass using rspec testing.
 
 * Testing:
 
-  Software: Rspec
-  Number of tests: 45
-  Type of testing: Model and Controller(request)
+  -Software: Rspec
+
+  -Number of tests: 45
+
+  -Type: Model and Controller(request)
+
+  -Some error messages printed to the console verify successful invalid data input for controller specs
