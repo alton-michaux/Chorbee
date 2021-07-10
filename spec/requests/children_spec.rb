@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 RSpec.describe 'Children', type: :request do
@@ -35,9 +37,7 @@ RSpec.describe 'Children', type: :request do
   describe 'post children_path with valid data' do
     it 'saves a new entry and redirects to the show path for the entry' do
       child_attributes = FactoryBot.attributes_for(:child)
-      expect do
-        post children_path, params: { child: child_attributes }
-      end.to change(Child, :count).by(1)
+      expect { post children_path, params: { child: child_attributes } }.to change(Child, :count).by(1)
       expect(response).to redirect_to child_path(id: Child.last.id)
     end
   end

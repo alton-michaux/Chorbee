@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 RSpec.describe 'Appointments', type: :request do
@@ -35,7 +37,10 @@ RSpec.describe 'Appointments', type: :request do
   describe 'post appointments_path with valid data' do
     it 'saves a new entry and redirects to the show path for the entry' do
       appointment_attributes = FactoryBot.attributes_for(:appointment)
-      expect { post appointments_path, params: { appointment: appointment_attributes.as_json } }.to change(Appointment, :count).by(1)
+      # byebug
+      expect do
+        post appointments_path, params: { appointment: appointment_attributes.as_json }
+      end.to change(Appointment, :count).by(1)
       expect(response).to redirect_to appointment_path(id: appointment.last.id)
     end
   end
