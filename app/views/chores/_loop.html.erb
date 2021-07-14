@@ -1,0 +1,14 @@
+<div class='row'>
+    <% animal_urls = [  ['Triceratops', 'http://clipart-library.com/images/ki8nKEdbT.png'],
+                        ['Penguin', 'http://clipart-library.com/images/pToA6pkpc.jpg'],
+                        ['Ladybug', 'http://clipart-library.com/images/zcXednKoi.jpg'],
+                        ['Tiger', 'http://clipart-library.com/clipart/ziXeXpxXT.htm'],
+                        ['Grasshopper', 'http://clipart-library.com/images/8TG6kg8ec.jpg'],
+                        ['Dog', 'http://clipart-library.com/images/8TAEz8g7c.png'],
+                        ['Giraffe', 'http://clipart-library.com/images/Bigzkjji8.png'] ] %>
+
+    <% random_animal = animal_urls[rand(animal_urls.size)] %>
+
+    <img src= <%= random_animal[1].to_s %> class="card-img-top" alt= <%= random_animal[0] %> >
+            
+</div>

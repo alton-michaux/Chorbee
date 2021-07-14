@@ -37,8 +37,9 @@
 
     <div class="card-body text-center">
 
-      <h5 class="card-title"><%= @chore.job %></h5>
-      <p class="card-text"><%= @chore.description %></p>
+      <%= render 'loop' %>
+      <h5 class="card-title">Chore: <br><strong><%= @chore.job %></strong></h5>
+      <p class="card-text">Description: <br><strong><%= @chore.description %></strong></p>
       <div class="card-header">Assigned To:</div>
       <ul class="list-group list-group-flush"><%= render partial: 'children/convert', locals: { children: @chore.children } %></ul>
 
