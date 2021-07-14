@@ -28,7 +28,7 @@ All model and controller specs pass using rspec testing.
 
     -the recurring_select gem is used to allow users to select and register recurring events(appointments) through a modal, this gem also gives us access to the ice_cube gem:
 
-      -the ice_cube gem is used to register recurring events and mark those dates on each respective calendar day, it is a dependency of the recurring_select gem
+      * the ice_cube gem is used to register recurring events and mark those dates on each respective calendar day, it is a dependency of the recurring_select gem
 
     -Chorbee uses the bootstrap gem for css styling and UI purposes
 

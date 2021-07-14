@@ -8,14 +8,14 @@
 
                 <% if event.frequency == 'Weekly' %>
 
-                    <div class='text-warning'>
-                        <%= event.chore.job %>
+                    <div>
+                        <%= link_to event.chore.job, chore_path(id: event.chore.id), class:'link-warning' %>
                     </div>
 
                 <% else %>
 
-                    <div class='text-dark'>
-                        <%= event.chore.job %>
+                    <div>
+                        <%= link_to event.chore.job, chore_path(id: event.chore.id), class:'link-dark' %>
                     </div>
 
                 <% end %>
