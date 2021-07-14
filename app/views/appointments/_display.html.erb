@@ -1,4 +1,4 @@
-<div class='container-sm'>
+<div class='row'>
 
     <%= week_calendar(number_of_weeks: 1, attribute: :start_time, end_attribute: :end_time, events: @recurring_events) do |date, events| %>
         
@@ -9,13 +9,13 @@
                 <% if event.frequency == 'Weekly' %>
 
                     <div>
-                        <%= link_to event.chore.job, chore_path(id: event.chore.id), class:'link-warning' %>
+                        <%= link_to event.chore.job, chore_path(id: event.chore.id), class:'d-inline-block link-warning text-truncate' %>
                     </div>
 
                 <% else %>
 
                     <div>
-                        <%= link_to event.chore.job, chore_path(id: event.chore.id), class:'link-dark' %>
+                        <%= link_to event.chore.job, chore_path(id: event.chore.id), class:'d-inline-block link-dark text-truncate' %>
                     </div>
 
                 <% end %>

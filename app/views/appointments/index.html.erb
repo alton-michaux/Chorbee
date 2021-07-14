@@ -39,7 +39,7 @@
   <% if !Appointment.nil? %>
 
   <div class="row">
-    <table class="table table-striped table-hover table-bordered shadow-sm">
+    <table class="table table-striped table-hover table-bordered shadow-sm container-sm">
       <thead>
         <tr class="table-dark text-center">
           <th>Chore:</th>
@@ -76,8 +76,8 @@
   <% else %>
   <% end %>
 
-  <%= render 'display', appointment: @appointment %>
-
   </div>
+
+  <%= render 'display', appointment: @appointment %>
 
 </div>

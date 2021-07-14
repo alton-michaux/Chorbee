@@ -27,3 +27,30 @@
  .navbar-brand {
     font-family: 'Yellowtail', cursive;
  }
+
+ // Source mixins
+
+// No media query necessary for xs breakpoint as it's effectively `@media (min-width: 0) { ... }`
+@include media-breakpoint-up(sm) { min-width: 576px }
+@include media-breakpoint-up(md) { min-width: 768px }
+@include media-breakpoint-up(lg) { min-width: 992px }
+@include media-breakpoint-up(xl) { min-width: 1200px }
+@include media-breakpoint-up(xxl) { min-width: 1400px }
+
+// Usage
+
+// Example: Hide starting at `min-width: 0`, and then show at the `sm` breakpoint
+.calendar {
+  display: none;
+}
+@include media-breakpoint-up(sm) {
+  .calendar {
+    display: block;
+  }
+}
+
+thead,
+tbody,
+ .calendar {
+    width: inherit;
+ }

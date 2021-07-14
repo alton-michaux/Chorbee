@@ -38,9 +38,10 @@
       <div class="card-body text-center">
 
         <% @appointment.reload %>
-        <h5 class="card-title"><%= @appointment.start_time.strftime("%m/%d/%Y") %></h5>
-        <p class="card-text"><%= @appointment.chore.job %></p>
-        <p class="card-text">Frequency: <%= @appointment.frequency %></p>
+        <h5 class="card-title">Appointment For:<br><strong><%= @appointment.chore.job %></strong></h5>
+        <p class="card-text">Created on: <strong><%= @appointment.start_time.strftime("%m/%d/%Y") %></strong></p>
+        <p class="card-text"><%= @appointment.chore.description %></p>
+        <p class="card-text">Frequency: <strong><%= @appointment.frequency %></strong></p>
 
       </div>
     
