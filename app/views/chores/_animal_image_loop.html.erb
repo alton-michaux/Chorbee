@@ -1,0 +1,15 @@
+<div class='row mx-auto d-block'>
+    <% animal_urls = [  ['Triceratops', "/vendor/assets/images/Triceratops.png"],
+                        ['Penguin', "/vendor/assets/images/Penguin.jpg"],
+                        ['Ladybug', "/vendor/assets/images/Ladybug.jpg"],
+                        ['Tiger', "/vendor/assets/images/Tiger.png"],
+                        ['Grasshopper', "/vendor/assets/images/Grasshopper.jpg"],
+                        ['Owl', "/vendor/assets/images/Owl.jpg"],
+                        ['Giraffe', "/vendor/assets/images/Giraffe.png"] ] %>
+
+    <% random_animal = animal_urls[rand(animal_urls.size)] %>
+
+    <%= image_tag(random_animal[1].to_s, class: 'card-img-top', alt: random_animal[0].to_s, onerror: "this.onerror=null; this.src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDP7Dc75L_m9zazv1Kb4rskgQfP9FofKc3tg&usqp=CAU';this.class='img-fluid';this.style.height='150px';this.style.width='200px';") %>
+    <%# <img src="original-image.jpg" onerror="this.onerror=null;this.src='default-image.jpg';"> %>
+            
+</div>

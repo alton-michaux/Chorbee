@@ -17,4 +17,5 @@ class Chore < ApplicationRecord
   # RSPEC(test) methods
 
   def each; end
+
 end
