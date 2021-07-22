@@ -73,11 +73,14 @@
       </tbody>
     </table>
 
-  <% else %>
-  <% end %>
-
   </div>
 
   <%= render 'display', appointment: @appointment %>
 
+  <% else %>
+
+  <div class='row'>
+    <h2 class='row mx-auto text-dark'>No Appointments Available</h2>
+  </div>
+  <% end %>
 </div>
