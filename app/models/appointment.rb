@@ -29,9 +29,4 @@ class Appointment < ApplicationRecord
       Appointment.new(id: id, frequency: frequency, chore_id: chore_id, start_time: date)
     end
   end
-
-  def from_hash
-    hash = schedule.to_hash
-    IceCube::Schedule.from_hash(hash)
-  end
 end
