@@ -37,6 +37,7 @@ gem 'jbuilder', '~> 2.5'
 # gem 'rack-cors'
 gem 'recurring_select'
 gem 'simple_calendar', '~> 2.4'
+gem 'devise', '~> 4.8'
 
 group :development do
   # Access an IRB console on exception pages or by using <%= console %> anywhere in the code.
