@@ -7,7 +7,7 @@ class Parent < ApplicationRecord
          :recoverable, :rememberable, :validatable
   validates :name, presence: true
   validates :email, presence: true
-  validates :email, format: { with: /\A\S+[@]\S+[.]\S+\z/,
+  validates :email, format: { with: /\A\S+@\S+[.]\S+\z/,
                               message: 'Invalid Email' }
 
   has_many :children
