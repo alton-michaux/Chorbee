@@ -6,7 +6,8 @@ class Parent < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
   validates :name, presence: true
-  validates :email, format: { with: /^\S+@\S+\.\S+$/,
+  validates :email, presence: true
+  validates :email, format: { with: /\A\S+[@]\S+[.]\S+\z/,
                               message: 'Invalid Email' }
 
   has_many :children
