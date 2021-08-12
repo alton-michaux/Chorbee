@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
 Rails.application.routes.draw do
-  devise_for :parents, controllers: {
-    sessions: 'parents/sessions'
-  }
-
+  devise_for :parents
+  
   resources :appointments
   resources :children
   resources :chores
