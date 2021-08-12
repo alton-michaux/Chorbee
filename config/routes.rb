@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   devise_for :parents, controllers: {
     sessions: 'parents/sessions'
   }
+
   resources :appointments
   resources :children
   resources :chores
