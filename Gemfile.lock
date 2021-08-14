@@ -68,6 +68,9 @@ GEM
       railties (>= 4.1.0)
       responders
       warden (~> 1.2.3)
+    devise-bootstrap-views (1.1.0)
+    devise-i18n (1.10.0)
+      devise (>= 4.8.0)
     diff-lcs (1.4.4)
     erubis (2.7.0)
     execjs (2.8.1)
@@ -232,6 +235,8 @@ DEPENDENCIES
   coffee-rails (~> 4.2)
   database_cleaner-active_record
   devise (~> 4.8)
+  devise-bootstrap-views (~> 1.0)
+  devise-i18n
   factory_bot_rails
   faker
   jbuilder (~> 2.5)
@@ -253,4 +258,4 @@ DEPENDENCIES
   web-console
 
 BUNDLED WITH
-   2.2.19
+   2.2.25

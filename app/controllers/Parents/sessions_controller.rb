@@ -28,7 +28,7 @@ module Parents
       respond_to do |format|
         if @session.save
           format.html { redirect_to @session, notice: 'Session was successfully created.' }
-          format.json { render :show, status: :created, location: children_url }
+          format.json { render :show, status: :created, location: parent_session_url }
         else
           pp "save error: #{@session.errors.to_a} \n error on: #{@session.as_json}"
           format.html { render :new, status: :unprocessable_entity }
