@@ -3,6 +3,10 @@
 class ParentsController < ApplicationController
   before_action :authenticate_parent!
 
+  def index; end
+
+  def about; end
+  
   private
 
   def parent_params

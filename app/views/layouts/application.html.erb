@@ -16,11 +16,8 @@
         <%= render 'layouts/navbar' %>
         <p class="notice"><%= notice %></p>
         <p class="alert"><%= alert %></p>
-        <% if !flash[:alert].nil? %>
-        <p class="my_alert"><%= flash[:alert] %></p>
-        <% end %>
         <%= yield %>
     </div>
   </body>
-  
+
 </html>
