@@ -23,6 +23,9 @@
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
               <li><a class="dropdown-item" href="#"><%= link_to 'New Chore', new_chore_path %></a></li>
             </ul>
+            <li class="nav-item">
+              <%= link_to 'Sign Out', destroy_parent_session_path, method: :delete, class: 'nav-link', data: { confirm: 'Are you sure you want to sign out?' } %>
+            </li>
           </li>
           </ul>
           <span class="navbar-text">A Chores App for Kids!</span>

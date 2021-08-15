@@ -6,6 +6,7 @@ class Child < ApplicationRecord
   validates :age, numericality: { only_integer: true }
 
   has_and_belongs_to_many :chores, dependent: :destroy
+  belongs_to :parent
 
   # RSPEC(test) methods
 
