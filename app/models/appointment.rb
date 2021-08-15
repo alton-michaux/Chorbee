@@ -12,6 +12,7 @@ class Appointment < ApplicationRecord
   validates_associated :chore
 
   belongs_to :chore
+  has_one :parent
 
   def each; end
 

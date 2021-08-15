@@ -12,6 +12,7 @@ class Chore < ApplicationRecord
   validates_associated :children
 
   has_one :appointment, dependent: :destroy
+  has_one :parent
   has_and_belongs_to_many :children
 
   # RSPEC(test) methods

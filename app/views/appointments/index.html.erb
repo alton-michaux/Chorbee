@@ -53,7 +53,7 @@
       </thead>
 
       <tbody>
-        <% @appointments.each do |appointment| %>
+        <% current_parent.appointments.each do |appointment| %>
           <tr class="text-center">
             <td><%= appointment.chore.job %></td>
             <td><%= appointment.frequency %></td>
@@ -78,7 +78,7 @@
 
   </div>
 
-  <%= render 'display', appointment: @appointment %>
+  <%= render 'display', appointment: current_parent.appointments %>
 
   <% else %>
 

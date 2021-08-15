@@ -50,7 +50,7 @@
     </thead>
 
     <tbody>
-      <% @chores.each do |chore| %>
+      <% current_parent.chores.each do |chore| %>
         <tr class="text-center">
           <td><%= chore.job %></td>
           <td><%= chore.description %></td>

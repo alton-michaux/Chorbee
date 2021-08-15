@@ -51,7 +51,7 @@
       </thead>
 
       <tbody>
-        <% @children.each do |child| %>
+        <% current_parent.children.each do |child| %>
           <tr class="text-center">
             <td><%= child.name %></td>
             <td><%= child.age %></td>
