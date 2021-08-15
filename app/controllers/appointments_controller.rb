@@ -4,6 +4,7 @@ class AppointmentsController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :catch_not_found
   rescue_from StandardError, with: :catch_no_method
   before_action :set_appointment, only: %i[show edit update destroy]
+  layout 'child_layout'
 
   # GET /appointments or /appointments.json
   def index
