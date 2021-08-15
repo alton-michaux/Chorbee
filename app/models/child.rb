@@ -5,6 +5,8 @@ class Child < ApplicationRecord
   validates :age,  presence: true
   validates :age, numericality: { only_integer: true }
 
+  validates_associated :parent
+
   has_and_belongs_to_many :chores, dependent: :destroy
   belongs_to :parent
 
