@@ -14,7 +14,7 @@
       <% end %>
 
       <div class="form-label col-lg-4">
-        <%= f.label :child_ids %>
+        <%= f.label :children %>
       </div>
       <div class="form-control-sm col-lg-4">
         <%= f.collection_check_boxes :child_ids, current_parent.children, :id, :name do |b| %>
