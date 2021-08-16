@@ -1,1 +1,7 @@
-<%= current_parent.children.to_s %>
+<% current_parent.children.each do |child| %>
+    <%= child.name %>
+    <%= child.age %>
+    <%= child.chores.each do |chore| %>
+			<% chore.job %>
+		<% end %>
+<% end %>
