@@ -24,6 +24,9 @@
               <li><a class="dropdown-item text-decoration-none" href="#"><%= link_to 'New Child', new_child_path %></a></li>
             </ul>
           </li>
+          <li class="nav-item">
+            <%= link_to 'Sign Out', destroy_parent_session_path, method: :delete, class: 'nav-link', data: { confirm: 'Are you sure you want to sign out?' } %>
+          </li>
           </ul>
           <span class="navbar-text">A Chores App for Kids!</span>
       </div>
@@ -48,7 +51,7 @@
       </thead>
 
       <tbody>
-        <% @children.each do |child| %>
+        <% current_parent.children.each do |child| %>
           <tr class="text-center">
             <td><%= child.name %></td>
             <td><%= child.age %></td>

@@ -12,9 +12,9 @@
   </head>
 
   <body>
-    <% if !flash[:alert].nil? %>
-    <p class="my_alert"><%= flash[:alert] %></p>
-    <% end %>
-    <%= yield %>
+    <div class="container bg-light bg-gradient">
+        <%= yield %>
+    </div>
   </body>
+
 </html>

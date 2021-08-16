@@ -35,6 +35,13 @@ gem 'jbuilder', '~> 2.5'
 # gem 'grape'
 # gem 'grape-active_model_serializers'
 # gem 'rack-cors'
+
+# Use devise for authentication
+gem 'devise-i18n'
+gem "devise-bootstrap-views", '~> 1.0'
+gem 'devise', '~> 4.8'
+
+# Use simple_calendar and recurring_select gems to handle calendar and event rendering
 gem 'recurring_select'
 gem 'simple_calendar', '~> 2.4'
 
