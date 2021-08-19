@@ -6,7 +6,7 @@ class ParentsController < ApplicationController
   def index; end
 
   def about; end
-  
+
   private
 
   def parent_params

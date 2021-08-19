@@ -11,6 +11,6 @@ class Parent < ApplicationRecord
                               message: 'Invalid Email' }
 
   has_many :children
-  has_many :chores, through: :children
+  has_many :chores, through: :children, source: :chores
   has_many :appointments, through: :chores
 end
