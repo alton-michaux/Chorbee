@@ -1,0 +1,46 @@
+<div class='container-lg'>
+	<div class="container-sm row">
+		<h2 class="row mx-auto text-warning shadow-sm">Dashboard</h2>
+	</div>
+	<div class="row text-center g-2">
+		<div class="col-md">
+				<a class='nav-link' href='/children'><strong>Children:</strong></a>
+				<div class="btn-group text-decoration-none">
+					<button type="button" class="btn btn-warning dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+						<span class="visually-hidden">Toggle Dropdown</span>View
+					</button>
+					<ul class="dropdown-menu text-center">
+					<% current_parent.children.each do |child| %>
+						<li><%= child.name %></li>
+					<% end %>
+					</ul>
+				</div>
+		</div>
+		<div class="col-md">
+				<a class='nav-link' href='/chores'><strong>Chores:</strong></a>
+				<div class="btn-group text-decoration-none">
+					<button type="button" class="btn btn-warning dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+						<span class="visually-hidden">Toggle Dropdown</span>View
+					</button>
+					<ul class="dropdown-menu text-center">
+					<% current_parent.chores.each do |chore| %>
+						<p class='pt-3'><%= chore.job %></p>
+					<% end %>
+					</ul>
+				</div>
+		</div>
+		<div class="col-md">
+				<a class='nav-link' href='/appointments'><strong>Appointments:</strong></a>
+				<div class="btn-group text-decoration-none">
+					<button type="button" class="btn btn-warning dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+						<span class="visually-hidden">Toggle Dropdown</span>View
+					</button>
+					<ul class="dropdown-menu text-center">
+					<% current_parent.appointments.each do |appointment| %>
+						<p class='pt-3'><%= appointment.start_time.strftime('%m-%d-%Y') %> - <%= appointment.frequency %></p>
+					<% end %>
+					</ul>
+				</div>
+		</div>
+  </div>
+</div>

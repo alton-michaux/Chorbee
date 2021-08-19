@@ -5,22 +5,8 @@ module Parents
     before_action :configure_sign_in_params, only: %i[index create new]
 
     # GET /resource/sign_in
-    def index
-      super
-    end
 
     # POST /resource/sign_in
-    def new
-      super
-    end
-
-    def edit
-      super
-    end
-
-    def show
-     super
-    end
 
     def create
       @session = Session.new(configure_sign_in_params)

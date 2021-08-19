@@ -39,38 +39,48 @@
   <h2 class="row mx-auto text-warning shadow-sm">Chores</h2>
 </div>
 
-<div class="row">
-  <table class="table table-striped table-hover table-bordered shadow-sm">
-    <thead>
-      <tr class="table-dark text-center">
-        <th>Job</th>
-        <th>Description</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
+<% if !current_parent.chores.empty? %>
 
-    <tbody>
-      <% current_parent.chores.each do |chore| %>
-        <tr class="text-center">
-          <td><%= chore.job %></td>
-          <td><%= chore.description %></td>
-          <td>
-            <div class="btn-group">
-                <button type="button" class="btn btn-warning"><%= link_to 'View', chore %></button>
-                <button type="button" class="btn btn-warning dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                  <span class="visually-hidden">Toggle Dropdown</span>
-                </button>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="#"><%= link_to 'Edit', edit_chore_path(chore) %></a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="#"><%= link_to 'Delete', chore, method: :delete, data: { confirm: 'Are you sure?' } %></a></li>
-                </ul>
-              </div>
-          </td>
+  <div class="row">
+    <table class="table table-striped table-hover table-bordered shadow-sm">
+      <thead>
+        <tr class="table-dark text-center">
+          <th>Job</th>
+          <th>Description</th>
+          <th>Actions</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
-</div> <!--/row-->
+      </thead>
+
+      <tbody>
+        <% current_parent.chores.each do |chore| %>
+          <tr class="text-center">
+            <td><%= chore.job %></td>
+            <td><%= chore.description %></td>
+            <td>
+              <div class="btn-group">
+                  <button type="button" class="btn btn-warning"><%= link_to 'View', chore %></button>
+                  <button type="button" class="btn btn-warning dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#"><%= link_to 'Edit', edit_chore_path(chore) %></a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#"><%= link_to 'Delete', chore, method: :delete, data: { confirm: 'Are you sure?' } %></a></li>
+                  </ul>
+                </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div> <!--/row-->
+
+<% else %>
+
+  <div class='row mx-auto text-center'>
+    <p class='mx-auto text-dark'>No Current Chores</h2>
+  </div>
+
+<% end %>
 
 </div> <!--/container-->

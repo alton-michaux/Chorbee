@@ -37,9 +37,9 @@ gem 'jbuilder', '~> 2.5'
 # gem 'rack-cors'
 
 # Use devise for authentication
-gem 'devise-i18n'
-gem "devise-bootstrap-views", '~> 1.0'
 gem 'devise', '~> 4.8'
+gem 'devise-bootstrap-views', '~> 1.0'
+gem 'devise-i18n'
 
 # Use simple_calendar and recurring_select gems to handle calendar and event rendering
 gem 'recurring_select'

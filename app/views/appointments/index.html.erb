@@ -39,7 +39,7 @@
     <h2 class="row mx-auto text-warning shadow-sm">Schedule</h2>
   </div>
 
-  <% if !Appointment.nil? %>
+  <% if !current_parent.appointments.empty? %>
 
   <div class="row">
     <table class="table table-striped table-hover table-bordered shadow-sm container-sm">
@@ -82,8 +82,9 @@
 
   <% else %>
 
-  <div class='row'>
-    <h2 class='row mx-auto text-dark'>No Appointments Available</h2>
+  <div class='row mx-auto text-center'>
+    <p class='mx-auto text-dark'>No Current Appointments</h2>
   </div>
+
   <% end %>
 </div>
