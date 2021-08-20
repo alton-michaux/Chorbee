@@ -4,7 +4,9 @@
         
         <%= date.day %>
 
-            <% events.each do |event| %>
+            <% events_array = events.uniq %>
+
+            <% events_array.each do |event| %>
 
                 <% if event.frequency == 'Weekly' %>
 

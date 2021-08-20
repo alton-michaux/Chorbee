@@ -16,7 +16,8 @@
     </thead>
 
     <tbody>
-      <% current_parent.appointments.each do |appointment| %>
+      <% parent_appointments_array = current_parent.appointments.uniq %>
+      <% parent_appointments_array.each do |appointment| %>
         <tr class="text-center">
           <td><%= appointment.chore.job %></td>
           <td><%= appointment.frequency %></td>
