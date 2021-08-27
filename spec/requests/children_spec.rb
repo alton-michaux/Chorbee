@@ -3,6 +3,8 @@
 require 'rails_helper'
 
 RSpec.describe 'Children', type: :request do
+  # let(:valid_session) { {} }
+
   describe 'get children_path' do
     it 'renders the index view' do
       FactoryBot.create_list(:child, 10)
