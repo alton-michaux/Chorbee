@@ -23,7 +23,10 @@
               </li>
 						<% end %>
           </ul>
-          <span class="navbar-text">A Chores App for Kids!</span>
+          <% if parent_signed_in? %>
+            <span class="navbar-text">A Chores App for Kids!</span>
+          <% else %>
+          <% end %>
       </div>
     </div>
   </nav>
