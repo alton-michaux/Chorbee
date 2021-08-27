@@ -27,8 +27,9 @@
 						<span class="visually-hidden">Toggle Dropdown</span>Select
 					</button>
 					<ul class="dropdown-menu text-center">
-					<% current_parent.children.each do |child| %>
-						<li><%= child.name %></li>
+					<% parent_children_array = current_parent.children.uniq %>
+					<% parent_children_array.each do |child| %>
+						<li><%= link_to child.name, child_path(id: child.id), class: 'nav-link' %></li>
 					<% end %>
 					</ul>
 				</div>
@@ -41,8 +42,9 @@
 						<span class="visually-hidden">Toggle Dropdown</span>Select
 					</button>
 					<ul class="dropdown-menu text-center">
-					<% current_parent.chores.each do |chore| %>
-						<p class='pt-3'><%= chore.job %></p>
+					<% parent_chores_array = current_parent.chores.uniq %>
+					<% parent_chores_array.each do |chore| %>
+						<li><%= link_to chore.job, chore_path(id: chore.id), class: 'nav-link' %></li>
 					<% end %>
 					</ul>
 				</div>
@@ -55,8 +57,9 @@
 						<span class="visually-hidden">Toggle Dropdown</span>Select
 					</button>
 					<ul class="dropdown-menu text-center">
-					<% current_parent.appointments.each do |appointment| %>
-						<p class='pt-3'><%= appointment.start_time.strftime('%m-%d-%Y') %> - <%= appointment.frequency %></p>
+					<% parent_appointments_array = current_parent.appointments.uniq %>
+					<% parent_appointments_array.each do |appointment| %>
+						<li><%= link_to appointment.chore.job, appointment_path(id: appointment.id), class: 'nav-link' %></li>
 					<% end %>
 					</ul>
 				</div>

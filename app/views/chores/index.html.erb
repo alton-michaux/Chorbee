@@ -15,7 +15,8 @@
       </thead>
 
       <tbody>
-        <% current_parent.chores.each do |chore| %>
+        <% parent_chores_array = current_parent.chores.uniq %>
+        <% parent_chores_array.each do |chore| %>
           <tr class="text-center">
             <td><%= chore.job %></td>
             <td><%= chore.description %></td>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20210811161234) do
+ActiveRecord::Schema.define(version: 20210817232447) do
 
   create_table "appointments", force: :cascade do |t|
     t.datetime "start_time"
@@ -54,10 +54,9 @@ ActiveRecord::Schema.define(version: 20210811161234) do
     t.string   "reset_password_token"
     t.datetime "reset_password_sent_at"
     t.datetime "remember_created_at"
-    t.integer  "children_id"
-    t.index ["children_id"], name: "index_parents_on_children_id"
     t.index ["email"], name: "index_parents_on_email", unique: true
     t.index ["reset_password_token"], name: "index_parents_on_reset_password_token", unique: true
+    t.index [nil, nil], name: "index_parents_on_children_ids_and_parent_id"
   end
 
 end
