@@ -7,6 +7,9 @@ RSpec.describe Child, type: :model do
   it 'is valid with valid attributes' do
     expect(subject).to be_valid
   end
+  it 'is only valid with a parent' do
+    expect(subject.parent).to_not be_nil
+  end
   it 'is only valid with a name' do
     subject.name = nil
     expect(subject).to_not be_valid

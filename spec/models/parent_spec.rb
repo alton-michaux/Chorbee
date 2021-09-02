@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Parent, type: :model, focus: true do
+RSpec.describe Parent, type: :model do
   subject { FactoryBot.create(:parent) }
   it 'is valid with valid attributes' do
     expect(subject).to be_valid
