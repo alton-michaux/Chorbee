@@ -4,14 +4,10 @@ require 'rails_helper'
 
 RSpec.describe 'Parents', type: :request do
   include ControllerMacros
-  # let(:valid_session) { {} }
+  let(:valid_session) { {} }
 
-  # before :each do
-  #   login_parent
-  # end
-
-  describe 'get root_path' do
-    context 'if parent not signed in' do
+  describe 'if parent not signed in' do
+    context 'get root_path' do
       it 'redirects to the login page' do
         get root_path
         expect(response).to redirect_to new_parent_session_path
@@ -32,23 +28,30 @@ RSpec.describe 'Parents', type: :request do
       end
     end
   end
-  # describe 'get new_parent_password' do
-  #   context 'renders the new password view' do
-  #     # parent_attributes = FactoryBot.attributes_for(:parent)
-  #     get new_parent_password_path, params: { parent: parent_attributes }
-  #     expect(response).to render_template(:new)
-  #   end
-  # end
-  # describe 'get root_path' do
-  #   context 'renders the root path if parent is signed in' do
-  #     get new_parent_session_path, session: valid_session
-  #     expect(response).to render_template(:new)
-  #   end
-  #   context 'redirects to the new_parent_session path if the parent is invalid' do
-  #     get root_path(id: 5000)
-  #     expect(response).to redirect_to new_parent_session_path
-  #   end
-  # end
+
+  describe 'if parent signed in' do
+
+    context 'get root_path' do
+      it 'renders the dashboard view' do
+        login_parent
+        get new_parent_session_path, session: valid_session
+        expect(response).to render_template(:root)
+      end
+      it 'redirects to the new_parent_session path if the parent is invalid' do
+        login_parent
+        get parent_session_path(id: 5000)
+        expect(response).to redirect_to new_parent_session_path
+      end
+    end
+    context 'get new password' do
+      it 'renders the new template' do
+        login_parent
+        # parent_attributes = FactoryBot.attributes_for(:parent)
+        get new_parent_password_path, params: { parent: parent_attributes }
+        expect(response).to render_template(:new)
+      end
+    end
+  end
   # describe 'get edit_parent_registration' do
   #   it 'renders the :edit template' do
   # 		parent = FactoryBot.create(:parent)

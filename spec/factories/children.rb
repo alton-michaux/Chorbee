@@ -8,5 +8,4 @@ FactoryBot.define do
     f.age { Faker::Number.number(digits: 1) }
     f.parent_id { [FactoryBot.create(:parent)].pluck('id').join }
   end
-  
 end
