@@ -15,4 +15,7 @@ RSpec.describe Parent, type: :model do
     subject.email = nil
     expect(subject).to_not be_valid
   end
+  it 'has associated children' do
+    expect(subject.children).to_not be_empty
+  end
 end

@@ -7,31 +7,25 @@ RSpec.describe 'Parents', type: :request do
   let(:valid_session) { {} }
 
   describe 'if parent not signed in' do
-    context 'get root_path' do
-      it 'redirects to the login page' do
-        get root_path
-        expect(response).to redirect_to new_parent_session_path
-      end
+    it 'redirects to the login page' do
+      get root_path
+      expect(response).to redirect_to new_parent_session_path
     end
-    context 'when sign in is clicked' do
-      it 'renders the sign in view' do
-        FactoryBot.create(:parent)
-        get new_parent_session_path
-        expect(response).to render_template(:new)
-      end
+    it 'renders the sign in view' do
+      FactoryBot.create(:parent)
+      get new_parent_session_path
+      expect(response).to render_template(:new)
     end
-    context 'when sign up is clicked' do
-      it 'renders the sign up view' do
-        parent_attributes = FactoryBot.attributes_for(:parent)
-        get new_parent_registration_path, params: { parent: parent_attributes }
-        expect(response).to render_template(:new)
-      end
+    it 'renders the sign up view' do
+      parent_attributes = FactoryBot.attributes_for(:parent)
+      get new_parent_registration_path, params: { parent: parent_attributes }
+      expect(response).to render_template(:new)
     end
   end
 
-  describe 'if parent signed in' do
+  context 'if parent signed in' do
 
-    context 'get root_path' do
+    describe 'get root_path' do
       it 'renders the dashboard view' do
         login_parent
         get new_parent_session_path, session: valid_session
@@ -43,7 +37,7 @@ RSpec.describe 'Parents', type: :request do
         expect(response).to redirect_to new_parent_session_path
       end
     end
-    context 'get new password' do
+    describe 'get new password' do
       it 'renders the new template' do
         login_parent
         # parent_attributes = FactoryBot.attributes_for(:parent)
