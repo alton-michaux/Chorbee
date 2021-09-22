@@ -1,13 +1,17 @@
 # frozen_string_literal: true
 
 module ControllerMacros
-  def login_parent
-    # Before each test, create and login the user
-    before(:each) do
-      @request.env['devise.mapping'] = Devise.mappings[:parent]
-      parent = FactoryBot.create(:parent)
-      sign_in parent
-    end
+  include Warden::Test::Helpers
+
+  def sign_in(resource_or_scope, resource = nil)
+    resource ||= resource_or_scope
+    scope = Devise::Mapping.find_scope!(resource_or_scope)
+    login_as(resource, scope: scope)
+  end
+
+  def sign_out(resource_or_scope)
+    scope = Devise::Mapping.find_scope!(resource_or_scope)
+    logout(scope)
   end
 
   # Not used in this tutorial, but left to show an example of different user types
