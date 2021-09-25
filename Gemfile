@@ -42,6 +42,7 @@ gem 'devise-bootstrap-views', '~> 1.0'
 gem 'devise-i18n'
 
 # Use simple_calendar and recurring_select gems to handle calendar and event rendering
+gem 'chartkick'
 gem 'recurring_select'
 gem 'simple_calendar', '~> 2.4'
 

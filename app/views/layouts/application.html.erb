@@ -17,6 +17,9 @@
         <p class="notice"><%= notice %></p>
         <p class="alert"><%= alert %></p>
         <%= yield %>
+        <% if current_parent %>
+          <%= render 'layouts/reports' %>
+        <% end %>
         <%= render 'layouts/footer' %>
     </div>
   </body>
