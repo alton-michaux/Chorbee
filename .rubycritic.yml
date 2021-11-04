@@ -1,0 +1,20 @@
+mode_ci:
+  enabled: false # default is false
+  branch: 'main' # default is master
+branch: 'reports' # default is master
+path: '/tmp/rubycritic' # Set path where report will be saved (tmp/rubycritic by default)
+threshold_score: 0 # default is 0
+deduplicate_symlinks: true # default is false
+suppress_ratings: false # default is false
+no_browser: true # default is false
+formats: # Available values are: html, json, console, lint. Default value is html.
+  - console
+minimum_score: 0 # default is 0
+paths: # Files to analyse.
+  - 'app/assets/'
+  - 'app/controllers/'
+  - 'app/models/'
+  - 'app/views/'
+  - 'config/'
+  - 'db/'
+  - 'spec/'
