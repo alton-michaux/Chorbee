@@ -23,7 +23,6 @@ RSpec.describe 'Parents', type: :request do
   end
 
   context 'if parent signed in' do
-
     describe 'get root_path' do
       it 'renders the dashboard view' do
         sign_in subject

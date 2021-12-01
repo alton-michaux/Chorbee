@@ -30,7 +30,6 @@ class ChoresController < ApplicationController
         format.html { redirect_to @chore, notice: 'Chore was successfully created.' }
         format.json { render :show, status: :created, location: @chore }
       else
-        pp "save error: #{@chore.errors.to_a} \n error on: #{@chore.as_json}"
         format.html { render :new, status: :unprocessable_entity }
         format.json { render json: @chore.errors, status: :unprocessable_entity }
       end
@@ -44,7 +43,6 @@ class ChoresController < ApplicationController
         format.html { redirect_to @chore, notice: 'Chore was successfully updated.' }
         format.json { render :show, status: :ok, location: @chore }
       else
-        pp "update error: #{@chore.errors.to_a} \n error on: #{@chore.as_json}"
         format.html { render :edit, status: :unprocessable_entity }
         format.json { render json: @chore.errors, status: :unprocessable_entity }
       end
