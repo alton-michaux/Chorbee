@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'database_cleaner/active_record'
 
 # database_cleaner helper module for feature specs (ensures that tests not
@@ -5,7 +7,7 @@ require 'database_cleaner/active_record'
 # do not use transactional fixtures)
 module CleanerConfigureHelper
   # this setting will allow database_cleaner to run in heroku envrionment
-#   DatabaseCleaner.allow_remote_database_url = true
+  #   DatabaseCleaner.allow_remote_database_url = true
 
   RSpec.configure do |config|
     # ensures clean slate on each test run
