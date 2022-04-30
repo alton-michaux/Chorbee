@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class RemoveChildrenIdFromParents < ActiveRecord::Migration[5.0]
   def change
     remove_column :parents, :children_id, :integer

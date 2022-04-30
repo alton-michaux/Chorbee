@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 namespace :export do
   desc 'Prints Parent.all in a seeds.rb way.'
   task seeds_format: :environment do

@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class Child < ApplicationRecord
   validates :name, presence: true
   validates :age,  presence: true
