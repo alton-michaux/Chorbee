@@ -21,3 +21,5 @@
 .byebug_history
 /spec/examples.txt
 coverage
+spec/examples.txt
+spec/examples.txt
