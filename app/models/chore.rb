@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class Chore < ApplicationRecord
   validates :job, presence: true
   validates :description, presence: true

@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class ParentsController < ApplicationController
   before_action :authenticate_parent!
 
@@ -10,6 +8,6 @@ class ParentsController < ApplicationController
   private
 
   def parent_params
-    params.require(:parent).permit(:name, :email, :child)
+    params.require(:parent).permit(:name, :email, children: [])
   end
 end

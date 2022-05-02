@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'ice_cube'
 require 'active_support/time'
 

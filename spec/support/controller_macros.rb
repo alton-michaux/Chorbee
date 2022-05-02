@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module ControllerMacros
   include Warden::Test::Helpers
 

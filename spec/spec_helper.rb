@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'support/db_cleaner_helper'
 require 'simplecov'
 SimpleCov.start 'rails'

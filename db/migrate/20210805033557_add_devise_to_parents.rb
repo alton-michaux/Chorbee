@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class AddDeviseToParents < ActiveRecord::Migration[5.0]
   def self.up
     change_table :parents do |t|

@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
@@ -42,6 +40,7 @@ gem 'devise-bootstrap-views', '~> 1.0'
 gem 'devise-i18n'
 
 # Use simple_calendar and recurring_select gems to handle calendar and event rendering
+gem 'chartkick'
 gem 'recurring_select'
 gem 'simple_calendar', '~> 2.4'
 
@@ -52,6 +51,8 @@ group :development do
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
   gem 'spring-watcher-listen', '~> 2.0.0'
+  gem 'rails-erd'
+  gem 'ruby-graphviz'
 end
 
 group :development, :test do
