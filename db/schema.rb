@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20220528165042) do
+ActiveRecord::Schema.define(version: 20220528044053) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -28,8 +28,6 @@ ActiveRecord::Schema.define(version: 20220528165042) do
     t.string  "name"
     t.integer "age"
     t.integer "parent_id"
-    t.integer "chores_id"
-    t.index ["chores_id"], name: "index_children_on_chores_id", using: :btree
     t.index ["parent_id"], name: "index_children_on_parent_id", using: :btree
   end
 
@@ -55,6 +53,5 @@ ActiveRecord::Schema.define(version: 20220528165042) do
   end
 
   add_foreign_key "appointments", "chores"
-  add_foreign_key "children", "chores", column: "chores_id"
   add_foreign_key "children", "parents"
 end
