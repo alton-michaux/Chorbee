@@ -6,6 +6,7 @@ class Child < ApplicationRecord
   validates_associated :parent
 
   has_and_belongs_to_many :chores, dependent: :destroy
+  has_many :appointments, through: :chores
   belongs_to :parent
 
   def pluck(*args)
