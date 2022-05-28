@@ -23,7 +23,6 @@ class ChildrenController < ApplicationController
   # POST /children or /children.json
   def create
     @child = Child.new(child_params)
-    byebug
     respond_to do |format|
       if @child.save
         format.html { redirect_to @child, notice: 'Child was successfully created.' }

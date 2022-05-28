@@ -1,7 +1,7 @@
 {
   "RSpec": {
     "coverage": {
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/models/parent.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/models/parent.rb": {
         "lines": [
           1,
           null,
@@ -19,44 +19,44 @@
           null
         ]
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/models/application_record.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/models/application_record.rb": {
         "lines": [
           1,
           1,
           null
         ]
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/helpers/application_helper.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/helpers/application_helper.rb": {
         "lines": [
           1,
           null
         ]
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/helpers/appointments_helper.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/helpers/appointments_helper.rb": {
         "lines": [
           1,
           null
         ]
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/helpers/children_helper.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/helpers/children_helper.rb": {
         "lines": [
           1,
           null
         ]
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/helpers/chores_helper.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/helpers/chores_helper.rb": {
         "lines": [
           1,
           null
         ]
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/helpers/parents_helper.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/helpers/parents_helper.rb": {
         "lines": [
           1,
           null
         ]
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/models/appointment.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/models/appointment.rb": {
         "lines": [
           1,
           1,
@@ -90,7 +90,7 @@
           null
         ]
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/models/child.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/models/child.rb": {
         "lines": [
           1,
           1,
@@ -99,6 +99,7 @@
           null,
           1,
           null,
+          1,
           1,
           1,
           null,
@@ -112,7 +113,7 @@
           null
         ]
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/models/chore.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/models/chore.rb": {
         "lines": [
           1,
           1,
@@ -134,99 +135,7 @@
           null
         ]
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/controllers/appointments_controller.rb": {
-        "lines": [
-          1,
-          1,
-          1,
-          1,
-          1,
-          null,
-          null,
-          1,
-          2,
-          2,
-          2,
-          2,
-          0,
-          null,
-          null,
-          null,
-          null,
-          1,
-          null,
-          null,
-          1,
-          1,
-          null,
-          null,
-          null,
-          1,
-          null,
-          null,
-          1,
-          2,
-          null,
-          2,
-          2,
-          2,
-          1,
-          null,
-          2,
-          1,
-          null,
-          null,
-          null,
-          null,
-          null,
-          1,
-          2,
-          2,
-          2,
-          1,
-          null,
-          2,
-          1,
-          null,
-          null,
-          null,
-          null,
-          null,
-          1,
-          0,
-          0,
-          0,
-          0,
-          null,
-          null,
-          null,
-          1,
-          null,
-          null,
-          1,
-          5,
-          null,
-          null,
-          null,
-          1,
-          4,
-          null,
-          null,
-          1,
-          0,
-          0,
-          0,
-          null,
-          null,
-          1,
-          1,
-          1,
-          1,
-          null,
-          null
-        ]
-      },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/controllers/application_controller.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/controllers/application_controller.rb": {
         "lines": [
           1,
           1,
@@ -248,7 +157,7 @@
           null
         ]
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/controllers/parents_controller.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/controllers/parents_controller.rb": {
         "lines": [
           1,
           1,
@@ -265,7 +174,99 @@
           null
         ]
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/controllers/chores_controller.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/controllers/appointments_controller.rb": {
+        "lines": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          null,
+          null,
+          1,
+          2,
+          2,
+          2,
+          2,
+          0,
+          null,
+          null,
+          null,
+          null,
+          1,
+          null,
+          null,
+          1,
+          1,
+          null,
+          null,
+          null,
+          1,
+          null,
+          null,
+          1,
+          2,
+          null,
+          2,
+          2,
+          2,
+          1,
+          null,
+          2,
+          1,
+          null,
+          null,
+          null,
+          null,
+          null,
+          1,
+          2,
+          2,
+          2,
+          1,
+          null,
+          2,
+          1,
+          null,
+          null,
+          null,
+          null,
+          null,
+          1,
+          0,
+          0,
+          0,
+          0,
+          null,
+          null,
+          null,
+          1,
+          null,
+          null,
+          1,
+          5,
+          null,
+          null,
+          null,
+          1,
+          4,
+          null,
+          null,
+          1,
+          0,
+          0,
+          0,
+          null,
+          null,
+          1,
+          1,
+          1,
+          1,
+          null,
+          null
+        ]
+      },
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/controllers/chores_controller.rb": {
         "lines": [
           1,
           1,
@@ -345,7 +346,7 @@
           null
         ]
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/controllers/children_controller.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/controllers/children_controller.rb": {
         "lines": [
           1,
           1,
@@ -372,7 +373,7 @@
           null,
           1,
           2,
-          null,
+          2,
           2,
           2,
           2,
@@ -432,7 +433,7 @@
           null
         ]
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/channels/application_cable/channel.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/channels/application_cable/channel.rb": {
         "lines": [
           0,
           0,
@@ -442,7 +443,7 @@
         "branches": {
         }
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/channels/application_cable/connection.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/channels/application_cable/connection.rb": {
         "lines": [
           0,
           0,
@@ -452,7 +453,7 @@
         "branches": {
         }
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/controllers/Parents/sessions_controller.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/controllers/Parents/sessions_controller.rb": {
         "lines": [
           0,
           0,
@@ -498,7 +499,7 @@
         "branches": {
         }
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/jobs/application_job.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/jobs/application_job.rb": {
         "lines": [
           0,
           0
@@ -506,7 +507,7 @@
         "branches": {
         }
       },
-      "/mnt/c/Users/Alton/CODE/backend/rails/Chorbee/app/mailers/application_mailer.rb": {
+      "/mnt/c/Users/alton/CODE/backend/rails/Chorbee/app/mailers/application_mailer.rb": {
         "lines": [
           0,
           0,
@@ -517,6 +518,6 @@
         }
       }
     },
-    "timestamp": 1651501912
+    "timestamp": 1653716914
   }
 }
