@@ -24,3 +24,6 @@ coverage
 spec/examples.txt
 spec/examples.txt
 erd.pdf
+coverage/.last_run.json
+coverage/.resultset.json
+coverage/index.html
