@@ -19,10 +19,13 @@
 
 # Ignore Byebug command history file.
 .byebug_history
+
+# Ignore test files
 /spec/examples.txt
-coverage
-spec/examples.txt
-spec/examples.txt
+coverage/
+
+# Ignore data files.
 erd.pdf
+
 lib/tasks/sample_data.rake
 lib/tasks/data_export.rake
