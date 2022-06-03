@@ -25,9 +25,6 @@
           "RAILS_ENV": "test",
           "RAILS_LOG_TO_STDOUT": "enabled",
           "RAILS_SERVE_STATIC_FILES": "enabled"
-        },
-        "scripts": {
-          "test": "bundle exec rspec"
         }
       },
       "review": {
