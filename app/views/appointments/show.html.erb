@@ -9,9 +9,9 @@
       <p class="card-text">Frequency: <strong><%= @appointment.frequency %></strong></p>
 
     </div>
-  
-    <div>
-      <a class='text-decoration-none'><%= link_to '<<Back', :back %></a> <a class="text-decoration-none float-end"><%= link_to 'Edit', edit_appointment_path %></a>
+
+    <div class="row">
+      <button type="button" class="btn btn-warning"><%= link_to 'Edit', edit_appointment_path %></button>
     </div>
 
 </div>

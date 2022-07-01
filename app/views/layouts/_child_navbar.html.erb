@@ -19,7 +19,9 @@
               Child Menu
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <li><a class="dropdown-item text-decoration-none" href="#"><%= link_to 'Children', children_path %></a></li>
+              <% unless request.path == "/children" %>
+                <li><a class="dropdown-item text-decoration-none" href="#"><%= link_to 'Children', children_path %></a></li>
+              <% end %>
               <li><a class="dropdown-item text-decoration-none" href="#"><%= link_to 'New Child', new_child_path %></a></li>
             </ul>
           </li>
