@@ -19,6 +19,9 @@
 									Appointment Menu
 							</a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <% unless request.path == "/appointments" %>
+                    <li><a class="dropdown-item" href="#"><%= link_to 'Appointments', appointments_path %></a></li>
+                <% end %>
                 <li><a class="dropdown-item" href="#"><%= link_to 'New Appointment', new_appointment_path %></a></li>
             </ul>
             </li>

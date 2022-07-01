@@ -1,1 +1,1 @@
-<%= pie_chart current_parent.chores.group(:chores).count, legend: true, label: "name" %>
+<%= column_chart current_parent.children.joins(:chores).group(:'children.name').count, legend: true, label: "Chores", colors: ["ffc107", "#0d6efd"], loading: "Loading..", empty: "No Data" %>
