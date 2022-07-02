@@ -14,6 +14,15 @@
 # Configure Using Gemfile
 # gem 'pg'
 #
+production:
+  adapter: postgresql
+  encoding: unicode
+  database: chorbee_production
+  pool: 5
+  username: code_gobbler
+  password:
+  timeout: 5000
+
 development:
   adapter: postgresql
   encoding: unicode
