@@ -19,3 +19,9 @@
 //= require bootstrap-sprockets
 //= require chartkick
 //= require Chart.bundle
+
+const domElements = {
+    childMain: document.getElementsByClassName('child-main'),
+    choreMain: document.getElementsByClassName('chore-main'),
+    appointmentMain: document.getElementsByClassName('appointment-main')
+}

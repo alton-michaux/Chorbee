@@ -13,10 +13,10 @@
 
   <body>
     <%= render 'layouts/child_navbar' %>
-    <div class="container bg-light bg-gradient">
+    <div class="container-md bg-light bg-gradient child-main">
         <%= yield %>
       <%= render 'layouts/footer' %>
     </div>
+    <%= render 'shared/window_sizing_js' %>
   </body>
-
 </html>
