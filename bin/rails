@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
-require 'dotenv/load'
+unless ENV["RAILS_ENV"]==("staging" || "production")
+  require "dotenv/load"
+end
 
 begin
   load File.expand_path('spring', __dir__)
