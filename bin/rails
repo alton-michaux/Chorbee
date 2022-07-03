@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-unless ENV["RAILS_ENV"]==("staging" || "production")
+unless ENV.keys.any? {|name| name.match(/heroku/i) }
   require "dotenv/load"
 end
 
