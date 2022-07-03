@@ -23,6 +23,15 @@ production:
   password:
   timeout: 5000
 
+staging:
+  adapter: postgresql
+  encoding: unicode
+  database: chorbee_staging
+  pool: 5
+  username: code_gobbler
+  password:
+  timeout: 5000
+
 development:
   adapter: postgresql
   encoding: unicode
