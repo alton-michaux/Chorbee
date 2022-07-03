@@ -29,3 +29,6 @@ erd.pdf
 
 lib/tasks/sample_data.rake
 lib/tasks/data_export.rake
+
+# Ignore env file
+.env

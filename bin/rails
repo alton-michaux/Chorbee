@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
-
+unless ENV.keys.any? {|name| name.match(/heroku/i) }
+  require "dotenv/load"
+end
 
 begin
   load File.expand_path('spring', __dir__)
