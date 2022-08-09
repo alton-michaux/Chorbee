@@ -134,7 +134,15 @@ label {
 }
 
 .grandparent {
-  // height: 100vh;
+  height: 100vh;
+}
+
+.parent-options {
+  height: 100vh;
+}
+
+.mobile-dropdown {
+  width: 100%;
 }
 
 @include media-breakpoint-up(lg) {
@@ -230,5 +238,9 @@ label {
 
   .calendar {
     display: block;
+  }
+
+  .parent-options {
+    height: 30vh;
   }
  }
