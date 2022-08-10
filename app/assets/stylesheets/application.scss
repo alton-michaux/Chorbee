@@ -126,6 +126,48 @@ div {
 
 label {
   display: block;
+  font-size: 40px;
+  margin-bottom: 0;
+}
+
+form {
+  height: 95%;
+}
+
+input {
+  margin-top: 1.5em;
+}
+
+#parent_email, #parent_password {
+  height: 5em;
+  width: 80%;
+  font-size: 30px;
+}
+
+#parent_remember_me {
+  height: 1em;
+  width: 1em;
+  margin-bottom: 1em;
+}
+
+.log-in {
+  width: 100%;
+  height: 5em;
+}
+
+.login-headers {
+  font-size: 50px;
+  text-align: center;
+}
+
+.login-fields {
+  font-size: 30px;
+  text-align: center;
+  margin-top: 2em;
+}
+
+.new-parent {
+  height: 100%;
 }
 
 .graph {
@@ -267,6 +309,52 @@ label {
   
   label {
     display: block;
+    margin-top: 1em;
+    font-size: 20px;
+  }
+
+  input {
+    margin-top: .5em;
+  }
+
+  form {
+    height: 65%;
+  }
+
+  #parent_email, #parent_password {
+    height: 2.5em;
+    width: 50%;
+    font-size: 15px;
+  }
+  
+  #parent_remember_me {
+    height: 1em;
+    width: 1em;
+    margin-bottom: 0;
+  }
+
+  .remember-me {
+    margin-top: .5em;
+    font-size: 15px;
+  }
+  
+  .log-in {
+    width: 25%;
+    height: 2.5em;
+  }
+  
+  .login-headers {
+    font-size: 30px;
+    text-align: left;
+  }
+
+  .login-fields {
+    font-size: 15px;
+    text-align: left;
+  }
+  
+  .new-parent {
+    height: 75%;
   }
 
   .graph {
