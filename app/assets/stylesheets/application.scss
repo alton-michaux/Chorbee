@@ -35,23 +35,20 @@
      color: black;
  }
 
- .navbar-brand {
-    font-family: 'Yellowtail', cursive;
- }
-
 body {
+  margin: o auto;
+  position: absolute;
   background-color: #fff;
   color: #333;
   font-family: 'Lato', sans-serif;
-  font-size: 13px;
-  line-height: 18px;
-  margin: 33px;
+  overflow-x: hidden;
+  width: 100%;
+  height: 100%;
+  padding: 0;
 }
 
 p, ol, ul, td {
   font-family: verdana, arial, helvetica, sans-serif;
-  font-size: 13px;
-  line-height: 18px;
 }
 
 pre {
@@ -89,6 +86,12 @@ div {
   }
 }
 
+.grandparent {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
 #notice {
   color: green;
 }
@@ -110,7 +113,7 @@ div {
   h2 {
     text-align: left;
     font-weight: bold;
-    padding: 5px 5px 5px 15px;
+    padding: 2px 2px 2px 6px;
     font-size: 12px;
     margin: -7px;
     margin-bottom: 0;
@@ -131,23 +134,42 @@ label {
 }
 
 form {
-  height: 95%;
+  height: 95vh;
 }
 
 input {
-  margin-top: 1.5em;
+  margin-top: 1em;
 }
 
-#parent_email, #parent_password {
-  height: 5em;
-  width: 80%;
+.navbar-brand {
+  font-family: 'Yellowtail', cursive;
+  font-size: 2em;
+}
+
+.navbar-brand img {
+  display: none;
+}
+
+// .navbar {
+//   width: 100%;
+//   font-size: 40px
+// }
+
+.nav-item {
   font-size: 30px;
 }
 
+#parent_email, #parent_password {
+  height: 4em;
+  width: 80%;
+  font-size: 30px;
+  margin-top: 1em;
+}
+
 #parent_remember_me {
-  height: 1em;
-  width: 1em;
-  margin-bottom: 1em;
+  height: .5em;
+  width: .5em;
+  margin-bottom: .5em;
 }
 
 .log-in {
@@ -156,17 +178,19 @@ input {
 }
 
 .login-headers {
-  font-size: 50px;
+  font-size: 60px;
   text-align: center;
+  border: 1px solid rgb(221, 178, 6);
 }
 
 .login-fields {
-  font-size: 30px;
+  font-size: 60px;
   text-align: center;
-  margin-top: 2em;
+  margin-top: 1em;
+  margin-bottom: 0;
 }
 
-.new-parent {
+.new_parent {
   height: 100%;
 }
 
@@ -176,10 +200,6 @@ input {
 
 .calendar {
   display: none;
-}
-
-.grandparent {
-  height: 100vh;
 }
 
 .parent-options {
@@ -206,7 +226,7 @@ input {
 }
 
 .index-links {
-  margin-top: .5em;
+  margin-top: 1em;
   height: 5vh;
   font-size: 40px;
   color: blue;
@@ -221,14 +241,231 @@ input {
   display: none;
 }
 
+.form-group {
+  font-size: 40px;
+  position: relative;
+  margin-bottom: 5em;
+  text-align: center;
+}
+
+.footer {
+  position: absoloute;
+  display: block;
+  margin-bottom: 1em;
+  width: 100vw;
+  height: 5vh;
+  font-size: 25px;
+}
+
+// @include media-breakpoint-up(sm) {
+//   * {
+//     font-family: 'Lato', sans-serif;
+//  }
+
+//  a {
+//      margin-left: 1em;
+//      text-decoration: none;
+//      color: black;
+//  }
+
+//  .navbar-brand {
+//     font-family: 'Yellowtail', cursive;
+//  }
+
+//   body {
+//     background-color: #fff;
+//     color: #333;
+//     font-family: 'Lato', sans-serif;
+//     font-size: 13px;
+//     line-height: 18px;
+//     margin: 33px;
+//   }
+
+//   p, ol, ul, td {
+//     font-family: verdana, arial, helvetica, sans-serif;
+//     font-size: 13px;
+//     line-height: 18px;
+//   }
+
+//   pre {
+//     background-color: #eee;
+//     padding: 10px;
+//     font-size: 11px;
+//   }
+
+//   a {
+//     color: #000;
+
+//     &:visited {
+//       color: #666;
+//     }
+
+//     &:hover {
+//       color: #fff;
+//       background-color: #000;
+//     }
+//   }
+
+//   th {
+//     padding-bottom: 5px;
+//   }
+
+//   td {
+//     padding-bottom: 7px;
+//     padding-left: 5px;
+//     padding-right: 5px;
+//   }
+
+//   div {
+//     &.field, &.actions {
+//       margin-bottom: 10px;
+//     }
+//   }
+
+//   #notice {
+//     color: green;
+//   }
+
+//   .field_with_errors {
+//     padding: 2px;
+//     background-color: red;
+//     display: table;
+//   }
+
+//   #error_explanation {
+//     width: 450px;
+//     border: 2px solid red;
+//     padding: 7px;
+//     padding-bottom: 0;
+//     margin-bottom: 20px;
+//     background-color: #f0f0f0;
+
+//     h2 {
+//       text-align: left;
+//       font-weight: bold;
+//       padding: 5px 5px 5px 15px;
+//       font-size: 12px;
+//       margin: -7px;
+//       margin-bottom: 0;
+//       background-color: #c00;
+//       color: #fff;
+//     }
+
+//     ul li {
+//       font-size: 12px;
+//       list-style: square;
+//     }
+//   }
+
+//   label {
+//     display: block;
+//     font-size: 40px;
+//     margin-bottom: 0;
+//   }
+
+//   form {
+//     height: 95%;
+//   }
+
+//   input {
+//     margin-top: 1.5em;
+//   }
+
+//   #parent_email, #parent_password {
+//     height: 5em;
+//     width: 80%;
+//     font-size: 30px;
+//   }
+
+//   #parent_remember_me {
+//     height: 1em;
+//     width: 1em;
+//     margin-bottom: 1em;
+//   }
+
+//   .log-in {
+//     width: 100%;
+//     height: 5em;
+//   }
+
+//   .login-headers {
+//     font-size: 50px;
+//     text-align: center;
+//   }
+
+//   .login-fields {
+//     font-size: 30px;
+//     text-align: center;
+//     margin-top: 2em;
+//   }
+
+//   .new-parent {
+//     height: 100%;
+//   }
+
+//   .graph {
+//     display: none;
+//   }
+
+//   .calendar {
+//     display: none;
+//   }
+
+//   .grandparent {
+//     height: 100vh;
+//   }
+
+//   .parent-options {
+//     height: 100vh;
+//   }
+
+//   .mobile-dropdown {
+//     width: 100%;
+//     height: 10vh;
+//   }
+
+//   .dropdown-menu {
+//     width: 96%;
+//     height: fit-content;
+//   }
+
+//   .dropdown-menu li {
+//     margin-top: 1em;
+//     font-size: 40px;
+//   }
+
+//   .button-box {
+//     font-size: 30px;
+//   }
+
+//   .index-links {
+//     margin-top: .5em;
+//     height: 5vh;
+//     font-size: 40px;
+//     color: blue;
+//     text-decoration: underline;
+//   }
+
+//   .index-buttons {
+//     font-size: 40px;
+//   }
+
+//   .accordion {
+//     display: none;
+//   }
+// }
+
 @include media-breakpoint-up(lg) {
   body {
+    position: absolute;
     background-color: #fff;
     color: #333;
     font-family: 'Lato', sans-serif;
     font-size: 13px;
     line-height: 18px;
-    margin: 33px;
+    overflow-x: hidden;
+    height: 100%;
+    width: 100%;
   }
   
   p, ol, ul, td {
@@ -320,6 +557,14 @@ input {
   form {
     height: 65%;
   }
+  
+  .navbar-brand img {
+    display: inline-block;
+  }
+
+  .nav-item {
+    font-size: 15px;
+  }
 
   #parent_email, #parent_password {
     height: 2.5em;
@@ -346,6 +591,7 @@ input {
   .login-headers {
     font-size: 30px;
     text-align: left;
+    border: none;
   }
 
   .login-fields {
@@ -354,7 +600,7 @@ input {
   }
   
   .new-parent {
-    height: 75%;
+    height: 100%;
   }
 
   .graph {
@@ -396,5 +642,20 @@ input {
 
   .accordion {
     display: block;
+  }
+
+  .form-group {
+    font-size: 15px;
+    position: relative;
+    margin-bottom: 1em;
+    text-align: left;
+  }
+
+  .footer {
+    display: block;
+    margin-bottom: 0;
+    width: 100vw;
+    height: 3vh;
+    font-size: 15px;
   }
  }
