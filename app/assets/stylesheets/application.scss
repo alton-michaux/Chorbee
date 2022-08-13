@@ -150,13 +150,13 @@ input {
   display: none;
 }
 
-// .navbar {
-//   width: 100%;
-//   font-size: 40px
-// }
+.navbar {
+  width: 100%;
+  font-size: 40px
+}
 
 .nav-item {
-  font-size: 30px;
+  font-size: 40px;
 }
 
 #parent_email, #parent_password {
@@ -546,20 +546,23 @@ input {
   
   label {
     display: block;
-    margin-top: 1em;
-    font-size: 20px;
-  }
-
-  input {
-    margin-top: .5em;
+    font-size: 15px;
   }
 
   form {
     height: 65%;
   }
+
+  .navbar {
+    font-size: 15px;
+  }
+
+  .navbar-brand {
+    font-size: 1.5em;
+  }
   
   .navbar-brand img {
-    display: inline-block;
+    display: inline-flex;
   }
 
   .nav-item {
@@ -575,12 +578,14 @@ input {
   #parent_remember_me {
     height: 1em;
     width: 1em;
-    margin-bottom: 0;
+    font-size: 10px;
+    margin-top: .5em;
   }
 
   .remember-me {
+    display: flex;
+    flex-direction: row;
     margin-top: .5em;
-    font-size: 15px;
   }
   
   .log-in {
@@ -599,8 +604,8 @@ input {
     text-align: left;
   }
   
-  .new-parent {
-    height: 100%;
+  .new_parent {
+    height: 50%;
   }
 
   .graph {
@@ -652,10 +657,7 @@ input {
   }
 
   .footer {
-    display: block;
-    margin-bottom: 0;
-    width: 100vw;
-    height: 3vh;
+    height: 4vh;
     font-size: 15px;
   }
  }
