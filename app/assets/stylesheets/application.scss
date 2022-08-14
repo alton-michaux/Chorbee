@@ -130,7 +130,7 @@ div {
     text-align: left;
     font-weight: bold;
     padding: 2px 2px 2px 6px;
-    font-size: 12px;
+    font-size: 24px;
     margin: -7px;
     margin-bottom: 0;
     background-color: #c00;
@@ -179,6 +179,11 @@ input {
 .chore-main,
 .appointment-main {
   width: 100%;
+}
+
+.table-title {
+  font-size: 50px;
+  margin-bottom: .5em;
 }
 
 .show-card {
@@ -720,6 +725,10 @@ input {
   .new_chore,
   .new_appointment {
     height: 50%;
+  }
+
+  .table-title {
+    font-size: 30px;
   }
 
   .form-label {
