@@ -154,7 +154,7 @@ form {
 }
 
 input {
-  margin-top: 1em;
+  margin-right: 1em;
 }
 
 .navbar-brand {
@@ -184,7 +184,15 @@ input {
 #parent_email, 
 #parent_password, 
 #parent_name, 
-#parent_password_confirmation {
+#parent_password_confirmation,
+#child_name,
+#child_age,
+#chore_description,
+#chore_job,
+#appointment_start_time,
+#appointment_end_time,
+#appointment_chore_id,
+#appointment_frequency {
   height: 4em;
   width: 80%;
   font-size: 30px;
@@ -215,19 +223,29 @@ input {
   margin-bottom: 0;
 }
 
-.new_parent {
+.new_parent,
+.new_child,
+.new_chore,
+.new_appointment {
   height: 100%;
 }
 
 .form-label {
   font-size: 40px;
-  margin-bottom: 2em;
+  margin-top: 1em;
+  margin-bottom: .5em;
 }
 
 .actions input {
   height: 5em;
   width: 15em;
   font-size: 30px;
+}
+
+.back {
+  font-size: 40px;
+  margin-top: 1em;
+  margin-bottom: 1em;
 }
 
 .sign-up {
@@ -294,7 +312,7 @@ input {
   margin-bottom: 1em;
   width: 100vw;
   height: 5vh;
-  font-size: 30px;
+  font-size: 50px;
 }
 
 // @include media-breakpoint-up(sm) {
@@ -612,7 +630,15 @@ input {
   #parent_email, 
   #parent_password, 
   #parent_name, 
-  #parent_password_confirmation {
+  #parent_password_confirmation,
+  #child_name,
+  #child_age,
+  #chore_descripton,
+  #chore_job,
+  #appointment_start_time,
+  #appointment_end_time,
+  #appointment_chore_id,
+  #appointment_frequency {
     height: 2.5em;
     width: 50%;
     font-size: 15px;
@@ -647,7 +673,10 @@ input {
     text-align: left;
   }
   
-  .new_parent {
+  .new_parent,
+  .new_child,
+  .new_chore,
+  .new_appointment {
     height: 50%;
   }
 
@@ -658,8 +687,14 @@ input {
 
   .actions input {
     height: 2em;
-    width: 6em;
+    width: fit-content;
     font-size: 15px;
+  }
+
+  .back {
+    font-size: 15px;
+    margin-top: 1em;
+    margin-bottom: 1em;
   }
 
   .sign-up {
