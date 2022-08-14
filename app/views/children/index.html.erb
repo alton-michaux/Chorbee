@@ -5,9 +5,9 @@
 <% if !current_parent.children.empty? %>
 
 <div class="row table-div">
-  <table class="table table-striped table-hover table-bordered shadow-sm">
+  <table class="table-responsive-sm table-striped table-hover table-bordered shadow-sm">
     <thead>
-      <tr class="table-dark text-center">
+      <tr class="table-resonsive-dark text-center">
         <th>Name</th>
         <th>Age</th>
         <th>Chore(s)</th>
@@ -17,7 +17,7 @@
 
     <tbody>
       <% current_parent.children.each do |child| %>
-        <tr class="text-center table-row">
+        <tr class="text-center">
           <td><%= child.name %></td>
           <td><%= child.age %></td>
           <td class="mark">
