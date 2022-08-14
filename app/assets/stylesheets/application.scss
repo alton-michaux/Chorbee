@@ -86,6 +86,21 @@ div {
   }
 }
 
+.table-div {
+  height: 100vh;
+  font-size: 40px;
+}
+
+.table-row {
+  height: 10%;
+}
+
+.dropdown button {
+  height: 5vh;
+  width: 15vw;
+  font-size: 30px;
+}
+
 .grandparent {
   position: relative;
   min-width: 100%;
@@ -653,6 +668,17 @@ input {
 
   .graph {
     display: block;
+  }
+
+  .table-div {
+    height: 50vh;
+    font-size: 20px;
+  }
+  
+  .dropdown button {
+    height: 5vh;
+    width: 7vw;
+    font-size: 15px;
   }
 
   .calendar {
