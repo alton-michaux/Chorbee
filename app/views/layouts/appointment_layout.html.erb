@@ -12,9 +12,11 @@
   </head>
 
   <body>
-    <%= render 'layouts/appointment_navbar' %>
-    <div class="container-md bg-light bg-gradient appointment-main">
-        <%= yield %>
+    <div class="container-fluid bg-light bg-gradient grandparent appointment-main">  
+      <%= render 'layouts/appointment_navbar' %>
+      <p class="notice"><%= notice %></p>
+      <p class="alert"><%= alert %></p>
+      <%= yield %>
     <%= render 'layouts/footer' %>
     </div>
   </body>

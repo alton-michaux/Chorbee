@@ -88,7 +88,7 @@ div {
 
 .grandparent {
   position: relative;
-  width: 100%;
+  min-width: 100%;
   min-height: 100%;
   margin-bottom: -5vh;
 }
@@ -158,6 +158,12 @@ input {
 
 .nav-item {
   font-size: 40px;
+}
+
+.child-main,
+.chore-main,
+.appointment-main {
+  width: 100%;
 }
 
 #parent_email, 
@@ -273,7 +279,7 @@ input {
   margin-bottom: 1em;
   width: 100vw;
   height: 5vh;
-  font-size: 45px;
+  font-size: 30px;
 }
 
 // @include media-breakpoint-up(sm) {

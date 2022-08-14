@@ -12,9 +12,11 @@
   </head>
 
   <body>
-    <%= render 'layouts/chore_navbar' %>
-    <div class="container-md bg-light bg-gradient chore-main">
-        <%= yield %>
+    <div class="container-fluid bg-light bg-gradient grandparent chore-main">
+      <%= render 'layouts/chore_navbar' %>
+      <p class="notice"><%= notice %></p>
+      <p class="alert"><%= alert %></p>
+      <%= yield %>
     <%= render 'layouts/footer' %>
     </div>
   </body>
