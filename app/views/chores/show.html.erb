@@ -1,6 +1,6 @@
-<div class="card shadow-sm">
+<div class="card container-lg shadow-sm show-card">
 
-  <div class="card-body text-center">
+  <div class="card-body text-center card-content">
 
     <%= render 'shared/chore_image_loop' %>
     <h5 class="card-title">Chore: <br><strong><%= @chore.job %></strong></h5>
@@ -10,7 +10,7 @@
 
   </div>
 
-  <div class="row">
+  <div class="row edit">
     <button type="button" class="btn btn-warning"><%= link_to 'Edit', edit_chore_path %></button>
   </div>
 
