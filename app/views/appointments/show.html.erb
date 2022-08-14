@@ -1,6 +1,6 @@
-<div class="card container-md shadow-sm appointment-show">
+<div class="card container-sm shadow-sm show-card appointment-show">
 
-    <div class="card-body text-center">
+    <div class="card-body text-center card-content">
 
       <% @appointment.reload %>
       <h5 class="card-title">Appointment For:<br><strong><%= @appointment.chore.job %></strong></h5>
@@ -10,7 +10,7 @@
 
     </div>
 
-    <div class="row">
+    <div class="row edit">
       <button type="button" class="btn btn-warning"><%= link_to 'Edit', edit_appointment_path %></button>
     </div>
 

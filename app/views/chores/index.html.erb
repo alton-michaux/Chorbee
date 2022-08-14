@@ -1,13 +1,13 @@
 <div class="container-sm row">
-  <h2 class="row mx-auto text-warning shadow-sm">Chores</h2>
+  <h2 class="row mx-auto text-warning shadow-sm table-title">Chores</h2>
 </div>
 
 <% if !current_parent.chores.empty? %>
 
-  <div class="row">
-    <table class="table table-striped table-hover table-bordered shadow-sm">
+  <div class="row table-div">
+    <table class="table-responsive table-striped table-hover table-bordered shadow-sm">
       <thead>
-        <tr class="table-dark text-center">
+        <tr class="table-responsive-dark text-center">
           <th>Job</th>
           <th>Description</th>
           <th>Actions</th>
@@ -17,11 +17,11 @@
       <tbody>
         <% parent_chores_array = current_parent.chores.uniq %>
         <% parent_chores_array.each do |chore| %>
-          <tr class="text-center">
+          <tr class="text-center table-row">
             <td><%= chore.job %></td>
             <td><%= chore.description %></td>
             <td>
-              <div class="btn-group">
+              <div class="btn-group dropdown">
                   <button type="button" class="btn btn-warning"><%= link_to 'View', chore %></button>
                   <button type="button" class="btn btn-warning dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
                     <span class="visually-hidden">Toggle Dropdown</span>

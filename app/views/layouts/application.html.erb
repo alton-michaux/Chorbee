@@ -12,16 +12,18 @@
   </head>
 
   <body>
-    <div class="container bg-light bg-gradient">
+    <div class="container-fluid bg-light bg-gradient grandparent">
         <%= render 'layouts/navbar' %>
         <p class="notice"><%= notice %></p>
         <p class="alert"><%= alert %></p>
         <%= yield %>
         <% if current_parent %>
-          <%= render 'layouts/reports' %>
+          <div class="graph">
+            <%= render 'layouts/reports' %>
+          </div>
         <% end %>
-        <%= render 'layouts/footer' %>
     </div>
+    <%= render 'layouts/footer' %>
   </body>
 
 </html>

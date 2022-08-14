@@ -13,6 +13,17 @@
  
  @import "bootstrap";
  @import "simple_calendar";
+ 
+//  // Source mixins
+
+// // No media query necessary for xs breakpoint as it's effectively `@media (min-width: 0) { ... }`
+@include media-breakpoint-up(sm) { min-width: 576px }
+@include media-breakpoint-up(md) { min-width: 768px }
+@include media-breakpoint-up(lg) { min-width: 992px }
+@include media-breakpoint-up(xl) { min-width: 1200px }
+@include media-breakpoint-up(xxl) { min-width: 1400px }
+
+// // Usage
 
  * {
     font-family: 'Lato', sans-serif;
@@ -24,27 +35,518 @@
      color: black;
  }
 
- .navbar-brand {
-    font-family: 'Yellowtail', cursive;
- }
+body {
+  margin: 0;
+  background-color: #fff;
+  color: #333;
+  font-family: 'Lato', sans-serif;
+  overflow-x: hidden;
+  width: 100%;
+  min-height: 100%;
+}
 
- // Source mixins
+body > footer {
+  position: fixed;
+  bottom: 0;
+  height: 2em;
+  width: 100vw;
+  font-size: 30px;
+  padding: 2px;
+}
 
-// No media query necessary for xs breakpoint as it's effectively `@media (min-width: 0) { ... }`
-@include media-breakpoint-up(sm) { min-width: 576px }
-@include media-breakpoint-up(md) { min-width: 768px }
-@include media-breakpoint-up(lg) { min-width: 992px }
-@include media-breakpoint-up(xl) { min-width: 1200px }
-@include media-breakpoint-up(xxl) { min-width: 1400px }
+p, ol, ul, td {
+  font-family: verdana, arial, helvetica, sans-serif;
+}
 
-// Usage
+pre {
+  background-color: #eee;
+  padding: 10px;
+  font-size: 11px;
+}
 
-// Example: Hide starting at `min-width: 0`, and then show at the `sm` breakpoint
+a {
+  color: #000;
+  
+  &:visited {
+    color: #666;
+  }
+
+  &:hover {
+    color: rgb(106, 90, 226);
+    background-color: rgb(250, 238, 238);
+  }
+}
+
+th {
+  padding-bottom: 5px;
+}
+
+
+div {
+  &.field, &.actions {
+    margin-bottom: 10px;
+  }
+}
+
+.table-div {
+  height: 100vh;
+  font-size: 40px;
+}
+
+.dropdown button {
+  height: fit-content;
+  width: max-content;
+  font-size: 40px;
+}
+
+.grandparent {
+  position: relative;
+  min-width: 100vw;
+  min-height: 100vh;
+}
+
+#notice {
+  color: green;
+}
+
+.field_with_errors {
+  padding: 2px;
+  background-color: red;
+  display: table;
+}
+
+#error_explanation {
+  width: 450px;
+  border: 2px solid red;
+  padding: 7px;
+  padding-bottom: 0;
+  margin-bottom: 20px;
+  background-color: #f0f0f0;
+
+  h2 {
+    text-align: left;
+    font-weight: bold;
+    padding: 2px 2px 2px 6px;
+    font-size: 24px;
+    margin: -7px;
+    margin-bottom: 0;
+    background-color: #c00;
+    color: #fff;
+  }
+
+  ul li {
+    font-size: 12px;
+    list-style: square;
+  }
+}
+
+label {
+  display: block;
+  font-size: 40px;
+  margin-bottom: 0;
+}
+
+form {
+  height: 95vh;
+}
+
+input {
+  margin-right: 1em;
+}
+
+.navbar-brand {
+  font-family: 'Yellowtail', cursive;
+  font-size: 2em;
+}
+
+.navbar-brand img {
+  display: none;
+}
+
+.navbar {
+  width: 100%;
+  font-size: 40px
+}
+
+.nav-item {
+  font-size: 40px;
+}
+
+.child-main,
+.chore-main,
+.appointment-main {
+  width: 100%;
+}
+
+.table-title {
+  font-size: 50px;
+  margin-bottom: .5em;
+}
+
+.show-card {
+  min-width: 100vw;
+  min-height: 70vh;
+}
+
+.card-content {
+  font-size: 40px;
+}
+
+.edit button {
+  font-size: 40px;
+}
+
+#parent_email, 
+#parent_password, 
+#parent_name, 
+#parent_password_confirmation,
+#child_name,
+#child_age,
+#chore_description,
+#chore_job,
+#appointment_start_time,
+#appointment_end_time,
+#appointment_chore_id,
+#appointment_frequency {
+  height: 4em;
+  width: 80%;
+  font-size: 30px;
+  margin-top: 1em;
+}
+
+#parent_remember_me {
+  height: .5em;
+  width: .5em;
+  margin-bottom: .5em;
+}
+
+.log-in {
+  width: 100%;
+  height: 5em;
+}
+
+.login-headers {
+  font-size: 60px;
+  text-align: center;
+  border: 1px solid rgb(221, 178, 6);
+}
+
+.login-fields {
+  font-size: 60px;
+  text-align: center;
+  margin-top: 1em;
+  margin-bottom: 0;
+}
+
+.new_parent,
+.new_child,
+.new_chore,
+.new_appointment {
+  height: 100%;
+}
+
+.form-label {
+  font-size: 40px;
+  margin-top: 1em;
+  margin-bottom: .5em;
+}
+
+.actions input {
+  height: 5em;
+  width: 15em;
+  font-size: 30px;
+}
+
+.back {
+  font-size: 40px;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.sign-up {
+  display: none;
+}
+
+.card-title {
+  font-size: 40px;
+}
+
+.graph {
+  display: none;
+}
+
 .calendar {
-   display: none;
- }
- @include media-breakpoint-up(lg) {
-   .calendar {
-     display: block;
-   }
+  display: none;
+}
+
+.parent-options {
+  height: 100vh;
+}
+
+.mobile-dropdown {
+  width: 100%;
+  height: 10vh;
+}
+
+.dropdown-menu {
+  width: fit-content;
+  height: fit-content;
+}
+
+.dropdown-menu li {
+  margin-top: 1em;
+  margin-right: .5em;
+  font-size: 40px;
+}
+
+.button-box {
+  font-size: 30px;
+}
+
+.index-links {
+  margin-top: 1em;
+  height: 5vh;
+  font-size: 40px;
+  color: blue;
+  text-decoration: underline;
+}
+
+.index-buttons {
+  font-size: 40px;
+}
+
+.accordion {
+  display: none;
+}
+
+.form-group {
+  font-size: 40px;
+  position: relative;
+  margin-bottom: 5em;
+  text-align: center;
+}
+
+.clear {
+  min-height: 5em;
+}
+
+@include media-breakpoint-up(md) {
+  // body > footer {
+  //   display: none;
+  // }
+
+  .dropdown-menu li {
+    margin-top: 1em;
+    margin-right: .5em;
+    font-size: 30px;
+  }
+}
+
+@include media-breakpoint-up(lg) {
+  body {
+    position: absolute;
+    background-color: #fff;
+    color: #333;
+    font-family: 'Lato', sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    overflow-x: hidden;
+    min-height: 100%;
+    width: 100%;
+  }
+  
+  body > footer {
+    // top: 1em;
+    // position: relative;
+    display: block;
+    font-size: 15px;
+    height: 2.5vh;
+    padding: 2px;
+  }
+
+  .grandparent {
+    position: relative;
+    min-width: 100%;
+    min-height: 100%;
+    margin-bottom: -5vh;
+  }
+  
+  label {
+    display: block;
+    font-size: 15px;
+  }
+
+  form {
+    height: 65%;
+  }
+
+  .navbar {
+    font-size: 15px;
+  }
+
+  .navbar-brand {
+    font-size: 1.5em;
+  }
+  
+  .navbar-brand img {
+    display: inline-flex;
+  }
+
+  .nav-item {
+    font-size: 15px;
+  }
+
+  .show-card {
+    min-width: 70vw;
+    min-height: 100%;
+  }
+
+  .card-content {
+    font-size: 20px;
+  }
+
+  .card-title {
+    font-size: 20px;
+  }
+
+  .edit button {
+    font-size: 20px;
+  }
+
+  #parent_email, 
+  #parent_password, 
+  #parent_name, 
+  #parent_password_confirmation,
+  #child_name,
+  #child_age,
+  #chore_descripton,
+  #chore_job,
+  #appointment_start_time,
+  #appointment_end_time,
+  #appointment_chore_id,
+  #appointment_frequency {
+    height: 2.5em;
+    width: 50%;
+    font-size: 15px;
+  }
+  
+  #parent_remember_me {
+    height: 1em;
+    width: 1em;
+    font-size: 10px;
+    margin-top: .5em;
+  }
+
+  .remember-me {
+    display: flex;
+    flex-direction: row;
+    margin-top: .5em;
+  }
+  
+  .log-in {
+    width: 25%;
+    height: 2.5em;
+  }
+  
+  .login-headers {
+    font-size: 30px;
+    text-align: left;
+    border: none;
+  }
+
+  .login-fields {
+    font-size: 15px;
+    text-align: left;
+  }
+  
+  .new_parent,
+  .new_child,
+  .new_chore,
+  .new_appointment {
+    height: 50%;
+  }
+
+  .table-title {
+    font-size: 30px;
+  }
+
+  .form-label {
+    font-size: 10px;
+    margin-bottom: 1em;
+  }
+
+  .actions input {
+    height: 2em;
+    width: fit-content;
+    font-size: 15px;
+  }
+
+  .back {
+    font-size: 15px;
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+
+  .sign-up {
+    display: block;
+  }
+
+  .graph {
+    display: block;
+  }
+
+  .table-div {
+    height: 50vh;
+    font-size: 20px;
+  }
+  
+  .dropdown button {
+    height: 5vh;
+    width: 7vw;
+    font-size: 15px;
+  }
+
+  .calendar {
+    display: block;
+  }
+
+  .parent-options {
+    height: 30vh;
+  }
+  
+  .dropdown-menu {
+    width: fit-content;
+    height: max-content;
+  }
+
+  .dropdown-menu li {
+    margin-top: 1em;
+    font-size: 15px;
+  }
+
+  .button-box {
+    font-size: 15px;
+  }
+
+  .index-links {
+    margin-top: .5em;
+    height: 5vh;
+    font-size: 20px;
+    text-decoration: none;
+  }
+
+  .index-buttons {
+    font-size: 20px;
+  }
+
+  .accordion {
+    display: block;
+  }
+
+  .form-group {
+    font-size: 15px;
+    position: relative;
+    margin-bottom: 1em;
+    text-align: left;
+  }
  }
