@@ -2,7 +2,8 @@
 //
 // Sprockets directives for required libraries:
 //= require turbo
-//= require bootstrap-sprockets
+//= require popper
+//= require bootstrap
 //= require chartkick
 //= require Chart.bundle
 //= require_tree .
