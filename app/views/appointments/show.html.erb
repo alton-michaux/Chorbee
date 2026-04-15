@@ -45,7 +45,7 @@
                         class: "btn #{@appointment.completed? ? 'btn-outline-secondary' : 'btn-success'}" %>
           <%= link_to 'Edit', edit_appointment_path, class: 'btn btn-gold' %>
           <%= button_to 'Delete', @appointment, method: :delete,
-                        data: { confirm: 'Delete this appointment?' },
+                        data: { turbo_confirm: 'Delete this appointment?' },
                         class: 'btn btn-outline-danger' %>
         </div>
       </div>

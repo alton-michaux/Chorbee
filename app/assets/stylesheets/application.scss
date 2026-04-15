@@ -31,43 +31,85 @@ body {
 
 .chorbee-navbar {
   background-color: $chorbee-dark;
-  padding-top: 0.6rem;
-  padding-bottom: 0.6rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 
+  // Brand
   .navbar-brand {
     font-family: 'Yellowtail', cursive;
     font-size: 1.8rem;
-    color: $chorbee-gold !important;
+    color: $chorbee-gold;
     letter-spacing: 0.03em;
+    text-decoration: none;
 
-    &:hover { color: lighten($chorbee-gold, 10%) !important; }
+    &:hover, &:focus { color: lighten($chorbee-gold, 12%); }
   }
 
-  .nav-link {
-    color: rgba(255,255,255,0.8) !important;
+  // Shared token for all "nav button" elements — both <a> and <button>
+  // Defined as a class so specificity is consistent and no !important needed.
+  .nav-link,
+  .chorbee-nav-btn {
+    color: #ffffff;
     font-size: 0.95rem;
     font-weight: 500;
-    padding: 0.4rem 0.75rem;
-    border-radius: 4px;
-    transition: background 0.15s, color 0.15s;
+    text-decoration: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 5px;
+    background: transparent;
+    transition: background-color 0.15s, color 0.15s;
+    cursor: pointer;
 
-    &:hover, &.active {
-      color: #fff !important;
-      background-color: rgba(255,255,255,0.1);
+    &:hover {
+      color: #ffffff;
+      background-color: rgba(255,255,255,0.15);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $chorbee-gold;
+      outline-offset: 2px;
+      color: #ffffff;
+    }
+
+    &.active {
+      color: $chorbee-gold;
     }
   }
 
+  .chorbee-greeting {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.85rem;
+  }
+
+  // Hamburger toggle — Bootstrap renders the icon via background-image;
+  // navbar-dark handles it, but we make it explicit.
+  .navbar-toggler {
+    border-color: rgba(255,255,255,0.35);
+
+    &:focus { box-shadow: 0 0 0 2px $chorbee-gold; }
+  }
+
+  // Dropdown panel
   .dropdown-menu {
-    border: none;
+    border: 1px solid rgba(0,0,0,0.1);
     box-shadow: 0 4px 16px rgba(0,0,0,0.15);
     border-radius: 8px;
+    padding: 0.4rem 0;
 
     .dropdown-item {
       font-size: 0.9rem;
       padding: 0.5rem 1rem;
-      color: #333;
+      color: #212529;
+      text-decoration: none;
 
-      &:hover { background-color: rgba($chorbee-gold, 0.12); color: $chorbee-dark; }
+      &:hover, &:focus {
+        background-color: rgba($chorbee-gold, 0.12);
+        color: $chorbee-dark;
+      }
+
+      &:focus-visible {
+        outline: 2px solid $chorbee-gold;
+        outline-offset: -2px;
+      }
     }
   }
 }

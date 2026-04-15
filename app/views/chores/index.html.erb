@@ -33,7 +33,7 @@
                     <%= link_to 'View', chore, class: 'btn btn-sm btn-gold' %>
                     <%= link_to 'Edit', edit_chore_path(chore), class: 'btn btn-sm btn-outline-secondary' %>
                     <%= button_to 'Delete', chore, method: :delete,
-                                  data: { confirm: 'Delete this chore?' },
+                                  data: { turbo_confirm: 'Delete this chore?' },
                                   class: 'btn btn-sm btn-outline-danger' %>
                   </div>
                 </td>

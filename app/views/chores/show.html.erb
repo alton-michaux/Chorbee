@@ -29,7 +29,7 @@
         <div class="card-footer d-flex gap-2">
           <%= link_to 'Edit', edit_chore_path, class: 'btn btn-gold' %>
           <%= button_to 'Delete', @chore, method: :delete,
-                        data: { confirm: 'Delete this chore?' },
+                        data: { turbo_confirm: 'Delete this chore?' },
                         class: 'btn btn-outline-danger' %>
         </div>
       </div>

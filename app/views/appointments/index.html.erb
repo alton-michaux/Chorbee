@@ -45,7 +45,7 @@
                     <%= link_to 'View', appointment, class: 'btn btn-sm btn-gold' %>
                     <%= link_to 'Edit', edit_appointment_path(appointment), class: 'btn btn-sm btn-outline-secondary' %>
                     <%= button_to 'Delete', appointment, method: :delete,
-                                  data: { confirm: 'Delete this appointment?' },
+                                  data: { turbo_confirm: 'Delete this appointment?' },
                                   class: 'btn btn-sm btn-outline-danger' %>
                   </div>
                 </td>

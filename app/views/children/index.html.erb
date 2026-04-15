@@ -37,7 +37,7 @@
                     <%= link_to 'View', child, class: 'btn btn-sm btn-gold' %>
                     <%= link_to 'Edit', edit_child_path(child), class: 'btn btn-sm btn-outline-secondary' %>
                     <%= button_to 'Delete', child, method: :delete,
-                                  data: { confirm: 'Delete this child?' },
+                                  data: { turbo_confirm: 'Delete this child?' },
                                   class: 'btn btn-sm btn-outline-danger' %>
                   </div>
                 </td>
