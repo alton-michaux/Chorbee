@@ -1,43 +1,89 @@
-# README
+# Chorbee
 
-Chorbee: A chores app for kids!
+A chores management app for parents and kids.
 
-Chorbee is a simple way for parents to keep track of their children's productivity when it comes to doing chores. The current version allows for admins(parents) to assign chores to each child and assign an appointment schedule that will render a calendar view of the appointment based on a daily or weekly basis.
+Chorbee lets parents keep track of their children's chores. The current version allows parents to create children, assign chores to each child, and schedule recurring appointments with a calendar view rendered on a daily or weekly basis.
 
-*Future versions will allow admins to mark chores complete and allot monetary amounts toward each child for allowance*
+**Planned for future versions:** marking chores complete and tracking allowance per child.
 
-All model and controller specs pass using rspec testing.
+---
 
-* App version:
+## Tech Stack
 
-  This app is version 0.0.1
+- **Ruby** 3.2
+- **Rails** 7.1
+- **Database** PostgreSQL
+- **Auth** Devise
+- **Frontend** Bootstrap 5, Turbo (Hotwire), importmap-rails
+- **Calendar** simple_calendar + ice_cube (via recurring_select)
+- **Charts** Chartkick
 
-* Ruby version:
+---
 
-  This app runs on Ruby version 2.6.5
+## Setup
 
-* Rails version:
+### Prerequisites
 
-  This app runs on Rails 5.0.7.2
+- Ruby 3.2.x
+- PostgreSQL
+- Bundler 2.x
 
-* System dependencies:
+### Install and Run
 
-  Chorbee uses several gems to help it do what it does:
+```bash
+bundle install
+rails db:create db:migrate db:seed
+rails server
+```
 
-    -simple_calendar is used to render the calendar for the appointments index page
+Visit `http://localhost:3000` and sign up as a parent.
 
-    -the recurring_select gem is used to allow users to select and register recurring events(appointments) through a modal, this gem also gives us access to the ice_cube gem:
+### Environment Variables
 
-      * the ice_cube gem is used to register recurring events and mark those dates on each respective calendar day, it is a dependency of the recurring_select gem
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string (production) |
+| `DEVISE_SECRET_KEY` | Secret key for Devise tokens |
+| `SECRET_KEY_BASE` | Rails secret key base (production) |
 
-    -Chorbee uses the bootstrap gem for css styling and UI purposes
+---
 
-* Testing:
+## Testing
 
-  -Software: Rspec
+**Framework:** RSpec  
+**Number of tests:** 69  
+**Types:** Model specs and request/controller specs
 
-  -Number of tests: 45
+```bash
+bundle exec rspec                    # Full suite
+bundle exec rspec spec/models/       # Model specs only
+bundle exec rspec spec/requests/     # Request specs only
+```
 
-  -Type: Model and Controller(request)
+---
 
-  -Some error messages printed to the console verify successful invalid data input for controller specs
+## Key Gems
+
+| Gem | Purpose |
+|-----|---------|
+| `devise` | Parent authentication (sign up, sign in, password reset) |
+| `simple_calendar` | Calendar rendering on the appointments index page |
+| `recurring_select` | UI modal for selecting recurring event schedules |
+| `ice_cube` | Recurring event logic (dependency of recurring_select) |
+| `chartkick` | Productivity charts and graphs |
+| `turbo-rails` | Hotwire Turbo for fast page navigation |
+| `bootstrap` | CSS framework for styling and responsive UI |
+
+---
+
+## Deployment
+
+Hosted on Heroku with a PostgreSQL addon.
+
+```bash
+# After deploying
+heroku run rails db:migrate
+heroku run rails db:seed
+```
+
+See `Procfile` and `app.json` for Heroku configuration.

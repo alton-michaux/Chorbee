@@ -16,7 +16,7 @@ RSpec.describe 'Children', type: :request do
   describe 'get child_path' do
     it 'renders the :show template' do
       sign_in subject
-      child = FactoryBot.create(:child)
+      child = FactoryBot.create(:child, parent: subject)
       get child_path(id: child.id)
       expect(response).to render_template(:show)
       sign_out subject
@@ -39,7 +39,7 @@ RSpec.describe 'Children', type: :request do
   describe 'get edit_child_path' do
     it 'renders the :edit template' do
       sign_in subject
-      child = FactoryBot.create(:child)
+      child = FactoryBot.create(:child, parent: subject)
       get edit_child_path(id: child.id)
       expect(response).to render_template(:edit)
       sign_out subject
@@ -69,7 +69,7 @@ RSpec.describe 'Children', type: :request do
   describe 'put child_path with valid data' do
     it 'updates an entry and redirects to the show path for the child' do
       sign_in subject
-      child = FactoryBot.create(:child)
+      child = FactoryBot.create(:child, parent: subject)
       child.update({ 'age' => 12 })
       child.reload
       expect do
@@ -82,7 +82,7 @@ RSpec.describe 'Children', type: :request do
   describe 'put child_path with invalid data' do
     it 'does not update the child record or redirect' do
       sign_in subject
-      child = FactoryBot.create(:child)
+      child = FactoryBot.create(:child, parent: subject)
       child.update({ 'name' => '' })
       expect do
         put child_path(id: child.id), params: { child: child.as_json }

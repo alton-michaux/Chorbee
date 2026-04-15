@@ -1,12 +1,12 @@
 class ChildrenController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :catch_not_found
-  rescue_from StandardError, with: :catch_no_method
+  rescue_from NoMethodError, with: :catch_no_method
   before_action :set_child, only: %i[show edit update destroy]
   layout 'child_layout'
 
   # GET /children or /children.json
   def index
-    @children = Child.all
+    @children = current_parent.children
   end
 
   # GET /children/1 or /children/1.json
@@ -14,7 +14,7 @@ class ChildrenController < ApplicationController
 
   # GET /children/new
   def new
-    @child = Child.new
+    @child = current_parent.children.build
   end
 
   # GET /children/1/edit
@@ -22,7 +22,7 @@ class ChildrenController < ApplicationController
 
   # POST /children or /children.json
   def create
-    @child = Child.new(child_params)
+    @child = current_parent.children.build(child_params)
     respond_to do |format|
       if @child.save
         format.html { redirect_to @child, notice: 'Child was successfully created.' }
@@ -60,12 +60,12 @@ class ChildrenController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_child
-    @child = Child.find(params[:id])
+    @child = current_parent.children.find(params[:id])
   end
 
   # Only allow a list of trusted parameters through.
   def child_params
-    params.require(:child).permit(:name, :age, :parent_id, chore_ids: [])
+    params.require(:child).permit(:name, :age, chore_ids: [])
   end
 
   def catch_not_found(e)

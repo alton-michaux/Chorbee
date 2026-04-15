@@ -11,12 +11,10 @@ class Appointment < ApplicationRecord
 
   belongs_to :chore
 
-  def each; end
-
   def schedule(start = Time.zone.now.to_date)
     IceCube::Schedule.new(start) do |s|
-      s.add_recurrence_rule IceCube::Rule.daily.until(Date.today + 30) if frequency === 'Daily'
-      s.add_recurrence_rule IceCube::Rule.weekly.until(Date.today + 30) if frequency === 'Weekly'
+      s.add_recurrence_rule IceCube::Rule.daily.until(Date.today + 30) if frequency == 'Daily'
+      s.add_recurrence_rule IceCube::Rule.weekly.until(Date.today + 30) if frequency == 'Weekly'
     end
   end
 

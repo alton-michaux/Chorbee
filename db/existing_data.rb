@@ -1,5 +1,5 @@
-Parent.create("name"=>"Alton", "email"=>"michaux.alton@gmail.com")
-Parent.create("name"=>"Gillian", "email"=>"some.other.alton@good.net")
+Parent.create("name"=>"Parent One", "email"=>"parent1@example.com")
+Parent.create("name"=>"Parent Two", "email"=>"parent2@example.com")
 Child.create("name"=>"Tyson", "age"=>17, "parent_id"=>1)
 Child.create("name"=>"Lyric", "age"=>14, "parent_id"=>1)
 Child.create("name"=>"AJ", "age"=>9, "parent_id"=>1)

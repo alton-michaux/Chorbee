@@ -1,6 +1,6 @@
 class AppointmentsController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :catch_not_found
-  rescue_from StandardError, with: :catch_no_method
+  rescue_from NoMethodError, with: :catch_no_method
   before_action :set_appointment, only: %i[show edit update destroy]
   layout 'appointment_layout'
 
@@ -10,7 +10,7 @@ class AppointmentsController < ApplicationController
     end_date = params.fetch(:end_time, Time.zone.now).to_date
     @appointments = Appointment.where(start_time: start_date.beginning_of_month.beginning_of_week..end_date.end_of_month.end_of_week)
     @recurring_events = current_parent.appointments.flat_map do |e|
-      e.calendar_events(params.fetch(start_date, Time.zone.now).to_date)
+      e.calendar_events(params.fetch(:start_date, Time.zone.now).to_date)
     end
   end
 
@@ -66,7 +66,7 @@ class AppointmentsController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_appointment
-    @appointment = Appointment.find(params[:id])
+    @appointment = current_parent.appointments.find(params[:id])
   end
 
   # Only allow a list of trusted parameters through.
