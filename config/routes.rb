@@ -1,7 +1,11 @@
 Rails.application.routes.draw do
   devise_for :parents
 
-  resources :appointments
+  resources :appointments do
+    member do
+      patch :toggle_complete
+    end
+  end
   resources :children
   resources :chores
 

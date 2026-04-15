@@ -1,3 +1,15 @@
-<h1 class="text-muted row px-3 mt-3">Edit Chore</h1>
-
-<%= render 'form', chore: @chore %>
+<div class="container-fluid px-4 py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="d-flex align-items-center mb-3">
+        <%= link_to '&larr; Back'.html_safe, :back, class: 'btn btn-sm btn-outline-secondary me-3' %>
+        <h2 class="page-title mb-0">Edit Chore</h2>
+      </div>
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <%= render 'form', chore: @chore %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

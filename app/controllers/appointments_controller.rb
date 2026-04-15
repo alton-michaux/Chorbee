@@ -1,8 +1,7 @@
 class AppointmentsController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :catch_not_found
   rescue_from NoMethodError, with: :catch_no_method
-  before_action :set_appointment, only: %i[show edit update destroy]
-  layout 'appointment_layout'
+  before_action :set_appointment, only: %i[show edit update destroy toggle_complete]
 
   # GET /appointments or /appointments.json
   def index
@@ -53,6 +52,13 @@ class AppointmentsController < ApplicationController
     end
   end
 
+  # PATCH /appointments/1/toggle_complete
+  def toggle_complete
+    @appointment.update!(completed: !@appointment.completed)
+    notice = @appointment.completed? ? 'Chore marked complete!' : 'Chore marked incomplete.'
+    redirect_back(fallback_location: appointments_path, notice: notice)
+  end
+
   # DELETE /appointments/1 or /appointments/1.json
   def destroy
     @appointment.destroy
@@ -71,7 +77,7 @@ class AppointmentsController < ApplicationController
 
   # Only allow a list of trusted parameters through.
   def appointment_params
-    params.require(:appointment).permit(:start_time, :end_time, :chore_id, :frequency)
+    params.require(:appointment).permit(:start_time, :end_time, :chore_id, :frequency, :completed)
   end
 
   def catch_not_found(e)

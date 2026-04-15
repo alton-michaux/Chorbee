@@ -1,17 +1,55 @@
-<div class="card container-sm shadow-sm show-card appointment-show">
+<div class="container-fluid px-4 py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
 
-    <div class="card-body text-center card-content">
+      <div class="d-flex align-items-center mb-3">
+        <%= link_to '&larr; All Appointments'.html_safe, appointments_path, class: 'btn btn-sm btn-outline-secondary me-3' %>
+        <h2 class="page-title mb-0">Appointment Details</h2>
+      </div>
 
-      <% @appointment.reload %>
-      <h5 class="card-title">Appointment For:<br><strong><%= @appointment.chore.job %></strong></h5>
-      <p class="card-text">Created on: <strong><%= @appointment.start_time.strftime("%m/%d/%Y") %></strong></p>
-      <p class="card-text">Description:<br><strong><%= @appointment.chore.description %></strong></p>
-      <p class="card-text">Frequency: <strong><%= @appointment.frequency %></strong></p>
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="card-title mb-0"><%= @appointment.chore.job %></h5>
+            <% if @appointment.completed? %>
+              <span class="badge bg-success fs-6">Done</span>
+            <% else %>
+              <span class="badge bg-warning text-dark fs-6">Pending</span>
+            <% end %>
+          </div>
+
+          <dl class="row mb-0">
+            <dt class="col-sm-4">Description</dt>
+            <dd class="col-sm-8"><%= @appointment.chore.description %></dd>
+
+            <dt class="col-sm-4">Frequency</dt>
+            <dd class="col-sm-8"><span class="badge bg-secondary"><%= @appointment.frequency %></span></dd>
+
+            <dt class="col-sm-4">Start Date</dt>
+            <dd class="col-sm-8"><%= @appointment.start_time.strftime('%B %-d, %Y') %></dd>
+
+            <dt class="col-sm-4">End Date</dt>
+            <dd class="col-sm-8"><%= @appointment.end_time.strftime('%B %-d, %Y') %></dd>
+
+            <% if @appointment.chore.allowance_amount > 0 %>
+              <dt class="col-sm-4">Allowance</dt>
+              <dd class="col-sm-8"><strong class="text-success">$<%= sprintf('%.2f', @appointment.chore.allowance_amount) %></strong></dd>
+            <% end %>
+          </dl>
+        </div>
+
+        <div class="card-footer d-flex gap-2">
+          <%= button_to @appointment.completed? ? 'Mark Incomplete' : 'Mark Complete',
+                        toggle_complete_appointment_path(@appointment),
+                        method: :patch,
+                        class: "btn #{@appointment.completed? ? 'btn-outline-secondary' : 'btn-success'}" %>
+          <%= link_to 'Edit', edit_appointment_path, class: 'btn btn-gold' %>
+          <%= button_to 'Delete', @appointment, method: :delete,
+                        data: { confirm: 'Delete this appointment?' },
+                        class: 'btn btn-outline-danger' %>
+        </div>
+      </div>
 
     </div>
-
-    <div class="row edit">
-      <button type="button" class="btn btn-warning"><%= link_to 'Edit', edit_appointment_path %></button>
-    </div>
-
+  </div>
 </div>

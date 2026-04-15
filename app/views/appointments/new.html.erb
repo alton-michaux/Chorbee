@@ -1,10 +1,15 @@
-<div class='m-3'>
-  <h1 class="row sign-up">New Appointment</h1>
-
-  <%= render 'form', appointment: @appointment %>
-
-  <div class="mx-5 back">
-    <%= link_to 'Back', :back %>
+<div class="container-fluid px-4 py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-5">
+      <div class="d-flex align-items-center mb-3">
+        <%= link_to '&larr; All Appointments'.html_safe, appointments_path, class: 'btn btn-sm btn-outline-secondary me-3' %>
+        <h2 class="page-title mb-0">New Appointment</h2>
+      </div>
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <%= render 'form', appointment: @appointment %>
+        </div>
+      </div>
+    </div>
   </div>
-
 </div>

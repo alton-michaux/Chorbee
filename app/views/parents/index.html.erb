@@ -1,72 +1,106 @@
-<div class='container-lg'>
-	<!--accordion welcome message-->
+<div class="container-fluid px-4 py-4">
+  <h2 class="page-title mb-4">Dashboard</h2>
 
-	<div class='row accordion pb-5'>
-		<div class='accordion-item' id='accordionExample'>
-			<h2 class='accordion-header' id='headingOne'>
-			<button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-			Hi and welcome to Chorbee!</button></h2>
-			<div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-				<div class="accordion-body">
-					You can find links to all of your children, their chores and their appointments <strong>below.</strong>
-				</div>
-			</div>
-		</div>
-	</div>
+  <%# Stat cards %>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-label">Children</div>
+        <div class="stat-value"><%= current_parent.children.count %></div>
+        <%= link_to 'View all', children_path, class: 'stat-link' %>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-label">Chores</div>
+        <div class="stat-value"><%= current_parent.chores.count %></div>
+        <%= link_to 'View all', chores_path, class: 'stat-link' %>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card stat-card--gold">
+        <div class="stat-label">Total Balance Owed</div>
+        <div class="stat-value">$<%= sprintf('%.2f', current_parent.children.sum(:balance)) %></div>
+        <%= link_to 'View children', children_path, class: 'stat-link' %>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-label">Pending Chores</div>
+        <div class="stat-value"><%= current_parent.appointments.where(completed: false).count %></div>
+        <%= link_to 'View schedule', appointments_path, class: 'stat-link' %>
+      </div>
+    </div>
+  </div>
 
-	<!--Dashboard-->
-	<div class="container-fluid row">
-		<h2 class="row mx-auto text-warning shadow-sm">Dashboard</h2>
-	</div>
-	<% if !current_parent.children.empty? %>
-		<div class="row text-center g-2 parent-options">
-			<div class="col-lg-4 p-4 text-center button-box">
-				<strong>Children</strong>
-				<div class="btn-group text-decoration-none p-3 d-grid gap-2 col-6 mx-auto mobile-dropdown">
-					<button type="button" class="btn btn-warning dropdown-toggle dropdown-toggle-split index-buttons" data-bs-toggle="dropdown" aria-expanded="false">
-						<span class="visually-hidden">Toggle Dropdown</span>Select
-					</button>
-					<ul class="dropdown-menu text-center">
-					<% parent_children_array = current_parent.children.uniq %>
-					<% parent_children_array.each do |child| %>
-						<li><%= link_to child.name, child_path(id: child.id), class: 'nav-link' %></li>
-					<% end %>
-					</ul>
-				</div>
-				<a class='nav-link mx-auto index-links' href='/children'><strong>View Children</strong></a>
-			</div>
-			<div class="col-lg-4 p-4 text-center button-box">
-				<strong>Chores</strong>
-				<div class="btn-group text-decoration-none p-3 d-grid gap-2 col-6 mx-auto mobile-dropdown">
-					<button type="button" class="btn btn-warning dropdown-toggle dropdown-toggle-split index-buttons" data-bs-toggle="dropdown" aria-expanded="false">
-						<span class="visually-hidden">Toggle Dropdown</span>Select
-					</button>
-					<ul class="dropdown-menu text-center">
-					<% parent_chores_array = current_parent.chores.uniq %>
-					<% parent_chores_array.each do |chore| %>
-						<li><%= link_to chore.job, chore_path(id: chore.id), class: 'nav-link' %></li>
-					<% end %>
-					</ul>
-				</div>
-				<a class='nav-link mx-auto index-links' href='/chores'><strong>View Chores</strong></a>
-			</div>
-			<div class="col-lg-4 p-4 text-center button-box">
-				<strong>Appointments</strong>
-				<div class="btn-group text-decoration-none p-3 d-grid gap-2 col-6 mx-auto mobile-dropdown">
-					<button type="button" class="btn btn-warning dropdown-toggle dropdown-toggle-split index-buttons" data-bs-toggle="dropdown" aria-expanded="false">
-						<span class="visually-hidden">Toggle Dropdown</span>Select
-					</button>
-					<ul class="dropdown-menu text-center">
-					<% parent_appointments_array = current_parent.appointments.uniq %>
-					<% parent_appointments_array.each do |appointment| %>
-						<li><%= link_to appointment.chore.job, appointment_path(id: appointment.id), class: 'nav-link' %></li>
-					<% end %>
-					</ul>
-				</div>
-				<a class='nav-link mx-auto index-links' href='/appointments'><strong>View Appointments</strong></a>
-			</div>
-		</div>
-	<% else %>
-		<p class='text-center text-danger my-3 p-auto'>No child in database. Please select the Chorbee icon to create one.</p>
-	<% end %>
+  <% if current_parent.children.any? %>
+    <%# Quick-access dropdowns %>
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+          <div class="card-header fw-semibold">Children</div>
+          <div class="card-body">
+            <ul class="list-unstyled mb-3">
+              <% current_parent.children.each do |child| %>
+                <li class="mb-1">
+                  <%= link_to child.name, child_path(child), class: 'text-decoration-none' %>
+                  <span class="badge bg-success float-end">$<%= sprintf('%.2f', child.balance) %></span>
+                </li>
+              <% end %>
+            </ul>
+            <%= link_to 'New Child', new_child_path, class: 'btn btn-sm btn-gold w-100' %>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+          <div class="card-header fw-semibold">Chores</div>
+          <div class="card-body">
+            <ul class="list-unstyled mb-3">
+              <% current_parent.chores.uniq.each do |chore| %>
+                <li class="mb-1"><%= link_to chore.job, chore_path(chore), class: 'text-decoration-none' %></li>
+              <% end %>
+            </ul>
+            <%= link_to 'New Chore', new_chore_path, class: 'btn btn-sm btn-gold w-100' %>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+          <div class="card-header fw-semibold">Appointments</div>
+          <div class="card-body">
+            <ul class="list-unstyled mb-3">
+              <% current_parent.appointments.uniq.each do |apt| %>
+                <li class="mb-1 d-flex justify-content-between align-items-center">
+                  <%= link_to apt.chore.job, appointment_path(apt), class: 'text-decoration-none' %>
+                  <% if apt.completed? %>
+                    <span class="badge bg-success">Done</span>
+                  <% else %>
+                    <span class="badge bg-warning text-dark">Pending</span>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+            <%= link_to 'New Appointment', new_appointment_path, class: 'btn btn-sm btn-gold w-100' %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# Chart %>
+    <div class="card shadow-sm">
+      <div class="card-header fw-semibold">Chores per Child</div>
+      <div class="card-body">
+        <%= column_chart current_parent.children.joins(:chores).group(:'children.name').count,
+                         legend: true, label: 'Chores', colors: ['#f5c518', '#0d6efd'],
+                         loading: 'Loading…', empty: 'No data yet' %>
+      </div>
+    </div>
+
+  <% else %>
+    <div class="empty-state">
+      <p class="text-muted">Get started by adding your first child.</p>
+      <%= link_to 'Add a Child', new_child_path, class: 'btn btn-gold mt-2' %>
+    </div>
+  <% end %>
 </div>
