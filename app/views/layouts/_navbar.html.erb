@@ -1,34 +1,83 @@
-<div class="container-fluid bg-light bg-gradient">
+<nav class="navbar navbar-expand-lg navbar-dark chorbee-navbar shadow-sm" aria-label="Main navigation">
+  <div class="container-fluid px-4">
 
-  <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom border-warning shadow-sm">
-    <div class="container">
-      <a class="navbar-brand" href="children">
-        <img class="img-thumbnail" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDP7Dc75L_m9zazv1Kb4rskgQfP9FofKc3tg&usqp=CAU" alt="chorbee" width="30" height="24" class="d-inline-block align-text-top">
-        Chorbee</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <%= link_to 'Chorbee', root_path, class: 'navbar-brand' %>
+
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse" data-bs-target="#mainNav"
+            aria-controls="mainNav" aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="mainNav">
+      <% if parent_signed_in? %>
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-						<% if parent_signed_in? %>
-							<li class="nav-item">
-									<%= link_to 'Sign Out', destroy_parent_session_path, method: :delete, class: 'nav-link', data: { confirm: 'Are you sure you want to sign out?' } %>
-							</li>
-						<% else %>
-              <li class="nav-item">
-                <%= link_to 'Sign In', new_parent_session_path, class: 'nav-link' %>
-              </li>
-              <li class="nav-item">
-                <%= link_to 'Register', new_parent_registration_path, class: 'nav-link' %>
-              </li>
-						<% end %>
-          </ul>
-          <% if parent_signed_in? %>
-            <span class="navbar-text">A Chores App for Kids!</span>
-          <% else %>
-          <% end %>
-      </div>
-    </div>
-  </nav>
 
-</div> <!--/container-->
+          <li class="nav-item dropdown">
+            <button class="nav-link dropdown-toggle chorbee-nav-btn <%= 'active' if request.path.start_with?('/children') %>"
+                    type="button" data-bs-toggle="dropdown"
+                    aria-expanded="false" aria-haspopup="true">
+              Children
+            </button>
+            <ul class="dropdown-menu">
+              <li><%= link_to 'All Children', children_path, class: 'dropdown-item' %></li>
+              <li><%= link_to 'New Child',    new_child_path, class: 'dropdown-item' %></li>
+            </ul>
+          </li>
+
+          <li class="nav-item dropdown">
+            <button class="nav-link dropdown-toggle chorbee-nav-btn <%= 'active' if request.path.start_with?('/chores') %>"
+                    type="button" data-bs-toggle="dropdown"
+                    aria-expanded="false" aria-haspopup="true">
+              Chores
+            </button>
+            <ul class="dropdown-menu">
+              <li><%= link_to 'All Chores', chores_path, class: 'dropdown-item' %></li>
+              <li><%= link_to 'New Chore',  new_chore_path, class: 'dropdown-item' %></li>
+            </ul>
+          </li>
+
+          <li class="nav-item dropdown">
+            <button class="nav-link dropdown-toggle chorbee-nav-btn <%= 'active' if request.path.start_with?('/appointments') %>"
+                    type="button" data-bs-toggle="dropdown"
+                    aria-expanded="false" aria-haspopup="true">
+              Schedule
+            </button>
+            <ul class="dropdown-menu">
+              <li><%= link_to 'All Appointments', appointments_path,     class: 'dropdown-item' %></li>
+              <li><%= link_to 'New Appointment',  new_appointment_path,  class: 'dropdown-item' %></li>
+            </ul>
+          </li>
+
+        </ul>
+
+        <ul class="navbar-nav ms-auto align-items-center">
+          <li class="nav-item">
+            <span class="navbar-text me-2 chorbee-greeting">
+              Hi, <%= current_parent.name %>!
+            </span>
+          </li>
+          <li class="nav-item">
+            <%= button_to 'Sign Out',
+                          destroy_parent_session_path,
+                          method: :delete,
+                          class: 'chorbee-nav-btn nav-link border-0',
+                          form: { 'data-turbo-confirm': 'Sign out?' } %>
+          </li>
+        </ul>
+
+      <% else %>
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <%= link_to 'Sign In',  new_parent_session_path,       class: 'nav-link' %>
+          </li>
+          <li class="nav-item">
+            <%= link_to 'Register', new_parent_registration_path,  class: 'nav-link' %>
+          </li>
+        </ul>
+      <% end %>
+    </div>
+
+  </div>
+</nav>

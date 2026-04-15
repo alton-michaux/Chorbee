@@ -1,29 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>ChoresApp</title>
+    <title>Chorbee</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <%= csrf_meta_tags %>
 
-    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbo-track': 'reload' %>
+    <%= stylesheet_link_tag 'application', media: 'all', 'data-turbo-track': 'reload' %>
     <%= javascript_include_tag 'application', 'data-turbo-track': 'reload' %>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato&family=Yellowtail&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;600;700&family=Yellowtail&display=swap" rel="stylesheet">
   </head>
 
   <body>
-    <div class="container-fluid bg-light bg-gradient grandparent">
-        <%= render 'layouts/navbar' %>
-        <p class="notice"><%= notice %></p>
-        <p class="alert"><%= alert %></p>
-        <%= yield %>
-        <% if current_parent %>
-          <div class="graph">
-            <%= render 'layouts/reports' %>
-          </div>
-        <% end %>
-    </div>
-    <%= render 'layouts/footer' %>
-  </body>
+    <%= render 'layouts/navbar' %>
 
+    <div class="page-content">
+      <% if notice.present? %>
+        <div class="container-fluid px-4 pt-3">
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= notice %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        </div>
+      <% end %>
+      <% if alert.present? %>
+        <div class="container-fluid px-4 pt-3">
+          <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <%= alert %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        </div>
+      <% end %>
+
+      <%= yield %>
+    </div>
+
+    <% if parent_signed_in? %>
+      <footer class="site-footer">
+        <span class="text-muted small">Welcome, <%= current_parent.name %>! &mdash; A chores app for kids.</span>
+      </footer>
+    <% else %>
+      <footer class="site-footer">
+        <span class="text-muted small">A chores app for kids.</span>
+      </footer>
+    <% end %>
+  </body>
 </html>

@@ -11,6 +11,8 @@ class Appointment < ApplicationRecord
 
   belongs_to :chore
 
+  after_update :credit_allowance
+
   def schedule(start = Time.zone.now.to_date)
     IceCube::Schedule.new(start) do |s|
       s.add_recurrence_rule IceCube::Rule.daily.until(Date.today + 30) if frequency == 'Daily'
@@ -24,5 +26,14 @@ class Appointment < ApplicationRecord
     schedule(start_date).occurrences(end_date).map do |date|
       Appointment.new(id: id, frequency: frequency, chore_id: chore_id, start_time: date)
     end
+  end
+
+  private
+
+  def credit_allowance
+    return unless saved_change_to_completed? && completed
+    amount = chore.allowance_amount.to_f
+    return if amount <= 0
+    chore.children.each { |child| child.increment!(:balance, amount) }
   end
 end

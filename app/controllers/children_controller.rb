@@ -2,7 +2,6 @@ class ChildrenController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :catch_not_found
   rescue_from NoMethodError, with: :catch_no_method
   before_action :set_child, only: %i[show edit update destroy]
-  layout 'child_layout'
 
   # GET /children or /children.json
   def index

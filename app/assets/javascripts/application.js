@@ -1,7 +1,7 @@
 // This is a manifest file that'll be compiled into application.js.
 //
 // Sprockets directives for required libraries:
-//= require "@hotwired/turbo-rails"
+//= require turbo
 //= require bootstrap-sprockets
 //= require chartkick
 //= require Chart.bundle

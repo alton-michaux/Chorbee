@@ -1,50 +1,47 @@
-<div class="row mt-4">
-  <div class="mb-3">
-    <%= form_for(chore) do |f| %>
-      <% if chore.errors.any? %>
-        <div class="alert alert-warning col-lg-6" id="error_explanation">
-          <h2><%= pluralize(chore.errors.count, "error") %> prohibited this chore from being saved:</h2>
+<%= form_for(chore) do |f| %>
+  <% if chore.errors.any? %>
+    <div class="alert alert-warning" id="error_explanation">
+      <strong><%= pluralize(chore.errors.count, 'error') %> prevented this chore from being saved:</strong>
+      <ul class="mb-0 mt-2">
+        <% chore.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
 
-          <ul>
-          <% chore.errors.full_messages.each do |message| %>
-            <li><%= message %></li>
-          <% end %>
-          </ul>
+  <div class="mb-3">
+    <%= f.label :children, class: 'form-label fw-semibold' %>
+    <div class="ps-2">
+      <%= f.collection_check_boxes :child_ids, current_parent.children, :id, :name do |b| %>
+        <div class="form-check">
+          <%= b.check_box class: 'form-check-input' %>
+          <%= b.label class: 'form-check-label' %>
         </div>
       <% end %>
-
-      <div class="form-label col-lg-4">
-        <%= f.label :children %>
-      </div>
-      <div class="form-control-sm col-lg-4">
-        <%= f.collection_check_boxes :child_ids, current_parent.children, :id, :name do |b| %>
-          <div class="collection-check-box d-flex">
-            <%= b.check_box %>
-            <%= b.label %>
-          </div>
-        <% end %>
-      </div>
-
-      <div class="form-label col-lg-4">
-        <%= f.label :job %>
-      </div>
-      <div class="form-control-sm col-lg-4">
-        <%= f.text_field :job %>
-      </div>
-
-      <div class="form-label col-lg-4">
-        <%= f.label :description %>
-      </div>
-      <div class="form-control-sm col-lg-4">
-        <%= f.text_area :description %>
-      </div>
-
-      <div class="actions m-3 col-lg-4">
-        <button type="button" class="btn">
-          <%= f.submit %>
-        </button>
-      </div>
-    <% end %>
-
+    </div>
   </div>
-</div>
+
+  <div class="mb-3">
+    <%= f.label :job, 'Chore Name', class: 'form-label fw-semibold' %>
+    <%= f.text_field :job, class: 'form-control' %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :description, class: 'form-label fw-semibold' %>
+    <%= f.text_area :description, rows: 3, class: 'form-control' %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :allowance_amount, 'Allowance per Completion ($)', class: 'form-label fw-semibold' %>
+    <div class="input-group" style="max-width: 200px;">
+      <span class="input-group-text">$</span>
+      <%= f.number_field :allowance_amount, step: '0.01', min: '0', class: 'form-control' %>
+    </div>
+    <div class="form-text">Credited to each assigned child's balance when marked complete.</div>
+  </div>
+
+  <div class="mt-4">
+    <%= f.submit class: 'btn btn-gold' %>
+  </div>
+<% end %>

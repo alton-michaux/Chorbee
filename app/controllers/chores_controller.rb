@@ -1,7 +1,6 @@
 class ChoresController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :catch_not_found
   before_action :set_chore, only: %i[show edit update destroy]
-  layout 'chore_layout'
 
   # GET /chores or /chores.json
   def index
@@ -65,7 +64,7 @@ class ChoresController < ApplicationController
 
   # Only allow a list of trusted parameters through.
   def chore_params
-    params.require(:chore).permit(:job, :description, child_ids: [])
+    params.require(:chore).permit(:job, :description, :allowance_amount, child_ids: [])
   end
 
   def catch_not_found(e)

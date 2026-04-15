@@ -1,17 +1,39 @@
-<div class="card container-sm shadow-sm show-card">
+<div class="container-fluid px-4 py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
 
-  <div class="card-body text-center card-content">
+      <div class="d-flex align-items-center mb-3">
+        <%= link_to '&larr; All Chores'.html_safe, chores_path, class: 'btn btn-sm btn-outline-secondary me-3' %>
+        <h2 class="page-title mb-0">Chore Details</h2>
+      </div>
 
-    <%= render 'shared/chore_image_loop' %>
-    <h5 class="card-title">Chore: <br><strong><%= @chore.job %></strong></h5>
-    <p class="card-text">Description: <br><strong><%= @chore.description %></strong></p>
-    <div class="card-header">Assigned To:</div>
-    <ul class="list-group list-group-flush"><%= render partial: 'children/convert', locals: { children: @chore.children } %></ul>
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <%= render 'shared/chore_image_loop' %>
 
+          <h5 class="card-title"><%= @chore.job %></h5>
+          <p class="text-muted"><%= @chore.description %></p>
+
+          <% if @chore.allowance_amount > 0 %>
+            <div class="alert alert-success py-2 mb-3">
+              <strong>Allowance:</strong> $<%= sprintf('%.2f', @chore.allowance_amount) %> per completion
+            </div>
+          <% end %>
+
+          <div class="card-header mb-2 rounded">Assigned To</div>
+          <ul class="list-group list-group-flush mb-3">
+            <%= render partial: 'children/convert', locals: { children: @chore.children } %>
+          </ul>
+        </div>
+
+        <div class="card-footer d-flex gap-2">
+          <%= link_to 'Edit', edit_chore_path, class: 'btn btn-gold' %>
+          <%= button_to 'Delete', @chore, method: :delete,
+                        data: { turbo_confirm: 'Delete this chore?' },
+                        class: 'btn btn-outline-danger' %>
+        </div>
+      </div>
+
+    </div>
   </div>
-
-  <div class="row edit">
-    <button type="button" class="btn btn-warning"><%= link_to 'Edit', edit_chore_path %></button>
-  </div>
-
 </div>

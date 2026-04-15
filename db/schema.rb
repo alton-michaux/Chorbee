@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2022_05_28_044053) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_15_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -18,7 +18,7 @@ ActiveRecord::Schema[7.2].define(version: 2022_05_28_044053) do
     t.datetime "start_time", precision: nil
     t.datetime "end_time", precision: nil
     t.string "frequency"
-    t.boolean "done?"
+    t.boolean "completed"
     t.integer "chore_id"
     t.index ["chore_id"], name: "index_appointments_on_chore_id"
   end
@@ -27,6 +27,7 @@ ActiveRecord::Schema[7.2].define(version: 2022_05_28_044053) do
     t.string "name"
     t.integer "age"
     t.integer "parent_id"
+    t.decimal "balance", precision: 8, scale: 2, default: "0.0", null: false
     t.index ["parent_id"], name: "index_children_on_parent_id"
   end
 
@@ -40,6 +41,7 @@ ActiveRecord::Schema[7.2].define(version: 2022_05_28_044053) do
   create_table "chores", id: :serial, force: :cascade do |t|
     t.string "job"
     t.text "description"
+    t.decimal "allowance_amount", precision: 8, scale: 2, default: "0.0", null: false
   end
 
   create_table "parents", id: :serial, force: :cascade do |t|

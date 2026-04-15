@@ -1,17 +1,38 @@
-<div class="card container-sm shadow-sm show-card">
+<div class="container-fluid px-4 py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-5">
 
-  <div class="card-body text-center card-content">
+      <div class="d-flex align-items-center mb-3">
+        <%= link_to '&larr; All Children'.html_safe, children_path, class: 'btn btn-sm btn-outline-secondary me-3' %>
+        <h2 class="page-title mb-0">Child Details</h2>
+      </div>
 
-    <%= render 'shared/animal_image_loop' %>
-    <h5 class="card-title"><%= @child.name %></h5>
-    <p class="card-text"><%= @child.age %></p>
-    <div class="card-header">Chores:</div>
-    <ul class="list-group list-group-flush"><%= render partial: 'chores/convert', locals: { chores: @child.chores } %></ul>
+      <div class="card shadow-sm">
+        <div class="card-body text-center">
+          <%= render 'shared/animal_image_loop' %>
 
+          <h4 class="card-title mt-2"><%= @child.name %></h4>
+          <p class="text-muted mb-3">Age: <%= @child.age %></p>
+
+          <div class="d-inline-block bg-success text-white rounded px-4 py-2 mb-4">
+            <div class="small fw-semibold">Allowance Balance</div>
+            <div class="fs-3 fw-bold">$<%= sprintf('%.2f', @child.balance) %></div>
+          </div>
+        </div>
+
+        <div class="card-header">Assigned Chores</div>
+        <ul class="list-group list-group-flush">
+          <%= render partial: 'chores/convert', locals: { chores: @child.chores } %>
+        </ul>
+
+        <div class="card-footer d-flex gap-2">
+          <%= link_to 'Edit', edit_child_path, class: 'btn btn-gold' %>
+          <%= button_to 'Delete', @child, method: :delete,
+                        data: { turbo_confirm: 'Delete this child?' },
+                        class: 'btn btn-outline-danger' %>
+        </div>
+      </div>
+
+    </div>
   </div>
-
-  <div class="row edit">
-    <button type="button" class="btn btn-warning"><%= link_to 'Edit', edit_child_path %></button>
-  </div>
-
 </div>

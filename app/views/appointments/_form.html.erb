@@ -1,49 +1,37 @@
-<div class="row mt-4">
-  <div class="mb-3">
-    <%= form_for(appointment) do |f| %>
-    <% if appointment.errors.any? %>
-      <div class="alert alert-warning col-lg-6" id="error_explanation">
-        <h2><%= pluralize(appointment.errors.count, "error") %> prohibited this appointment from being saved:</h2>
-
-        <ul>
+<%= form_for(appointment) do |f| %>
+  <% if appointment.errors.any? %>
+    <div class="alert alert-warning" id="error_explanation">
+      <strong><%= pluralize(appointment.errors.count, 'error') %> prevented this appointment from being saved:</strong>
+      <ul class="mb-0 mt-2">
         <% appointment.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
-        </ul>
-      </div>
-    <% end %>
+      </ul>
+    </div>
+  <% end %>
 
-    <div class="form-label col-lg-4">
-      <%= f.label :start_time %>
-    </div>
-    <div class="form-control-sm col-lg-4">
-      <%= f.date_field :start_time %>
-    </div>
-
-    <div class="form-label col-lg-4">
-      <%= f.label :end_time %>
-    </div>
-    <div class="form-control-sm col-lg-4">
-      <%= f.date_field :end_time %>
-    </div>
-
-    <div class="form-label col-lg-4">
-      <%= f.label :chore_id %>
-    </div>
-    <div class="form-control-sm col-lg-4 dropdown">
-      <%= f.collection_select(:chore_id, current_parent.chores.all.uniq, :id, :job) %>
-    </div>
-
-    <div class="form-label col-lg-4">
-      <%= f.label :frequency %>
-    </div>
-    <div class="form-control-sm col-lg-4 dropdown">
-      <%= f.select(:frequency, [['Daily'],['Weekly']]) %>
-    </div>
-
-    <div class="actions m-3 col-lg-4">
-      <%= f.submit %>
-    </div>
-    <% end %>
+  <div class="mb-3">
+    <%= f.label :chore_id, 'Chore', class: 'form-label fw-semibold' %>
+    <%= f.collection_select(:chore_id, current_parent.chores.all.uniq, :id, :job, {}, class: 'form-select') %>
   </div>
-</div>
+
+  <div class="mb-3">
+    <%= f.label :frequency, class: 'form-label fw-semibold' %>
+    <%= f.select(:frequency, [['Daily'], ['Weekly']], {}, class: 'form-select') %>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <%= f.label :start_time, 'Start Date', class: 'form-label fw-semibold' %>
+      <%= f.date_field :start_time, class: 'form-control' %>
+    </div>
+    <div class="col-md-6 mb-3">
+      <%= f.label :end_time, 'End Date', class: 'form-label fw-semibold' %>
+      <%= f.date_field :end_time, class: 'form-control' %>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <%= f.submit class: 'btn btn-gold' %>
+  </div>
+<% end %>
