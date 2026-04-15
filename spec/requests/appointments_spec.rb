@@ -15,7 +15,9 @@ RSpec.describe 'Appointments', type: :request do
   describe 'get appointment_path' do
     it 'renders the :show template' do
       sign_in subject
-      appointment = FactoryBot.create(:appointment)
+      child = FactoryBot.create(:child, parent: subject)
+      chore = FactoryBot.create(:chore, child_ids: [child.id])
+      appointment = FactoryBot.create(:appointment, chore: chore)
       get appointment_path(id: appointment.id)
       expect(response).to render_template(:show)
       sign_out subject
@@ -38,7 +40,9 @@ RSpec.describe 'Appointments', type: :request do
   describe 'get edit_appointment_path' do
     it 'renders the :edit template' do
       sign_in subject
-      appointment = FactoryBot.create(:appointment)
+      child = FactoryBot.create(:child, parent: subject)
+      chore = FactoryBot.create(:chore, child_ids: [child.id])
+      appointment = FactoryBot.create(:appointment, chore: chore)
       get edit_appointment_path(id: appointment.id)
       expect(response).to render_template(:edit)
       sign_out subject
@@ -47,7 +51,9 @@ RSpec.describe 'Appointments', type: :request do
   describe 'post appointments_path with valid data' do
     it 'saves a new entry and redirects to the show path for the entry' do
       sign_in subject
-      appointment_attributes = FactoryBot.attributes_for(:appointment)
+      child = FactoryBot.create(:child, parent: subject)
+      chore = FactoryBot.create(:chore, child_ids: [child.id])
+      appointment_attributes = FactoryBot.attributes_for(:appointment).merge(chore_id: chore.id)
       expect do
         post appointments_path, params: { appointment: appointment_attributes.as_json }
       end.to change(Appointment, :count).by(1)
@@ -70,7 +76,9 @@ RSpec.describe 'Appointments', type: :request do
   describe 'put appointment_path with valid data' do
     it 'updates an entry and redirects to the show path for the appointment' do
       sign_in subject
-      appointment = FactoryBot.create(:appointment)
+      child = FactoryBot.create(:child, parent: subject)
+      chore = FactoryBot.create(:chore, child_ids: [child.id])
+      appointment = FactoryBot.create(:appointment, chore: chore)
       appointment.update({ 'frequency' => 'Weekly' })
       appointment.reload
       expect do
@@ -83,7 +91,9 @@ RSpec.describe 'Appointments', type: :request do
   describe 'put appointment_path with invalid data' do
     it 'does not update the appointment record or redirect' do
       sign_in subject
-      appointment = FactoryBot.create(:appointment)
+      child = FactoryBot.create(:child, parent: subject)
+      chore = FactoryBot.create(:chore, child_ids: [child.id])
+      appointment = FactoryBot.create(:appointment, chore: chore)
       appointment.update({ 'frequency' => ' ' })
       expect do
         put appointment_path(id: appointment.id), params: { appointment: appointment.as_json }

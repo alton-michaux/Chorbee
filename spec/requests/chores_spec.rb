@@ -15,7 +15,8 @@ RSpec.describe 'Chores', type: :request do
   describe 'get chore_path' do
     it 'renders the :show template' do
       sign_in subject
-      chore = FactoryBot.create(:chore)
+      child = FactoryBot.create(:child, parent: subject)
+      chore = FactoryBot.create(:chore, child_ids: [child.id])
       get chore_path(id: chore.id)
       expect(response).to render_template(:show)
       sign_out subject
@@ -38,7 +39,8 @@ RSpec.describe 'Chores', type: :request do
   describe 'get edit_chore_path' do
     it 'renders the :edit template' do
       sign_in subject
-      chore = FactoryBot.create(:chore)
+      child = FactoryBot.create(:child, parent: subject)
+      chore = FactoryBot.create(:chore, child_ids: [child.id])
       get edit_chore_path(id: chore.id)
       expect(response).to render_template(:edit)
       sign_out subject
@@ -68,7 +70,8 @@ RSpec.describe 'Chores', type: :request do
   describe 'put chore_path with valid data' do
     it 'updates an entry and redirects to the show path for the chore' do
       sign_in subject
-      chore = FactoryBot.create(:chore)
+      child = FactoryBot.create(:child, parent: subject)
+      chore = FactoryBot.create(:chore, child_ids: [child.id])
       chore.update({ 'description' => 'rake leaves' })
       chore.reload
       expect do
@@ -81,7 +84,8 @@ RSpec.describe 'Chores', type: :request do
   describe 'put chore_path with invalid data' do
     it 'does not update the chore record or redirect' do
       sign_in subject
-      chore = FactoryBot.create(:chore)
+      child = FactoryBot.create(:child, parent: subject)
+      chore = FactoryBot.create(:chore, child_ids: [child.id])
       chore.update({ 'job' => '' })
       expect do
         put chore_path(id: chore.id), params: { chore: chore.as_json }

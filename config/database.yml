@@ -19,7 +19,7 @@ production:
   encoding: unicode
   database: chorbee_production
   pool: 5
-  username: code_gobbler
+  username: alton
   password:
   timeout: 5000
 
@@ -28,7 +28,7 @@ staging:
   encoding: unicode
   database: chorbee_staging
   pool: 5
-  username: code_gobbler
+  username: alton
   password:
   timeout: 5000
 
@@ -37,7 +37,7 @@ development:
   encoding: unicode
   database: chorbee_development
   pool: 5
-  username: code_gobbler
+  username: alton
   password:
   timeout: 5000
  
@@ -67,6 +67,6 @@ test:
   encoding: unicode
   database: chorbee_test
   pool: 5
-  username: code_gobbler
+  username: alton
   password:
   timeout: 5000
