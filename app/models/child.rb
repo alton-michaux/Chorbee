@@ -8,12 +8,4 @@ class Child < ApplicationRecord
   has_and_belongs_to_many :chores, dependent: :destroy
   has_many :appointments, through: :chores
   belongs_to :parent
-
-  def pluck(*args)
-    self.pluck(*args)
-  end
-
-  # RSPEC(test) methods
-
-  def each; end
 end

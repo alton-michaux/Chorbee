@@ -5,7 +5,7 @@ class ChoresController < ApplicationController
 
   # GET /chores or /chores.json
   def index
-    @chores = Chore.all
+    @chores = current_parent.chores
   end
 
   # GET /chores/1 or /chores/1.json
@@ -60,7 +60,7 @@ class ChoresController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_chore
-    @chore = Chore.find(params[:id])
+    @chore = current_parent.chores.find(params[:id])
   end
 
   # Only allow a list of trusted parameters through.

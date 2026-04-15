@@ -7,9 +7,9 @@ Bundler.require(*Rails.groups)
 
 module ChoresApp
   class Application < Rails::Application
-    # Settings in config/environments/* take precedence over those specified here.
-    # Application configuration should go into files in config/initializers
-    # -- all .rb files in that directory are automatically loaded.
+    # Load Rails 7.1 defaults
+    config.load_defaults 7.1
+
     config.beginning_of_week = :sunday
   end
 end
