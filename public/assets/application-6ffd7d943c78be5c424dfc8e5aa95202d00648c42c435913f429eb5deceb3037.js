@@ -1,6079 +1,37 @@
-/*!
-Turbo 8.0.23
-Copyright © 2026 37signals LLC
+/**
+ * @popperjs/core v2.11.8 - MIT License
  */
-const FrameLoadingStyle = {
-  eager: "eager",
-  lazy: "lazy"
-};
 
-class FrameElement extends HTMLElement {
-  static delegateConstructor=undefined;
-  loaded=Promise.resolve();
-  static get observedAttributes() {
-    return [ "disabled", "loading", "src" ];
-  }
-  constructor() {
-    super();
-    this.delegate = new FrameElement.delegateConstructor(this);
-  }
-  connectedCallback() {
-    this.delegate.connect();
-  }
-  disconnectedCallback() {
-    this.delegate.disconnect();
-  }
-  reload() {
-    return this.delegate.sourceURLReloaded();
-  }
-  attributeChangedCallback(name) {
-    if (name == "loading") {
-      this.delegate.loadingStyleChanged();
-    } else if (name == "src") {
-      this.delegate.sourceURLChanged();
-    } else if (name == "disabled") {
-      this.delegate.disabledChanged();
-    }
-  }
-  get src() {
-    return this.getAttribute("src");
-  }
-  set src(value) {
-    if (value) {
-      this.setAttribute("src", value);
-    } else {
-      this.removeAttribute("src");
-    }
-  }
-  get refresh() {
-    return this.getAttribute("refresh");
-  }
-  set refresh(value) {
-    if (value) {
-      this.setAttribute("refresh", value);
-    } else {
-      this.removeAttribute("refresh");
-    }
-  }
-  get shouldReloadWithMorph() {
-    return this.src && this.refresh === "morph";
-  }
-  get loading() {
-    return frameLoadingStyleFromString(this.getAttribute("loading") || "");
-  }
-  set loading(value) {
-    if (value) {
-      this.setAttribute("loading", value);
-    } else {
-      this.removeAttribute("loading");
-    }
-  }
-  get disabled() {
-    return this.hasAttribute("disabled");
-  }
-  set disabled(value) {
-    if (value) {
-      this.setAttribute("disabled", "");
-    } else {
-      this.removeAttribute("disabled");
-    }
-  }
-  get autoscroll() {
-    return this.hasAttribute("autoscroll");
-  }
-  set autoscroll(value) {
-    if (value) {
-      this.setAttribute("autoscroll", "");
-    } else {
-      this.removeAttribute("autoscroll");
-    }
-  }
-  get complete() {
-    return !this.delegate.isLoading;
-  }
-  get isActive() {
-    return this.ownerDocument === document && !this.isPreview;
-  }
-  get isPreview() {
-    return this.ownerDocument?.documentElement?.hasAttribute("data-turbo-preview");
-  }
-}
-
-function frameLoadingStyleFromString(style) {
-  switch (style.toLowerCase()) {
-   case "lazy":
-    return FrameLoadingStyle.lazy;
-
-   default:
-    return FrameLoadingStyle.eager;
-  }
-}
-
-const drive = {
-  enabled: true,
-  progressBarDelay: 500,
-  unvisitableExtensions: new Set([ ".7z", ".aac", ".apk", ".avi", ".bmp", ".bz2", ".css", ".csv", ".deb", ".dmg", ".doc", ".docx", ".exe", ".gif", ".gz", ".heic", ".heif", ".ico", ".iso", ".jpeg", ".jpg", ".js", ".json", ".m4a", ".mkv", ".mov", ".mp3", ".mp4", ".mpeg", ".mpg", ".msi", ".ogg", ".ogv", ".pdf", ".pkg", ".png", ".ppt", ".pptx", ".rar", ".rtf", ".svg", ".tar", ".tif", ".tiff", ".txt", ".wav", ".webm", ".webp", ".wma", ".wmv", ".xls", ".xlsx", ".xml", ".zip" ])
-};
-
-function activateScriptElement(element) {
-  if (element.getAttribute("data-turbo-eval") == "false") {
-    return element;
-  } else {
-    const createdScriptElement = document.createElement("script");
-    const cspNonce = getCspNonce();
-    if (cspNonce) {
-      createdScriptElement.nonce = cspNonce;
-    }
-    createdScriptElement.textContent = element.textContent;
-    createdScriptElement.async = false;
-    copyElementAttributes(createdScriptElement, element);
-    return createdScriptElement;
-  }
-}
-
-function copyElementAttributes(destinationElement, sourceElement) {
-  for (const {name: name, value: value} of sourceElement.attributes) {
-    destinationElement.setAttribute(name, value);
-  }
-}
-
-function createDocumentFragment(html) {
-  const template = document.createElement("template");
-  template.innerHTML = html;
-  return template.content;
-}
-
-function dispatch(eventName, {target: target, cancelable: cancelable, detail: detail} = {}) {
-  const event = new CustomEvent(eventName, {
-    cancelable: cancelable,
-    bubbles: true,
-    composed: true,
-    detail: detail
-  });
-  if (target && target.isConnected) {
-    target.dispatchEvent(event);
-  } else {
-    document.documentElement.dispatchEvent(event);
-  }
-  return event;
-}
-
-function cancelEvent(event) {
-  event.preventDefault();
-  event.stopImmediatePropagation();
-}
-
-function nextRepaint() {
-  if (document.visibilityState === "hidden") {
-    return nextEventLoopTick();
-  } else {
-    return nextAnimationFrame();
-  }
-}
-
-function nextAnimationFrame() {
-  return new Promise((resolve => requestAnimationFrame((() => resolve()))));
-}
-
-function nextEventLoopTick() {
-  return new Promise((resolve => setTimeout((() => resolve()), 0)));
-}
-
-function parseHTMLDocument(html = "") {
-  return (new DOMParser).parseFromString(html, "text/html");
-}
-
-function unindent(strings, ...values) {
-  const lines = interpolate(strings, values).replace(/^\n/, "").split("\n");
-  const match = lines[0].match(/^\s+/);
-  const indent = match ? match[0].length : 0;
-  return lines.map((line => line.slice(indent))).join("\n");
-}
-
-function interpolate(strings, values) {
-  return strings.reduce(((result, string, i) => {
-    const value = values[i] == undefined ? "" : values[i];
-    return result + string + value;
-  }), "");
-}
-
-function uuid() {
-  return Array.from({
-    length: 36
-  }).map(((_, i) => {
-    if (i == 8 || i == 13 || i == 18 || i == 23) {
-      return "-";
-    } else if (i == 14) {
-      return "4";
-    } else if (i == 19) {
-      return (Math.floor(Math.random() * 4) + 8).toString(16);
-    } else {
-      return Math.floor(Math.random() * 16).toString(16);
-    }
-  })).join("");
-}
-
-function getAttribute(attributeName, ...elements) {
-  for (const value of elements.map((element => element?.getAttribute(attributeName)))) {
-    if (typeof value == "string") return value;
-  }
-  return null;
-}
-
-function hasAttribute(attributeName, ...elements) {
-  return elements.some((element => element && element.hasAttribute(attributeName)));
-}
-
-function markAsBusy(...elements) {
-  for (const element of elements) {
-    if (element.localName == "turbo-frame") {
-      element.setAttribute("busy", "");
-    }
-    element.setAttribute("aria-busy", "true");
-  }
-}
-
-function clearBusyState(...elements) {
-  for (const element of elements) {
-    if (element.localName == "turbo-frame") {
-      element.removeAttribute("busy");
-    }
-    element.removeAttribute("aria-busy");
-  }
-}
-
-function waitForLoad(element, timeoutInMilliseconds = 2e3) {
-  return new Promise((resolve => {
-    const onComplete = () => {
-      element.removeEventListener("error", onComplete);
-      element.removeEventListener("load", onComplete);
-      resolve();
-    };
-    element.addEventListener("load", onComplete, {
-      once: true
-    });
-    element.addEventListener("error", onComplete, {
-      once: true
-    });
-    setTimeout(resolve, timeoutInMilliseconds);
-  }));
-}
-
-function getHistoryMethodForAction(action) {
-  switch (action) {
-   case "replace":
-    return history.replaceState;
-
-   case "advance":
-   case "restore":
-    return history.pushState;
-  }
-}
-
-function isAction(action) {
-  return action == "advance" || action == "replace" || action == "restore";
-}
-
-function getVisitAction(...elements) {
-  const action = getAttribute("data-turbo-action", ...elements);
-  return isAction(action) ? action : null;
-}
-
-function getMetaElement(name) {
-  return document.querySelector(`meta[name="${name}"]`);
-}
-
-function getMetaContent(name) {
-  const element = getMetaElement(name);
-  return element && element.content;
-}
-
-function getCspNonce() {
-  const element = getMetaElement("csp-nonce");
-  if (element) {
-    const {nonce: nonce, content: content} = element;
-    return nonce == "" ? content : nonce;
-  }
-}
-
-function setMetaContent(name, content) {
-  let element = getMetaElement(name);
-  if (!element) {
-    element = document.createElement("meta");
-    element.setAttribute("name", name);
-    document.head.appendChild(element);
-  }
-  element.setAttribute("content", content);
-  return element;
-}
-
-function findClosestRecursively(element, selector) {
-  if (element instanceof Element) {
-    return element.closest(selector) || findClosestRecursively(element.assignedSlot || element.getRootNode()?.host, selector);
-  }
-}
-
-function elementIsFocusable(element) {
-  const inertDisabledOrHidden = "[inert], :disabled, [hidden], details:not([open]), dialog:not([open])";
-  return !!element && element.closest(inertDisabledOrHidden) == null && typeof element.focus == "function";
-}
-
-function queryAutofocusableElement(elementOrDocumentFragment) {
-  return Array.from(elementOrDocumentFragment.querySelectorAll("[autofocus]")).find(elementIsFocusable);
-}
-
-async function around(callback, reader) {
-  const before = reader();
-  callback();
-  await nextAnimationFrame();
-  const after = reader();
-  return [ before, after ];
-}
-
-function doesNotTargetIFrame(name) {
-  if (name === "_blank") {
-    return false;
-  } else if (name) {
-    for (const element of document.getElementsByName(name)) {
-      if (element instanceof HTMLIFrameElement) return false;
-    }
-    return true;
-  } else {
-    return true;
-  }
-}
-
-function findLinkFromClickTarget(target) {
-  const link = findClosestRecursively(target, "a[href], a[xlink\\:href]");
-  if (!link) return null;
-  if (link.href.startsWith("#")) return null;
-  if (link.hasAttribute("download")) return null;
-  const linkTarget = link.getAttribute("target");
-  if (linkTarget && linkTarget !== "_self") return null;
-  return link;
-}
-
-function debounce(fn, delay) {
-  let timeoutId = null;
-  return (...args) => {
-    const callback = () => fn.apply(this, args);
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(callback, delay);
-  };
-}
-
-const submitter = {
-  "aria-disabled": {
-    beforeSubmit: submitter => {
-      submitter.setAttribute("aria-disabled", "true");
-      submitter.addEventListener("click", cancelEvent);
-    },
-    afterSubmit: submitter => {
-      submitter.removeAttribute("aria-disabled");
-      submitter.removeEventListener("click", cancelEvent);
-    }
-  },
-  disabled: {
-    beforeSubmit: submitter => submitter.disabled = true,
-    afterSubmit: submitter => submitter.disabled = false
-  }
-};
-
-class Config {
-  #submitter=null;
-  constructor(config) {
-    Object.assign(this, config);
-  }
-  get submitter() {
-    return this.#submitter;
-  }
-  set submitter(value) {
-    this.#submitter = submitter[value] || value;
-  }
-}
-
-const forms = new Config({
-  mode: "on",
-  submitter: "disabled"
-});
-
-const config = {
-  drive: drive,
-  forms: forms
-};
-
-function expandURL(locatable) {
-  return new URL(locatable.toString(), document.baseURI);
-}
-
-function getAnchor(url) {
-  let anchorMatch;
-  if (url.hash) {
-    return url.hash.slice(1);
-  } else if (anchorMatch = url.href.match(/#(.*)$/)) {
-    return anchorMatch[1];
-  }
-}
-
-function getAction$1(form, submitter) {
-  const action = submitter?.getAttribute("formaction") || form.getAttribute("action") || form.action;
-  return expandURL(action);
-}
-
-function getExtension(url) {
-  return (getLastPathComponent(url).match(/\.[^.]*$/) || [])[0] || "";
-}
-
-function isPrefixedBy(baseURL, url) {
-  const prefix = addTrailingSlash(url.origin + url.pathname);
-  return addTrailingSlash(baseURL.href) === prefix || baseURL.href.startsWith(prefix);
-}
-
-function locationIsVisitable(location, rootLocation) {
-  return isPrefixedBy(location, rootLocation) && !config.drive.unvisitableExtensions.has(getExtension(location));
-}
-
-function getLocationForLink(link) {
-  return expandURL(link.getAttribute("href") || "");
-}
-
-function getRequestURL(url) {
-  const anchor = getAnchor(url);
-  return anchor != null ? url.href.slice(0, -(anchor.length + 1)) : url.href;
-}
-
-function toCacheKey(url) {
-  return getRequestURL(url);
-}
-
-function urlsAreEqual(left, right) {
-  return expandURL(left).href == expandURL(right).href;
-}
-
-function getPathComponents(url) {
-  return url.pathname.split("/").slice(1);
-}
-
-function getLastPathComponent(url) {
-  return getPathComponents(url).slice(-1)[0];
-}
-
-function addTrailingSlash(value) {
-  return value.endsWith("/") ? value : value + "/";
-}
-
-class FetchResponse {
-  constructor(response) {
-    this.response = response;
-  }
-  get succeeded() {
-    return this.response.ok;
-  }
-  get failed() {
-    return !this.succeeded;
-  }
-  get clientError() {
-    return this.statusCode >= 400 && this.statusCode <= 499;
-  }
-  get serverError() {
-    return this.statusCode >= 500 && this.statusCode <= 599;
-  }
-  get redirected() {
-    return this.response.redirected;
-  }
-  get location() {
-    return expandURL(this.response.url);
-  }
-  get isHTML() {
-    return this.contentType && this.contentType.match(/^(?:text\/([^\s;,]+\b)?html|application\/xhtml\+xml)\b/);
-  }
-  get statusCode() {
-    return this.response.status;
-  }
-  get contentType() {
-    return this.header("Content-Type");
-  }
-  get responseText() {
-    return this.response.clone().text();
-  }
-  get responseHTML() {
-    if (this.isHTML) {
-      return this.response.clone().text();
-    } else {
-      return Promise.resolve(undefined);
-    }
-  }
-  header(name) {
-    return this.response.headers.get(name);
-  }
-}
-
-class LimitedSet extends Set {
-  constructor(maxSize) {
-    super();
-    this.maxSize = maxSize;
-  }
-  add(value) {
-    if (this.size >= this.maxSize) {
-      const iterator = this.values();
-      const oldestValue = iterator.next().value;
-      this.delete(oldestValue);
-    }
-    super.add(value);
-  }
-}
-
-const recentRequests = new LimitedSet(20);
-
-function fetchWithTurboHeaders(url, options = {}) {
-  const modifiedHeaders = new Headers(options.headers || {});
-  const requestUID = uuid();
-  recentRequests.add(requestUID);
-  modifiedHeaders.append("X-Turbo-Request-Id", requestUID);
-  return window.fetch(url, {
-    ...options,
-    headers: modifiedHeaders
-  });
-}
-
-function fetchMethodFromString(method) {
-  switch (method.toLowerCase()) {
-   case "get":
-    return FetchMethod.get;
-
-   case "post":
-    return FetchMethod.post;
-
-   case "put":
-    return FetchMethod.put;
-
-   case "patch":
-    return FetchMethod.patch;
-
-   case "delete":
-    return FetchMethod.delete;
-  }
-}
-
-const FetchMethod = {
-  get: "get",
-  post: "post",
-  put: "put",
-  patch: "patch",
-  delete: "delete"
-};
-
-function fetchEnctypeFromString(encoding) {
-  switch (encoding.toLowerCase()) {
-   case FetchEnctype.multipart:
-    return FetchEnctype.multipart;
-
-   case FetchEnctype.plain:
-    return FetchEnctype.plain;
-
-   default:
-    return FetchEnctype.urlEncoded;
-  }
-}
-
-const FetchEnctype = {
-  urlEncoded: "application/x-www-form-urlencoded",
-  multipart: "multipart/form-data",
-  plain: "text/plain"
-};
-
-class FetchRequest {
-  abortController=new AbortController;
-  #resolveRequestPromise=_value => {};
-  constructor(delegate, method, location, requestBody = new URLSearchParams, target = null, enctype = FetchEnctype.urlEncoded) {
-    const [url, body] = buildResourceAndBody(expandURL(location), method, requestBody, enctype);
-    this.delegate = delegate;
-    this.url = url;
-    this.target = target;
-    this.fetchOptions = {
-      credentials: "same-origin",
-      redirect: "follow",
-      method: method.toUpperCase(),
-      headers: {
-        ...this.defaultHeaders
-      },
-      body: body,
-      signal: this.abortSignal,
-      referrer: this.delegate.referrer?.href
-    };
-    this.enctype = enctype;
-  }
-  get method() {
-    return this.fetchOptions.method;
-  }
-  set method(value) {
-    const fetchBody = this.isSafe ? this.url.searchParams : this.fetchOptions.body || new FormData;
-    const fetchMethod = fetchMethodFromString(value) || FetchMethod.get;
-    this.url.search = "";
-    const [url, body] = buildResourceAndBody(this.url, fetchMethod, fetchBody, this.enctype);
-    this.url = url;
-    this.fetchOptions.body = body;
-    this.fetchOptions.method = fetchMethod.toUpperCase();
-  }
-  get headers() {
-    return this.fetchOptions.headers;
-  }
-  set headers(value) {
-    this.fetchOptions.headers = value;
-  }
-  get body() {
-    if (this.isSafe) {
-      return this.url.searchParams;
-    } else {
-      return this.fetchOptions.body;
-    }
-  }
-  set body(value) {
-    this.fetchOptions.body = value;
-  }
-  get location() {
-    return this.url;
-  }
-  get params() {
-    return this.url.searchParams;
-  }
-  get entries() {
-    return this.body ? Array.from(this.body.entries()) : [];
-  }
-  cancel() {
-    this.abortController.abort();
-  }
-  async perform() {
-    const {fetchOptions: fetchOptions} = this;
-    this.delegate.prepareRequest(this);
-    const event = await this.#allowRequestToBeIntercepted(fetchOptions);
-    try {
-      this.delegate.requestStarted(this);
-      if (event.detail.fetchRequest) {
-        this.response = event.detail.fetchRequest.response;
-      } else {
-        this.response = fetchWithTurboHeaders(this.url.href, fetchOptions);
-      }
-      const response = await this.response;
-      return await this.receive(response);
-    } catch (error) {
-      if (error.name !== "AbortError") {
-        if (this.#willDelegateErrorHandling(error)) {
-          this.delegate.requestErrored(this, error);
-        }
-        throw error;
-      }
-    } finally {
-      this.delegate.requestFinished(this);
-    }
-  }
-  async receive(response) {
-    const fetchResponse = new FetchResponse(response);
-    const event = dispatch("turbo:before-fetch-response", {
-      cancelable: true,
-      detail: {
-        fetchResponse: fetchResponse
-      },
-      target: this.target
-    });
-    if (event.defaultPrevented) {
-      this.delegate.requestPreventedHandlingResponse(this, fetchResponse);
-    } else if (fetchResponse.succeeded) {
-      this.delegate.requestSucceededWithResponse(this, fetchResponse);
-    } else {
-      this.delegate.requestFailedWithResponse(this, fetchResponse);
-    }
-    return fetchResponse;
-  }
-  get defaultHeaders() {
-    return {
-      Accept: "text/html, application/xhtml+xml"
-    };
-  }
-  get isSafe() {
-    return isSafe(this.method);
-  }
-  get abortSignal() {
-    return this.abortController.signal;
-  }
-  acceptResponseType(mimeType) {
-    this.headers["Accept"] = [ mimeType, this.headers["Accept"] ].join(", ");
-  }
-  async #allowRequestToBeIntercepted(fetchOptions) {
-    const requestInterception = new Promise((resolve => this.#resolveRequestPromise = resolve));
-    const event = dispatch("turbo:before-fetch-request", {
-      cancelable: true,
-      detail: {
-        fetchOptions: fetchOptions,
-        url: this.url,
-        resume: this.#resolveRequestPromise
-      },
-      target: this.target
-    });
-    this.url = event.detail.url;
-    if (event.defaultPrevented) await requestInterception;
-    return event;
-  }
-  #willDelegateErrorHandling(error) {
-    const event = dispatch("turbo:fetch-request-error", {
-      target: this.target,
-      cancelable: true,
-      detail: {
-        request: this,
-        error: error
-      }
-    });
-    return !event.defaultPrevented;
-  }
-}
-
-function isSafe(fetchMethod) {
-  return fetchMethodFromString(fetchMethod) == FetchMethod.get;
-}
-
-function buildResourceAndBody(resource, method, requestBody, enctype) {
-  const searchParams = Array.from(requestBody).length > 0 ? new URLSearchParams(entriesExcludingFiles(requestBody)) : resource.searchParams;
-  if (isSafe(method)) {
-    return [ mergeIntoURLSearchParams(resource, searchParams), null ];
-  } else if (enctype == FetchEnctype.urlEncoded) {
-    return [ resource, searchParams ];
-  } else {
-    return [ resource, requestBody ];
-  }
-}
-
-function entriesExcludingFiles(requestBody) {
-  const entries = [];
-  for (const [name, value] of requestBody) {
-    if (value instanceof File) continue; else entries.push([ name, value ]);
-  }
-  return entries;
-}
-
-function mergeIntoURLSearchParams(url, requestBody) {
-  const searchParams = new URLSearchParams(entriesExcludingFiles(requestBody));
-  url.search = searchParams.toString();
-  return url;
-}
-
-class AppearanceObserver {
-  started=false;
-  constructor(delegate, element) {
-    this.delegate = delegate;
-    this.element = element;
-    this.intersectionObserver = new IntersectionObserver(this.intersect);
-  }
-  start() {
-    if (!this.started) {
-      this.started = true;
-      this.intersectionObserver.observe(this.element);
-    }
-  }
-  stop() {
-    if (this.started) {
-      this.started = false;
-      this.intersectionObserver.unobserve(this.element);
-    }
-  }
-  intersect=entries => {
-    const lastEntry = entries.slice(-1)[0];
-    if (lastEntry?.isIntersecting) {
-      this.delegate.elementAppearedInViewport(this.element);
-    }
-  };
-}
-
-class StreamMessage {
-  static contentType="text/vnd.turbo-stream.html";
-  static wrap(message) {
-    if (typeof message == "string") {
-      return new this(createDocumentFragment(message));
-    } else {
-      return message;
-    }
-  }
-  constructor(fragment) {
-    this.fragment = importStreamElements(fragment);
-  }
-}
-
-function importStreamElements(fragment) {
-  for (const element of fragment.querySelectorAll("turbo-stream")) {
-    const streamElement = document.importNode(element, true);
-    for (const inertScriptElement of streamElement.templateElement.content.querySelectorAll("script")) {
-      inertScriptElement.replaceWith(activateScriptElement(inertScriptElement));
-    }
-    element.replaceWith(streamElement);
-  }
-  return fragment;
-}
-
-const identity = key => key;
-
-class LRUCache {
-  keys=[];
-  entries={};
-  #toCacheKey;
-  constructor(size, toCacheKey = identity) {
-    this.size = size;
-    this.#toCacheKey = toCacheKey;
-  }
-  has(key) {
-    return this.#toCacheKey(key) in this.entries;
-  }
-  get(key) {
-    if (this.has(key)) {
-      const entry = this.read(key);
-      this.touch(key);
-      return entry;
-    }
-  }
-  put(key, entry) {
-    this.write(key, entry);
-    this.touch(key);
-    return entry;
-  }
-  clear() {
-    for (const key of Object.keys(this.entries)) {
-      this.evict(key);
-    }
-  }
-  read(key) {
-    return this.entries[this.#toCacheKey(key)];
-  }
-  write(key, entry) {
-    this.entries[this.#toCacheKey(key)] = entry;
-  }
-  touch(key) {
-    key = this.#toCacheKey(key);
-    const index = this.keys.indexOf(key);
-    if (index > -1) this.keys.splice(index, 1);
-    this.keys.unshift(key);
-    this.trim();
-  }
-  trim() {
-    for (const key of this.keys.splice(this.size)) {
-      this.evict(key);
-    }
-  }
-  evict(key) {
-    delete this.entries[key];
-  }
-}
-
-const PREFETCH_DELAY = 100;
-
-class PrefetchCache extends LRUCache {
-  #prefetchTimeout=null;
-  #maxAges={};
-  constructor(size = 1, prefetchDelay = PREFETCH_DELAY) {
-    super(size, toCacheKey);
-    this.prefetchDelay = prefetchDelay;
-  }
-  putLater(url, request, ttl) {
-    this.#prefetchTimeout = setTimeout((() => {
-      request.perform();
-      this.put(url, request, ttl);
-      this.#prefetchTimeout = null;
-    }), this.prefetchDelay);
-  }
-  put(url, request, ttl = cacheTtl) {
-    super.put(url, request);
-    this.#maxAges[toCacheKey(url)] = new Date((new Date).getTime() + ttl);
-  }
-  clear() {
-    super.clear();
-    if (this.#prefetchTimeout) clearTimeout(this.#prefetchTimeout);
-  }
-  evict(key) {
-    super.evict(key);
-    delete this.#maxAges[key];
-  }
-  has(key) {
-    if (super.has(key)) {
-      const maxAge = this.#maxAges[toCacheKey(key)];
-      return maxAge && maxAge > Date.now();
-    } else {
-      return false;
-    }
-  }
-}
-
-const cacheTtl = 10 * 1e3;
-
-const prefetchCache = new PrefetchCache;
-
-const FormSubmissionState = {
-  initialized: "initialized",
-  requesting: "requesting",
-  waiting: "waiting",
-  receiving: "receiving",
-  stopping: "stopping",
-  stopped: "stopped"
-};
-
-class FormSubmission {
-  state=FormSubmissionState.initialized;
-  static confirmMethod(message) {
-    return Promise.resolve(confirm(message));
-  }
-  constructor(delegate, formElement, submitter, mustRedirect = false) {
-    const method = getMethod(formElement, submitter);
-    const action = getAction(getFormAction(formElement, submitter), method);
-    const body = buildFormData(formElement, submitter);
-    const enctype = getEnctype(formElement, submitter);
-    this.delegate = delegate;
-    this.formElement = formElement;
-    this.submitter = submitter;
-    this.fetchRequest = new FetchRequest(this, method, action, body, formElement, enctype);
-    this.mustRedirect = mustRedirect;
-  }
-  get method() {
-    return this.fetchRequest.method;
-  }
-  set method(value) {
-    this.fetchRequest.method = value;
-  }
-  get action() {
-    return this.fetchRequest.url.toString();
-  }
-  set action(value) {
-    this.fetchRequest.url = expandURL(value);
-  }
-  get body() {
-    return this.fetchRequest.body;
-  }
-  get enctype() {
-    return this.fetchRequest.enctype;
-  }
-  get isSafe() {
-    return this.fetchRequest.isSafe;
-  }
-  get location() {
-    return this.fetchRequest.url;
-  }
-  async start() {
-    const {initialized: initialized, requesting: requesting} = FormSubmissionState;
-    const confirmationMessage = getAttribute("data-turbo-confirm", this.submitter, this.formElement);
-    if (typeof confirmationMessage === "string") {
-      const confirmMethod = typeof config.forms.confirm === "function" ? config.forms.confirm : FormSubmission.confirmMethod;
-      const answer = await confirmMethod(confirmationMessage, this.formElement, this.submitter);
-      if (!answer) {
-        return;
-      }
-    }
-    if (this.state == initialized) {
-      this.state = requesting;
-      return this.fetchRequest.perform();
-    }
-  }
-  stop() {
-    const {stopping: stopping, stopped: stopped} = FormSubmissionState;
-    if (this.state != stopping && this.state != stopped) {
-      this.state = stopping;
-      this.fetchRequest.cancel();
-      return true;
-    }
-  }
-  prepareRequest(request) {
-    if (!request.isSafe) {
-      const token = getCookieValue(getMetaContent("csrf-param")) || getMetaContent("csrf-token");
-      if (token) {
-        request.headers["X-CSRF-Token"] = token;
-      }
-    }
-    if (this.requestAcceptsTurboStreamResponse(request)) {
-      request.acceptResponseType(StreamMessage.contentType);
-    }
-  }
-  requestStarted(_request) {
-    this.state = FormSubmissionState.waiting;
-    if (this.submitter) config.forms.submitter.beforeSubmit(this.submitter);
-    this.setSubmitsWith();
-    markAsBusy(this.formElement);
-    dispatch("turbo:submit-start", {
-      target: this.formElement,
-      detail: {
-        formSubmission: this
-      }
-    });
-    this.delegate.formSubmissionStarted(this);
-  }
-  requestPreventedHandlingResponse(request, response) {
-    prefetchCache.clear();
-    this.result = {
-      success: response.succeeded,
-      fetchResponse: response
-    };
-  }
-  requestSucceededWithResponse(request, response) {
-    if (response.clientError || response.serverError) {
-      this.delegate.formSubmissionFailedWithResponse(this, response);
-      return;
-    }
-    prefetchCache.clear();
-    if (this.requestMustRedirect(request) && responseSucceededWithoutRedirect(response)) {
-      const error = new Error("Form responses must redirect to another location");
-      this.delegate.formSubmissionErrored(this, error);
-    } else {
-      this.state = FormSubmissionState.receiving;
-      this.result = {
-        success: true,
-        fetchResponse: response
-      };
-      this.delegate.formSubmissionSucceededWithResponse(this, response);
-    }
-  }
-  requestFailedWithResponse(request, response) {
-    this.result = {
-      success: false,
-      fetchResponse: response
-    };
-    this.delegate.formSubmissionFailedWithResponse(this, response);
-  }
-  requestErrored(request, error) {
-    this.result = {
-      success: false,
-      error: error
-    };
-    this.delegate.formSubmissionErrored(this, error);
-  }
-  requestFinished(_request) {
-    this.state = FormSubmissionState.stopped;
-    if (this.submitter) config.forms.submitter.afterSubmit(this.submitter);
-    this.resetSubmitterText();
-    clearBusyState(this.formElement);
-    dispatch("turbo:submit-end", {
-      target: this.formElement,
-      detail: {
-        formSubmission: this,
-        ...this.result
-      }
-    });
-    this.delegate.formSubmissionFinished(this);
-  }
-  setSubmitsWith() {
-    if (!this.submitter || !this.submitsWith) return;
-    if (this.submitter.matches("button")) {
-      this.originalSubmitText = this.submitter.innerHTML;
-      this.submitter.innerHTML = this.submitsWith;
-    } else if (this.submitter.matches("input")) {
-      const input = this.submitter;
-      this.originalSubmitText = input.value;
-      input.value = this.submitsWith;
-    }
-  }
-  resetSubmitterText() {
-    if (!this.submitter || !this.originalSubmitText) return;
-    if (this.submitter.matches("button")) {
-      this.submitter.innerHTML = this.originalSubmitText;
-    } else if (this.submitter.matches("input")) {
-      const input = this.submitter;
-      input.value = this.originalSubmitText;
-    }
-  }
-  requestMustRedirect(request) {
-    return !request.isSafe && this.mustRedirect;
-  }
-  requestAcceptsTurboStreamResponse(request) {
-    return !request.isSafe || hasAttribute("data-turbo-stream", this.submitter, this.formElement);
-  }
-  get submitsWith() {
-    return this.submitter?.getAttribute("data-turbo-submits-with");
-  }
-}
-
-function buildFormData(formElement, submitter) {
-  const formData = new FormData(formElement);
-  const name = submitter?.getAttribute("name");
-  const value = submitter?.getAttribute("value");
-  if (name) {
-    formData.append(name, value || "");
-  }
-  return formData;
-}
-
-function getCookieValue(cookieName) {
-  if (cookieName != null) {
-    const cookies = document.cookie ? document.cookie.split("; ") : [];
-    const cookie = cookies.find((cookie => cookie.startsWith(cookieName)));
-    if (cookie) {
-      const value = cookie.split("=").slice(1).join("=");
-      return value ? decodeURIComponent(value) : undefined;
-    }
-  }
-}
-
-function responseSucceededWithoutRedirect(response) {
-  return response.statusCode == 200 && !response.redirected;
-}
-
-function getFormAction(formElement, submitter) {
-  const formElementAction = typeof formElement.action === "string" ? formElement.action : null;
-  if (submitter?.hasAttribute("formaction")) {
-    return submitter.getAttribute("formaction") || "";
-  } else {
-    return formElement.getAttribute("action") || formElementAction || "";
-  }
-}
-
-function getAction(formAction, fetchMethod) {
-  const action = expandURL(formAction);
-  if (isSafe(fetchMethod)) {
-    action.search = "";
-  }
-  return action;
-}
-
-function getMethod(formElement, submitter) {
-  const method = submitter?.getAttribute("formmethod") || formElement.getAttribute("method") || "";
-  return fetchMethodFromString(method.toLowerCase()) || FetchMethod.get;
-}
-
-function getEnctype(formElement, submitter) {
-  return fetchEnctypeFromString(submitter?.getAttribute("formenctype") || formElement.enctype);
-}
-
-class Snapshot {
-  constructor(element) {
-    this.element = element;
-  }
-  get activeElement() {
-    return this.element.ownerDocument.activeElement;
-  }
-  get children() {
-    return [ ...this.element.children ];
-  }
-  hasAnchor(anchor) {
-    return this.getElementForAnchor(anchor) != null;
-  }
-  getElementForAnchor(anchor) {
-    return anchor ? this.element.querySelector(`[id='${anchor}'], a[name='${anchor}']`) : null;
-  }
-  get isConnected() {
-    return this.element.isConnected;
-  }
-  get firstAutofocusableElement() {
-    return queryAutofocusableElement(this.element);
-  }
-  get permanentElements() {
-    return queryPermanentElementsAll(this.element);
-  }
-  getPermanentElementById(id) {
-    return getPermanentElementById(this.element, id);
-  }
-  getPermanentElementMapForSnapshot(snapshot) {
-    const permanentElementMap = {};
-    for (const currentPermanentElement of this.permanentElements) {
-      const {id: id} = currentPermanentElement;
-      const newPermanentElement = snapshot.getPermanentElementById(id);
-      if (newPermanentElement) {
-        permanentElementMap[id] = [ currentPermanentElement, newPermanentElement ];
-      }
-    }
-    return permanentElementMap;
-  }
-}
-
-function getPermanentElementById(node, id) {
-  return node.querySelector(`#${id}[data-turbo-permanent]`);
-}
-
-function queryPermanentElementsAll(node) {
-  return node.querySelectorAll("[id][data-turbo-permanent]");
-}
-
-class FormSubmitObserver {
-  started=false;
-  constructor(delegate, eventTarget) {
-    this.delegate = delegate;
-    this.eventTarget = eventTarget;
-  }
-  start() {
-    if (!this.started) {
-      this.eventTarget.addEventListener("submit", this.submitCaptured, true);
-      this.started = true;
-    }
-  }
-  stop() {
-    if (this.started) {
-      this.eventTarget.removeEventListener("submit", this.submitCaptured, true);
-      this.started = false;
-    }
-  }
-  submitCaptured=() => {
-    this.eventTarget.removeEventListener("submit", this.submitBubbled, false);
-    this.eventTarget.addEventListener("submit", this.submitBubbled, false);
-  };
-  submitBubbled=event => {
-    if (!event.defaultPrevented) {
-      const form = event.target instanceof HTMLFormElement ? event.target : undefined;
-      const submitter = event.submitter || undefined;
-      if (form && submissionDoesNotDismissDialog(form, submitter) && submissionDoesNotTargetIFrame(form, submitter) && this.delegate.willSubmitForm(form, submitter)) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        this.delegate.formSubmitted(form, submitter);
-      }
-    }
-  };
-}
-
-function submissionDoesNotDismissDialog(form, submitter) {
-  const method = submitter?.getAttribute("formmethod") || form.getAttribute("method");
-  return method != "dialog";
-}
-
-function submissionDoesNotTargetIFrame(form, submitter) {
-  const target = submitter?.getAttribute("formtarget") || form.getAttribute("target");
-  return doesNotTargetIFrame(target);
-}
-
-class View {
-  #resolveRenderPromise=_value => {};
-  #resolveInterceptionPromise=_value => {};
-  constructor(delegate, element) {
-    this.delegate = delegate;
-    this.element = element;
-  }
-  scrollToAnchor(anchor) {
-    const element = this.snapshot.getElementForAnchor(anchor);
-    if (element) {
-      this.focusElement(element);
-      this.scrollToElement(element);
-    } else {
-      this.scrollToPosition({
-        x: 0,
-        y: 0
-      });
-    }
-  }
-  scrollToAnchorFromLocation(location) {
-    this.scrollToAnchor(getAnchor(location));
-  }
-  scrollToElement(element) {
-    element.scrollIntoView();
-  }
-  focusElement(element) {
-    if (element instanceof HTMLElement) {
-      if (element.hasAttribute("tabindex")) {
-        element.focus();
-      } else {
-        element.setAttribute("tabindex", "-1");
-        element.focus();
-        element.removeAttribute("tabindex");
-      }
-    }
-  }
-  scrollToPosition({x: x, y: y}) {
-    this.scrollRoot.scrollTo(x, y);
-  }
-  scrollToTop() {
-    this.scrollToPosition({
-      x: 0,
-      y: 0
-    });
-  }
-  get scrollRoot() {
-    return window;
-  }
-  async render(renderer) {
-    const {isPreview: isPreview, shouldRender: shouldRender, willRender: willRender, newSnapshot: snapshot} = renderer;
-    const shouldInvalidate = willRender;
-    if (shouldRender) {
-      try {
-        this.renderPromise = new Promise((resolve => this.#resolveRenderPromise = resolve));
-        this.renderer = renderer;
-        await this.prepareToRenderSnapshot(renderer);
-        const renderInterception = new Promise((resolve => this.#resolveInterceptionPromise = resolve));
-        const options = {
-          resume: this.#resolveInterceptionPromise,
-          render: this.renderer.renderElement,
-          renderMethod: this.renderer.renderMethod
-        };
-        const immediateRender = this.delegate.allowsImmediateRender(snapshot, options);
-        if (!immediateRender) await renderInterception;
-        await this.renderSnapshot(renderer);
-        this.delegate.viewRenderedSnapshot(snapshot, isPreview, this.renderer.renderMethod);
-        this.delegate.preloadOnLoadLinksForView(this.element);
-        this.finishRenderingSnapshot(renderer);
-      } finally {
-        delete this.renderer;
-        this.#resolveRenderPromise(undefined);
-        delete this.renderPromise;
-      }
-    } else if (shouldInvalidate) {
-      this.invalidate(renderer.reloadReason);
-    }
-  }
-  invalidate(reason) {
-    this.delegate.viewInvalidated(reason);
-  }
-  async prepareToRenderSnapshot(renderer) {
-    this.markAsPreview(renderer.isPreview);
-    await renderer.prepareToRender();
-  }
-  markAsPreview(isPreview) {
-    if (isPreview) {
-      this.element.setAttribute("data-turbo-preview", "");
-    } else {
-      this.element.removeAttribute("data-turbo-preview");
-    }
-  }
-  markVisitDirection(direction) {
-    this.element.setAttribute("data-turbo-visit-direction", direction);
-  }
-  unmarkVisitDirection() {
-    this.element.removeAttribute("data-turbo-visit-direction");
-  }
-  async renderSnapshot(renderer) {
-    await renderer.render();
-  }
-  finishRenderingSnapshot(renderer) {
-    renderer.finishRendering();
-  }
-}
-
-class FrameView extends View {
-  missing() {
-    this.element.innerHTML = `<strong class="turbo-frame-error">Content missing</strong>`;
-  }
-  get snapshot() {
-    return new Snapshot(this.element);
-  }
-}
-
-class LinkInterceptor {
-  constructor(delegate, element) {
-    this.delegate = delegate;
-    this.element = element;
-  }
-  start() {
-    this.element.addEventListener("click", this.clickBubbled);
-    document.addEventListener("turbo:click", this.linkClicked);
-    document.addEventListener("turbo:before-visit", this.willVisit);
-  }
-  stop() {
-    this.element.removeEventListener("click", this.clickBubbled);
-    document.removeEventListener("turbo:click", this.linkClicked);
-    document.removeEventListener("turbo:before-visit", this.willVisit);
-  }
-  clickBubbled=event => {
-    if (this.clickEventIsSignificant(event)) {
-      this.clickEvent = event;
-    } else {
-      delete this.clickEvent;
-    }
-  };
-  linkClicked=event => {
-    if (this.clickEvent && this.clickEventIsSignificant(event)) {
-      if (this.delegate.shouldInterceptLinkClick(event.target, event.detail.url, event.detail.originalEvent)) {
-        this.clickEvent.preventDefault();
-        event.preventDefault();
-        this.delegate.linkClickIntercepted(event.target, event.detail.url, event.detail.originalEvent);
-      }
-    }
-    delete this.clickEvent;
-  };
-  willVisit=_event => {
-    delete this.clickEvent;
-  };
-  clickEventIsSignificant(event) {
-    const target = event.composed ? event.target?.parentElement : event.target;
-    const element = findLinkFromClickTarget(target) || target;
-    return element instanceof Element && element.closest("turbo-frame, html") == this.element;
-  }
-}
-
-class LinkClickObserver {
-  started=false;
-  constructor(delegate, eventTarget) {
-    this.delegate = delegate;
-    this.eventTarget = eventTarget;
-  }
-  start() {
-    if (!this.started) {
-      this.eventTarget.addEventListener("click", this.clickCaptured, true);
-      this.started = true;
-    }
-  }
-  stop() {
-    if (this.started) {
-      this.eventTarget.removeEventListener("click", this.clickCaptured, true);
-      this.started = false;
-    }
-  }
-  clickCaptured=() => {
-    this.eventTarget.removeEventListener("click", this.clickBubbled, false);
-    this.eventTarget.addEventListener("click", this.clickBubbled, false);
-  };
-  clickBubbled=event => {
-    if (event instanceof MouseEvent && this.clickEventIsSignificant(event)) {
-      const target = event.composedPath && event.composedPath()[0] || event.target;
-      const link = findLinkFromClickTarget(target);
-      if (link && doesNotTargetIFrame(link.target)) {
-        const location = getLocationForLink(link);
-        if (this.delegate.willFollowLinkToLocation(link, location, event)) {
-          event.preventDefault();
-          this.delegate.followedLinkToLocation(link, location);
-        }
-      }
-    }
-  };
-  clickEventIsSignificant(event) {
-    return !(event.target && event.target.isContentEditable || event.defaultPrevented || event.which > 1 || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey);
-  }
-}
-
-class FormLinkClickObserver {
-  constructor(delegate, element) {
-    this.delegate = delegate;
-    this.linkInterceptor = new LinkClickObserver(this, element);
-  }
-  start() {
-    this.linkInterceptor.start();
-  }
-  stop() {
-    this.linkInterceptor.stop();
-  }
-  canPrefetchRequestToLocation(link, location) {
-    return false;
-  }
-  prefetchAndCacheRequestToLocation(link, location) {
-    return;
-  }
-  willFollowLinkToLocation(link, location, originalEvent) {
-    return this.delegate.willSubmitFormLinkToLocation(link, location, originalEvent) && (link.hasAttribute("data-turbo-method") || link.hasAttribute("data-turbo-stream"));
-  }
-  followedLinkToLocation(link, location) {
-    const form = document.createElement("form");
-    const type = "hidden";
-    for (const [name, value] of location.searchParams) {
-      form.append(Object.assign(document.createElement("input"), {
-        type: type,
-        name: name,
-        value: value
-      }));
-    }
-    const action = Object.assign(location, {
-      search: ""
-    });
-    form.setAttribute("data-turbo", "true");
-    form.setAttribute("action", action.href);
-    form.setAttribute("hidden", "");
-    const method = link.getAttribute("data-turbo-method");
-    if (method) form.setAttribute("method", method);
-    const turboFrame = link.getAttribute("data-turbo-frame");
-    if (turboFrame) form.setAttribute("data-turbo-frame", turboFrame);
-    const turboAction = getVisitAction(link);
-    if (turboAction) form.setAttribute("data-turbo-action", turboAction);
-    const turboConfirm = link.getAttribute("data-turbo-confirm");
-    if (turboConfirm) form.setAttribute("data-turbo-confirm", turboConfirm);
-    const turboStream = link.hasAttribute("data-turbo-stream");
-    if (turboStream) form.setAttribute("data-turbo-stream", "");
-    this.delegate.submittedFormLinkToLocation(link, location, form);
-    document.body.appendChild(form);
-    form.addEventListener("turbo:submit-end", (() => form.remove()), {
-      once: true
-    });
-    requestAnimationFrame((() => form.requestSubmit()));
-  }
-}
-
-class Bardo {
-  static async preservingPermanentElements(delegate, permanentElementMap, callback) {
-    const bardo = new this(delegate, permanentElementMap);
-    bardo.enter();
-    await callback();
-    bardo.leave();
-  }
-  constructor(delegate, permanentElementMap) {
-    this.delegate = delegate;
-    this.permanentElementMap = permanentElementMap;
-  }
-  enter() {
-    for (const id in this.permanentElementMap) {
-      const [currentPermanentElement, newPermanentElement] = this.permanentElementMap[id];
-      this.delegate.enteringBardo(currentPermanentElement, newPermanentElement);
-      this.replaceNewPermanentElementWithPlaceholder(newPermanentElement);
-    }
-  }
-  leave() {
-    for (const id in this.permanentElementMap) {
-      const [currentPermanentElement] = this.permanentElementMap[id];
-      this.replaceCurrentPermanentElementWithClone(currentPermanentElement);
-      this.replacePlaceholderWithPermanentElement(currentPermanentElement);
-      this.delegate.leavingBardo(currentPermanentElement);
-    }
-  }
-  replaceNewPermanentElementWithPlaceholder(permanentElement) {
-    const placeholder = createPlaceholderForPermanentElement(permanentElement);
-    permanentElement.replaceWith(placeholder);
-  }
-  replaceCurrentPermanentElementWithClone(permanentElement) {
-    const clone = permanentElement.cloneNode(true);
-    permanentElement.replaceWith(clone);
-  }
-  replacePlaceholderWithPermanentElement(permanentElement) {
-    const placeholder = this.getPlaceholderById(permanentElement.id);
-    placeholder?.replaceWith(permanentElement);
-  }
-  getPlaceholderById(id) {
-    return this.placeholders.find((element => element.content == id));
-  }
-  get placeholders() {
-    return [ ...document.querySelectorAll("meta[name=turbo-permanent-placeholder][content]") ];
-  }
-}
-
-function createPlaceholderForPermanentElement(permanentElement) {
-  const element = document.createElement("meta");
-  element.setAttribute("name", "turbo-permanent-placeholder");
-  element.setAttribute("content", permanentElement.id);
-  return element;
-}
-
-class Renderer {
-  #activeElement=null;
-  static renderElement(currentElement, newElement) {}
-  constructor(currentSnapshot, newSnapshot, isPreview, willRender = true) {
-    this.currentSnapshot = currentSnapshot;
-    this.newSnapshot = newSnapshot;
-    this.isPreview = isPreview;
-    this.willRender = willRender;
-    this.renderElement = this.constructor.renderElement;
-    this.promise = new Promise(((resolve, reject) => this.resolvingFunctions = {
-      resolve: resolve,
-      reject: reject
-    }));
-  }
-  get shouldRender() {
-    return true;
-  }
-  get shouldAutofocus() {
-    return true;
-  }
-  get reloadReason() {
-    return;
-  }
-  prepareToRender() {
-    return;
-  }
-  render() {}
-  finishRendering() {
-    if (this.resolvingFunctions) {
-      this.resolvingFunctions.resolve();
-      delete this.resolvingFunctions;
-    }
-  }
-  async preservingPermanentElements(callback) {
-    await Bardo.preservingPermanentElements(this, this.permanentElementMap, callback);
-  }
-  focusFirstAutofocusableElement() {
-    if (this.shouldAutofocus) {
-      const element = this.connectedSnapshot.firstAutofocusableElement;
-      if (element) {
-        element.focus();
-      }
-    }
-  }
-  enteringBardo(currentPermanentElement) {
-    if (this.#activeElement) return;
-    if (currentPermanentElement.contains(this.currentSnapshot.activeElement)) {
-      this.#activeElement = this.currentSnapshot.activeElement;
-    }
-  }
-  leavingBardo(currentPermanentElement) {
-    if (currentPermanentElement.contains(this.#activeElement) && this.#activeElement instanceof HTMLElement) {
-      this.#activeElement.focus();
-      this.#activeElement = null;
-    }
-  }
-  get connectedSnapshot() {
-    return this.newSnapshot.isConnected ? this.newSnapshot : this.currentSnapshot;
-  }
-  get currentElement() {
-    return this.currentSnapshot.element;
-  }
-  get newElement() {
-    return this.newSnapshot.element;
-  }
-  get permanentElementMap() {
-    return this.currentSnapshot.getPermanentElementMapForSnapshot(this.newSnapshot);
-  }
-  get renderMethod() {
-    return "replace";
-  }
-}
-
-class FrameRenderer extends Renderer {
-  static renderElement(currentElement, newElement) {
-    const destinationRange = document.createRange();
-    destinationRange.selectNodeContents(currentElement);
-    destinationRange.deleteContents();
-    const frameElement = newElement;
-    const sourceRange = frameElement.ownerDocument?.createRange();
-    if (sourceRange) {
-      sourceRange.selectNodeContents(frameElement);
-      currentElement.appendChild(sourceRange.extractContents());
-    }
-  }
-  constructor(delegate, currentSnapshot, newSnapshot, renderElement, isPreview, willRender = true) {
-    super(currentSnapshot, newSnapshot, renderElement, isPreview, willRender);
-    this.delegate = delegate;
-  }
-  get shouldRender() {
-    return true;
-  }
-  async render() {
-    await nextRepaint();
-    this.preservingPermanentElements((() => {
-      this.loadFrameElement();
-    }));
-    this.scrollFrameIntoView();
-    await nextRepaint();
-    this.focusFirstAutofocusableElement();
-    await nextRepaint();
-    this.activateScriptElements();
-  }
-  loadFrameElement() {
-    this.delegate.willRenderFrame(this.currentElement, this.newElement);
-    this.renderElement(this.currentElement, this.newElement);
-  }
-  scrollFrameIntoView() {
-    if (this.currentElement.autoscroll || this.newElement.autoscroll) {
-      const element = this.currentElement.firstElementChild;
-      const block = readScrollLogicalPosition(this.currentElement.getAttribute("data-autoscroll-block"), "end");
-      const behavior = readScrollBehavior(this.currentElement.getAttribute("data-autoscroll-behavior"), "auto");
-      if (element) {
-        element.scrollIntoView({
-          block: block,
-          behavior: behavior
-        });
-        return true;
-      }
-    }
-    return false;
-  }
-  activateScriptElements() {
-    for (const inertScriptElement of this.newScriptElements) {
-      const activatedScriptElement = activateScriptElement(inertScriptElement);
-      inertScriptElement.replaceWith(activatedScriptElement);
-    }
-  }
-  get newScriptElements() {
-    return this.currentElement.querySelectorAll("script");
-  }
-}
-
-function readScrollLogicalPosition(value, defaultValue) {
-  if (value == "end" || value == "start" || value == "center" || value == "nearest") {
-    return value;
-  } else {
-    return defaultValue;
-  }
-}
-
-function readScrollBehavior(value, defaultValue) {
-  if (value == "auto" || value == "smooth") {
-    return value;
-  } else {
-    return defaultValue;
-  }
-}
-
-var Idiomorph = function() {
-  const noOp = () => {};
-  const defaults = {
-    morphStyle: "outerHTML",
-    callbacks: {
-      beforeNodeAdded: noOp,
-      afterNodeAdded: noOp,
-      beforeNodeMorphed: noOp,
-      afterNodeMorphed: noOp,
-      beforeNodeRemoved: noOp,
-      afterNodeRemoved: noOp,
-      beforeAttributeUpdated: noOp
-    },
-    head: {
-      style: "merge",
-      shouldPreserve: elt => elt.getAttribute("im-preserve") === "true",
-      shouldReAppend: elt => elt.getAttribute("im-re-append") === "true",
-      shouldRemove: noOp,
-      afterHeadMorphed: noOp
-    },
-    restoreFocus: true
-  };
-  function morph(oldNode, newContent, config = {}) {
-    oldNode = normalizeElement(oldNode);
-    const newNode = normalizeParent(newContent);
-    const ctx = createMorphContext(oldNode, newNode, config);
-    const morphedNodes = saveAndRestoreFocus(ctx, (() => withHeadBlocking(ctx, oldNode, newNode, (ctx => {
-      if (ctx.morphStyle === "innerHTML") {
-        morphChildren(ctx, oldNode, newNode);
-        return Array.from(oldNode.childNodes);
-      } else {
-        return morphOuterHTML(ctx, oldNode, newNode);
-      }
-    }))));
-    ctx.pantry.remove();
-    return morphedNodes;
-  }
-  function morphOuterHTML(ctx, oldNode, newNode) {
-    const oldParent = normalizeParent(oldNode);
-    morphChildren(ctx, oldParent, newNode, oldNode, oldNode.nextSibling);
-    return Array.from(oldParent.childNodes);
-  }
-  function saveAndRestoreFocus(ctx, fn) {
-    if (!ctx.config.restoreFocus) return fn();
-    let activeElement = document.activeElement;
-    if (!(activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement)) {
-      return fn();
-    }
-    const {id: activeElementId, selectionStart: selectionStart, selectionEnd: selectionEnd} = activeElement;
-    const results = fn();
-    if (activeElementId && activeElementId !== document.activeElement?.getAttribute("id")) {
-      activeElement = ctx.target.querySelector(`[id="${activeElementId}"]`);
-      activeElement?.focus();
-    }
-    if (activeElement && !activeElement.selectionEnd && selectionEnd) {
-      activeElement.setSelectionRange(selectionStart, selectionEnd);
-    }
-    return results;
-  }
-  const morphChildren = function() {
-    function morphChildren(ctx, oldParent, newParent, insertionPoint = null, endPoint = null) {
-      if (oldParent instanceof HTMLTemplateElement && newParent instanceof HTMLTemplateElement) {
-        oldParent = oldParent.content;
-        newParent = newParent.content;
-      }
-      insertionPoint ||= oldParent.firstChild;
-      for (const newChild of newParent.childNodes) {
-        if (insertionPoint && insertionPoint != endPoint) {
-          const bestMatch = findBestMatch(ctx, newChild, insertionPoint, endPoint);
-          if (bestMatch) {
-            if (bestMatch !== insertionPoint) {
-              removeNodesBetween(ctx, insertionPoint, bestMatch);
-            }
-            morphNode(bestMatch, newChild, ctx);
-            insertionPoint = bestMatch.nextSibling;
-            continue;
-          }
-        }
-        if (newChild instanceof Element) {
-          const newChildId = newChild.getAttribute("id");
-          if (ctx.persistentIds.has(newChildId)) {
-            const movedChild = moveBeforeById(oldParent, newChildId, insertionPoint, ctx);
-            morphNode(movedChild, newChild, ctx);
-            insertionPoint = movedChild.nextSibling;
-            continue;
-          }
-        }
-        const insertedNode = createNode(oldParent, newChild, insertionPoint, ctx);
-        if (insertedNode) {
-          insertionPoint = insertedNode.nextSibling;
-        }
-      }
-      while (insertionPoint && insertionPoint != endPoint) {
-        const tempNode = insertionPoint;
-        insertionPoint = insertionPoint.nextSibling;
-        removeNode(ctx, tempNode);
-      }
-    }
-    function createNode(oldParent, newChild, insertionPoint, ctx) {
-      if (ctx.callbacks.beforeNodeAdded(newChild) === false) return null;
-      if (ctx.idMap.has(newChild)) {
-        const newEmptyChild = document.createElement(newChild.tagName);
-        oldParent.insertBefore(newEmptyChild, insertionPoint);
-        morphNode(newEmptyChild, newChild, ctx);
-        ctx.callbacks.afterNodeAdded(newEmptyChild);
-        return newEmptyChild;
-      } else {
-        const newClonedChild = document.importNode(newChild, true);
-        oldParent.insertBefore(newClonedChild, insertionPoint);
-        ctx.callbacks.afterNodeAdded(newClonedChild);
-        return newClonedChild;
-      }
-    }
-    const findBestMatch = function() {
-      function findBestMatch(ctx, node, startPoint, endPoint) {
-        let softMatch = null;
-        let nextSibling = node.nextSibling;
-        let siblingSoftMatchCount = 0;
-        let cursor = startPoint;
-        while (cursor && cursor != endPoint) {
-          if (isSoftMatch(cursor, node)) {
-            if (isIdSetMatch(ctx, cursor, node)) {
-              return cursor;
-            }
-            if (softMatch === null) {
-              if (!ctx.idMap.has(cursor)) {
-                softMatch = cursor;
-              }
-            }
-          }
-          if (softMatch === null && nextSibling && isSoftMatch(cursor, nextSibling)) {
-            siblingSoftMatchCount++;
-            nextSibling = nextSibling.nextSibling;
-            if (siblingSoftMatchCount >= 2) {
-              softMatch = undefined;
-            }
-          }
-          if (ctx.activeElementAndParents.includes(cursor)) break;
-          cursor = cursor.nextSibling;
-        }
-        return softMatch || null;
-      }
-      function isIdSetMatch(ctx, oldNode, newNode) {
-        let oldSet = ctx.idMap.get(oldNode);
-        let newSet = ctx.idMap.get(newNode);
-        if (!newSet || !oldSet) return false;
-        for (const id of oldSet) {
-          if (newSet.has(id)) {
-            return true;
-          }
-        }
-        return false;
-      }
-      function isSoftMatch(oldNode, newNode) {
-        const oldElt = oldNode;
-        const newElt = newNode;
-        return oldElt.nodeType === newElt.nodeType && oldElt.tagName === newElt.tagName && (!oldElt.getAttribute?.("id") || oldElt.getAttribute?.("id") === newElt.getAttribute?.("id"));
-      }
-      return findBestMatch;
-    }();
-    function removeNode(ctx, node) {
-      if (ctx.idMap.has(node)) {
-        moveBefore(ctx.pantry, node, null);
-      } else {
-        if (ctx.callbacks.beforeNodeRemoved(node) === false) return;
-        node.parentNode?.removeChild(node);
-        ctx.callbacks.afterNodeRemoved(node);
-      }
-    }
-    function removeNodesBetween(ctx, startInclusive, endExclusive) {
-      let cursor = startInclusive;
-      while (cursor && cursor !== endExclusive) {
-        let tempNode = cursor;
-        cursor = cursor.nextSibling;
-        removeNode(ctx, tempNode);
-      }
-      return cursor;
-    }
-    function moveBeforeById(parentNode, id, after, ctx) {
-      const target = ctx.target.getAttribute?.("id") === id && ctx.target || ctx.target.querySelector(`[id="${id}"]`) || ctx.pantry.querySelector(`[id="${id}"]`);
-      removeElementFromAncestorsIdMaps(target, ctx);
-      moveBefore(parentNode, target, after);
-      return target;
-    }
-    function removeElementFromAncestorsIdMaps(element, ctx) {
-      const id = element.getAttribute("id");
-      while (element = element.parentNode) {
-        let idSet = ctx.idMap.get(element);
-        if (idSet) {
-          idSet.delete(id);
-          if (!idSet.size) {
-            ctx.idMap.delete(element);
-          }
-        }
-      }
-    }
-    function moveBefore(parentNode, element, after) {
-      if (parentNode.moveBefore) {
-        try {
-          parentNode.moveBefore(element, after);
-        } catch (e) {
-          parentNode.insertBefore(element, after);
-        }
-      } else {
-        parentNode.insertBefore(element, after);
-      }
-    }
-    return morphChildren;
-  }();
-  const morphNode = function() {
-    function morphNode(oldNode, newContent, ctx) {
-      if (ctx.ignoreActive && oldNode === document.activeElement) {
-        return null;
-      }
-      if (ctx.callbacks.beforeNodeMorphed(oldNode, newContent) === false) {
-        return oldNode;
-      }
-      if (oldNode instanceof HTMLHeadElement && ctx.head.ignore) ; else if (oldNode instanceof HTMLHeadElement && ctx.head.style !== "morph") {
-        handleHeadElement(oldNode, newContent, ctx);
-      } else {
-        morphAttributes(oldNode, newContent, ctx);
-        if (!ignoreValueOfActiveElement(oldNode, ctx)) {
-          morphChildren(ctx, oldNode, newContent);
-        }
-      }
-      ctx.callbacks.afterNodeMorphed(oldNode, newContent);
-      return oldNode;
-    }
-    function morphAttributes(oldNode, newNode, ctx) {
-      let type = newNode.nodeType;
-      if (type === 1) {
-        const oldElt = oldNode;
-        const newElt = newNode;
-        const oldAttributes = oldElt.attributes;
-        const newAttributes = newElt.attributes;
-        for (const newAttribute of newAttributes) {
-          if (ignoreAttribute(newAttribute.name, oldElt, "update", ctx)) {
-            continue;
-          }
-          if (oldElt.getAttribute(newAttribute.name) !== newAttribute.value) {
-            oldElt.setAttribute(newAttribute.name, newAttribute.value);
-          }
-        }
-        for (let i = oldAttributes.length - 1; 0 <= i; i--) {
-          const oldAttribute = oldAttributes[i];
-          if (!oldAttribute) continue;
-          if (!newElt.hasAttribute(oldAttribute.name)) {
-            if (ignoreAttribute(oldAttribute.name, oldElt, "remove", ctx)) {
-              continue;
-            }
-            oldElt.removeAttribute(oldAttribute.name);
-          }
-        }
-        if (!ignoreValueOfActiveElement(oldElt, ctx)) {
-          syncInputValue(oldElt, newElt, ctx);
-        }
-      }
-      if (type === 8 || type === 3) {
-        if (oldNode.nodeValue !== newNode.nodeValue) {
-          oldNode.nodeValue = newNode.nodeValue;
-        }
-      }
-    }
-    function syncInputValue(oldElement, newElement, ctx) {
-      if (oldElement instanceof HTMLInputElement && newElement instanceof HTMLInputElement && newElement.type !== "file") {
-        let newValue = newElement.value;
-        let oldValue = oldElement.value;
-        syncBooleanAttribute(oldElement, newElement, "checked", ctx);
-        syncBooleanAttribute(oldElement, newElement, "disabled", ctx);
-        if (!newElement.hasAttribute("value")) {
-          if (!ignoreAttribute("value", oldElement, "remove", ctx)) {
-            oldElement.value = "";
-            oldElement.removeAttribute("value");
-          }
-        } else if (oldValue !== newValue) {
-          if (!ignoreAttribute("value", oldElement, "update", ctx)) {
-            oldElement.setAttribute("value", newValue);
-            oldElement.value = newValue;
-          }
-        }
-      } else if (oldElement instanceof HTMLOptionElement && newElement instanceof HTMLOptionElement) {
-        syncBooleanAttribute(oldElement, newElement, "selected", ctx);
-      } else if (oldElement instanceof HTMLTextAreaElement && newElement instanceof HTMLTextAreaElement) {
-        let newValue = newElement.value;
-        let oldValue = oldElement.value;
-        if (ignoreAttribute("value", oldElement, "update", ctx)) {
-          return;
-        }
-        if (newValue !== oldValue) {
-          oldElement.value = newValue;
-        }
-        if (oldElement.firstChild && oldElement.firstChild.nodeValue !== newValue) {
-          oldElement.firstChild.nodeValue = newValue;
-        }
-      }
-    }
-    function syncBooleanAttribute(oldElement, newElement, attributeName, ctx) {
-      const newLiveValue = newElement[attributeName], oldLiveValue = oldElement[attributeName];
-      if (newLiveValue !== oldLiveValue) {
-        const ignoreUpdate = ignoreAttribute(attributeName, oldElement, "update", ctx);
-        if (!ignoreUpdate) {
-          oldElement[attributeName] = newElement[attributeName];
-        }
-        if (newLiveValue) {
-          if (!ignoreUpdate) {
-            oldElement.setAttribute(attributeName, "");
-          }
-        } else {
-          if (!ignoreAttribute(attributeName, oldElement, "remove", ctx)) {
-            oldElement.removeAttribute(attributeName);
-          }
-        }
-      }
-    }
-    function ignoreAttribute(attr, element, updateType, ctx) {
-      if (attr === "value" && ctx.ignoreActiveValue && element === document.activeElement) {
-        return true;
-      }
-      return ctx.callbacks.beforeAttributeUpdated(attr, element, updateType) === false;
-    }
-    function ignoreValueOfActiveElement(possibleActiveElement, ctx) {
-      return !!ctx.ignoreActiveValue && possibleActiveElement === document.activeElement && possibleActiveElement !== document.body;
-    }
-    return morphNode;
-  }();
-  function withHeadBlocking(ctx, oldNode, newNode, callback) {
-    if (ctx.head.block) {
-      const oldHead = oldNode.querySelector("head");
-      const newHead = newNode.querySelector("head");
-      if (oldHead && newHead) {
-        const promises = handleHeadElement(oldHead, newHead, ctx);
-        return Promise.all(promises).then((() => {
-          const newCtx = Object.assign(ctx, {
-            head: {
-              block: false,
-              ignore: true
-            }
-          });
-          return callback(newCtx);
-        }));
-      }
-    }
-    return callback(ctx);
-  }
-  function handleHeadElement(oldHead, newHead, ctx) {
-    let added = [];
-    let removed = [];
-    let preserved = [];
-    let nodesToAppend = [];
-    let srcToNewHeadNodes = new Map;
-    for (const newHeadChild of newHead.children) {
-      srcToNewHeadNodes.set(newHeadChild.outerHTML, newHeadChild);
-    }
-    for (const currentHeadElt of oldHead.children) {
-      let inNewContent = srcToNewHeadNodes.has(currentHeadElt.outerHTML);
-      let isReAppended = ctx.head.shouldReAppend(currentHeadElt);
-      let isPreserved = ctx.head.shouldPreserve(currentHeadElt);
-      if (inNewContent || isPreserved) {
-        if (isReAppended) {
-          removed.push(currentHeadElt);
-        } else {
-          srcToNewHeadNodes.delete(currentHeadElt.outerHTML);
-          preserved.push(currentHeadElt);
-        }
-      } else {
-        if (ctx.head.style === "append") {
-          if (isReAppended) {
-            removed.push(currentHeadElt);
-            nodesToAppend.push(currentHeadElt);
-          }
-        } else {
-          if (ctx.head.shouldRemove(currentHeadElt) !== false) {
-            removed.push(currentHeadElt);
-          }
-        }
-      }
-    }
-    nodesToAppend.push(...srcToNewHeadNodes.values());
-    let promises = [];
-    for (const newNode of nodesToAppend) {
-      let newElt = document.createRange().createContextualFragment(newNode.outerHTML).firstChild;
-      if (ctx.callbacks.beforeNodeAdded(newElt) !== false) {
-        if ("href" in newElt && newElt.href || "src" in newElt && newElt.src) {
-          let resolve;
-          let promise = new Promise((function(_resolve) {
-            resolve = _resolve;
-          }));
-          newElt.addEventListener("load", (function() {
-            resolve();
-          }));
-          promises.push(promise);
-        }
-        oldHead.appendChild(newElt);
-        ctx.callbacks.afterNodeAdded(newElt);
-        added.push(newElt);
-      }
-    }
-    for (const removedElement of removed) {
-      if (ctx.callbacks.beforeNodeRemoved(removedElement) !== false) {
-        oldHead.removeChild(removedElement);
-        ctx.callbacks.afterNodeRemoved(removedElement);
-      }
-    }
-    ctx.head.afterHeadMorphed(oldHead, {
-      added: added,
-      kept: preserved,
-      removed: removed
-    });
-    return promises;
-  }
-  const createMorphContext = function() {
-    function createMorphContext(oldNode, newContent, config) {
-      const {persistentIds: persistentIds, idMap: idMap} = createIdMaps(oldNode, newContent);
-      const mergedConfig = mergeDefaults(config);
-      const morphStyle = mergedConfig.morphStyle || "outerHTML";
-      if (![ "innerHTML", "outerHTML" ].includes(morphStyle)) {
-        throw `Do not understand how to morph style ${morphStyle}`;
-      }
-      return {
-        target: oldNode,
-        newContent: newContent,
-        config: mergedConfig,
-        morphStyle: morphStyle,
-        ignoreActive: mergedConfig.ignoreActive,
-        ignoreActiveValue: mergedConfig.ignoreActiveValue,
-        restoreFocus: mergedConfig.restoreFocus,
-        idMap: idMap,
-        persistentIds: persistentIds,
-        pantry: createPantry(),
-        activeElementAndParents: createActiveElementAndParents(oldNode),
-        callbacks: mergedConfig.callbacks,
-        head: mergedConfig.head
-      };
-    }
-    function mergeDefaults(config) {
-      let finalConfig = Object.assign({}, defaults);
-      Object.assign(finalConfig, config);
-      finalConfig.callbacks = Object.assign({}, defaults.callbacks, config.callbacks);
-      finalConfig.head = Object.assign({}, defaults.head, config.head);
-      return finalConfig;
-    }
-    function createPantry() {
-      const pantry = document.createElement("div");
-      pantry.hidden = true;
-      document.body.insertAdjacentElement("afterend", pantry);
-      return pantry;
-    }
-    function createActiveElementAndParents(oldNode) {
-      let activeElementAndParents = [];
-      let elt = document.activeElement;
-      if (elt?.tagName !== "BODY" && oldNode.contains(elt)) {
-        while (elt) {
-          activeElementAndParents.push(elt);
-          if (elt === oldNode) break;
-          elt = elt.parentElement;
-        }
-      }
-      return activeElementAndParents;
-    }
-    function findIdElements(root) {
-      let elements = Array.from(root.querySelectorAll("[id]"));
-      if (root.getAttribute?.("id")) {
-        elements.push(root);
-      }
-      return elements;
-    }
-    function populateIdMapWithTree(idMap, persistentIds, root, elements) {
-      for (const elt of elements) {
-        const id = elt.getAttribute("id");
-        if (persistentIds.has(id)) {
-          let current = elt;
-          while (current) {
-            let idSet = idMap.get(current);
-            if (idSet == null) {
-              idSet = new Set;
-              idMap.set(current, idSet);
-            }
-            idSet.add(id);
-            if (current === root) break;
-            current = current.parentElement;
-          }
-        }
-      }
-    }
-    function createIdMaps(oldContent, newContent) {
-      const oldIdElements = findIdElements(oldContent);
-      const newIdElements = findIdElements(newContent);
-      const persistentIds = createPersistentIds(oldIdElements, newIdElements);
-      let idMap = new Map;
-      populateIdMapWithTree(idMap, persistentIds, oldContent, oldIdElements);
-      const newRoot = newContent.__idiomorphRoot || newContent;
-      populateIdMapWithTree(idMap, persistentIds, newRoot, newIdElements);
-      return {
-        persistentIds: persistentIds,
-        idMap: idMap
-      };
-    }
-    function createPersistentIds(oldIdElements, newIdElements) {
-      let duplicateIds = new Set;
-      let oldIdTagNameMap = new Map;
-      for (const {id: id, tagName: tagName} of oldIdElements) {
-        if (oldIdTagNameMap.has(id)) {
-          duplicateIds.add(id);
-        } else {
-          oldIdTagNameMap.set(id, tagName);
-        }
-      }
-      let persistentIds = new Set;
-      for (const {id: id, tagName: tagName} of newIdElements) {
-        if (persistentIds.has(id)) {
-          duplicateIds.add(id);
-        } else if (oldIdTagNameMap.get(id) === tagName) {
-          persistentIds.add(id);
-        }
-      }
-      for (const id of duplicateIds) {
-        persistentIds.delete(id);
-      }
-      return persistentIds;
-    }
-    return createMorphContext;
-  }();
-  const {normalizeElement: normalizeElement, normalizeParent: normalizeParent} = function() {
-    const generatedByIdiomorph = new WeakSet;
-    function normalizeElement(content) {
-      if (content instanceof Document) {
-        return content.documentElement;
-      } else {
-        return content;
-      }
-    }
-    function normalizeParent(newContent) {
-      if (newContent == null) {
-        return document.createElement("div");
-      } else if (typeof newContent === "string") {
-        return normalizeParent(parseContent(newContent));
-      } else if (generatedByIdiomorph.has(newContent)) {
-        return newContent;
-      } else if (newContent instanceof Node) {
-        if (newContent.parentNode) {
-          return new SlicedParentNode(newContent);
-        } else {
-          const dummyParent = document.createElement("div");
-          dummyParent.append(newContent);
-          return dummyParent;
-        }
-      } else {
-        const dummyParent = document.createElement("div");
-        for (const elt of [ ...newContent ]) {
-          dummyParent.append(elt);
-        }
-        return dummyParent;
-      }
-    }
-    class SlicedParentNode {
-      constructor(node) {
-        this.originalNode = node;
-        this.realParentNode = node.parentNode;
-        this.previousSibling = node.previousSibling;
-        this.nextSibling = node.nextSibling;
-      }
-      get childNodes() {
-        const nodes = [];
-        let cursor = this.previousSibling ? this.previousSibling.nextSibling : this.realParentNode.firstChild;
-        while (cursor && cursor != this.nextSibling) {
-          nodes.push(cursor);
-          cursor = cursor.nextSibling;
-        }
-        return nodes;
-      }
-      querySelectorAll(selector) {
-        return this.childNodes.reduce(((results, node) => {
-          if (node instanceof Element) {
-            if (node.matches(selector)) results.push(node);
-            const nodeList = node.querySelectorAll(selector);
-            for (let i = 0; i < nodeList.length; i++) {
-              results.push(nodeList[i]);
-            }
-          }
-          return results;
-        }), []);
-      }
-      insertBefore(node, referenceNode) {
-        return this.realParentNode.insertBefore(node, referenceNode);
-      }
-      moveBefore(node, referenceNode) {
-        return this.realParentNode.moveBefore(node, referenceNode);
-      }
-      get __idiomorphRoot() {
-        return this.originalNode;
-      }
-    }
-    function parseContent(newContent) {
-      let parser = new DOMParser;
-      let contentWithSvgsRemoved = newContent.replace(/<svg(\s[^>]*>|>)([\s\S]*?)<\/svg>/gim, "");
-      if (contentWithSvgsRemoved.match(/<\/html>/) || contentWithSvgsRemoved.match(/<\/head>/) || contentWithSvgsRemoved.match(/<\/body>/)) {
-        let content = parser.parseFromString(newContent, "text/html");
-        if (contentWithSvgsRemoved.match(/<\/html>/)) {
-          generatedByIdiomorph.add(content);
-          return content;
-        } else {
-          let htmlElement = content.firstChild;
-          if (htmlElement) {
-            generatedByIdiomorph.add(htmlElement);
-          }
-          return htmlElement;
-        }
-      } else {
-        let responseDoc = parser.parseFromString("<body><template>" + newContent + "</template></body>", "text/html");
-        let content = responseDoc.body.querySelector("template").content;
-        generatedByIdiomorph.add(content);
-        return content;
-      }
-    }
-    return {
-      normalizeElement: normalizeElement,
-      normalizeParent: normalizeParent
-    };
-  }();
-  return {
-    morph: morph,
-    defaults: defaults
-  };
-}();
-
-function morphElements(currentElement, newElement, {callbacks: callbacks, ...options} = {}) {
-  Idiomorph.morph(currentElement, newElement, {
-    ...options,
-    callbacks: new DefaultIdiomorphCallbacks(callbacks)
-  });
-}
-
-function morphChildren(currentElement, newElement, options = {}) {
-  morphElements(currentElement, newElement.childNodes, {
-    ...options,
-    morphStyle: "innerHTML"
-  });
-}
-
-function shouldRefreshFrameWithMorphing(currentFrame, newFrame) {
-  return currentFrame instanceof FrameElement && currentFrame.shouldReloadWithMorph && (!newFrame || areFramesCompatibleForRefreshing(currentFrame, newFrame)) && !currentFrame.closest("[data-turbo-permanent]");
-}
-
-function areFramesCompatibleForRefreshing(currentFrame, newFrame) {
-  return newFrame instanceof Element && newFrame.nodeName === "TURBO-FRAME" && currentFrame.id === newFrame.id && (!newFrame.getAttribute("src") || urlsAreEqual(currentFrame.src, newFrame.getAttribute("src")));
-}
-
-function closestFrameReloadableWithMorphing(node) {
-  return node.parentElement.closest("turbo-frame[src][refresh=morph]");
-}
-
-class DefaultIdiomorphCallbacks {
-  #beforeNodeMorphed;
-  constructor({beforeNodeMorphed: beforeNodeMorphed} = {}) {
-    this.#beforeNodeMorphed = beforeNodeMorphed || (() => true);
-  }
-  beforeNodeAdded=node => !(node.id && node.hasAttribute("data-turbo-permanent") && document.getElementById(node.id));
-  beforeNodeMorphed=(currentElement, newElement) => {
-    if (currentElement instanceof Element) {
-      if (!currentElement.hasAttribute("data-turbo-permanent") && this.#beforeNodeMorphed(currentElement, newElement)) {
-        const event = dispatch("turbo:before-morph-element", {
-          cancelable: true,
-          target: currentElement,
-          detail: {
-            currentElement: currentElement,
-            newElement: newElement
-          }
-        });
-        return !event.defaultPrevented;
-      } else {
-        return false;
-      }
-    }
-  };
-  beforeAttributeUpdated=(attributeName, target, mutationType) => {
-    const event = dispatch("turbo:before-morph-attribute", {
-      cancelable: true,
-      target: target,
-      detail: {
-        attributeName: attributeName,
-        mutationType: mutationType
-      }
-    });
-    return !event.defaultPrevented;
-  };
-  beforeNodeRemoved=node => this.beforeNodeMorphed(node);
-  afterNodeMorphed=(currentElement, newElement) => {
-    if (currentElement instanceof Element) {
-      dispatch("turbo:morph-element", {
-        target: currentElement,
-        detail: {
-          currentElement: currentElement,
-          newElement: newElement
-        }
-      });
-    }
-  };
-}
-
-class MorphingFrameRenderer extends FrameRenderer {
-  static renderElement(currentElement, newElement) {
-    dispatch("turbo:before-frame-morph", {
-      target: currentElement,
-      detail: {
-        currentElement: currentElement,
-        newElement: newElement
-      }
-    });
-    morphChildren(currentElement, newElement, {
-      callbacks: {
-        beforeNodeMorphed: (node, newNode) => {
-          if (shouldRefreshFrameWithMorphing(node, newNode) && closestFrameReloadableWithMorphing(node) === currentElement) {
-            node.reload();
-            return false;
-          }
-          return true;
-        }
-      }
-    });
-  }
-  async preservingPermanentElements(callback) {
-    return await callback();
-  }
-}
-
-class ProgressBar {
-  static animationDuration=300;
-  static get defaultCSS() {
-    return unindent`
-      .turbo-progress-bar {
-        position: fixed;
-        display: block;
-        top: 0;
-        left: 0;
-        height: 3px;
-        background: #0076ff;
-        z-index: 2147483647;
-        transition:
-          width ${ProgressBar.animationDuration}ms ease-out,
-          opacity ${ProgressBar.animationDuration / 2}ms ${ProgressBar.animationDuration / 2}ms ease-in;
-        transform: translate3d(0, 0, 0);
-      }
-    `;
-  }
-  hiding=false;
-  value=0;
-  visible=false;
-  constructor() {
-    this.stylesheetElement = this.createStylesheetElement();
-    this.progressElement = this.createProgressElement();
-    this.installStylesheetElement();
-    this.setValue(0);
-  }
-  show() {
-    if (!this.visible) {
-      this.visible = true;
-      this.installProgressElement();
-      this.startTrickling();
-    }
-  }
-  hide() {
-    if (this.visible && !this.hiding) {
-      this.hiding = true;
-      this.fadeProgressElement((() => {
-        this.uninstallProgressElement();
-        this.stopTrickling();
-        this.visible = false;
-        this.hiding = false;
-      }));
-    }
-  }
-  setValue(value) {
-    this.value = value;
-    this.refresh();
-  }
-  installStylesheetElement() {
-    document.head.insertBefore(this.stylesheetElement, document.head.firstChild);
-  }
-  installProgressElement() {
-    this.progressElement.style.width = "0";
-    this.progressElement.style.opacity = "1";
-    document.documentElement.insertBefore(this.progressElement, document.body);
-    this.refresh();
-  }
-  fadeProgressElement(callback) {
-    this.progressElement.style.opacity = "0";
-    setTimeout(callback, ProgressBar.animationDuration * 1.5);
-  }
-  uninstallProgressElement() {
-    if (this.progressElement.parentNode) {
-      document.documentElement.removeChild(this.progressElement);
-    }
-  }
-  startTrickling() {
-    if (!this.trickleInterval) {
-      this.trickleInterval = window.setInterval(this.trickle, ProgressBar.animationDuration);
-    }
-  }
-  stopTrickling() {
-    window.clearInterval(this.trickleInterval);
-    delete this.trickleInterval;
-  }
-  trickle=() => {
-    this.setValue(this.value + Math.random() / 100);
-  };
-  refresh() {
-    requestAnimationFrame((() => {
-      this.progressElement.style.width = `${10 + this.value * 90}%`;
-    }));
-  }
-  createStylesheetElement() {
-    const element = document.createElement("style");
-    element.type = "text/css";
-    element.textContent = ProgressBar.defaultCSS;
-    const cspNonce = getCspNonce();
-    if (cspNonce) {
-      element.nonce = cspNonce;
-    }
-    return element;
-  }
-  createProgressElement() {
-    const element = document.createElement("div");
-    element.className = "turbo-progress-bar";
-    return element;
-  }
-}
-
-class HeadSnapshot extends Snapshot {
-  detailsByOuterHTML=this.children.filter((element => !elementIsNoscript(element))).map((element => elementWithoutNonce(element))).reduce(((result, element) => {
-    const {outerHTML: outerHTML} = element;
-    const details = outerHTML in result ? result[outerHTML] : {
-      type: elementType(element),
-      tracked: elementIsTracked(element),
-      elements: []
-    };
-    return {
-      ...result,
-      [outerHTML]: {
-        ...details,
-        elements: [ ...details.elements, element ]
-      }
-    };
-  }), {});
-  get trackedElementSignature() {
-    return Object.keys(this.detailsByOuterHTML).filter((outerHTML => this.detailsByOuterHTML[outerHTML].tracked)).join("");
-  }
-  getScriptElementsNotInSnapshot(snapshot) {
-    return this.getElementsMatchingTypeNotInSnapshot("script", snapshot);
-  }
-  getStylesheetElementsNotInSnapshot(snapshot) {
-    return this.getElementsMatchingTypeNotInSnapshot("stylesheet", snapshot);
-  }
-  getElementsMatchingTypeNotInSnapshot(matchedType, snapshot) {
-    return Object.keys(this.detailsByOuterHTML).filter((outerHTML => !(outerHTML in snapshot.detailsByOuterHTML))).map((outerHTML => this.detailsByOuterHTML[outerHTML])).filter((({type: type}) => type == matchedType)).map((({elements: [element]}) => element));
-  }
-  get provisionalElements() {
-    return Object.keys(this.detailsByOuterHTML).reduce(((result, outerHTML) => {
-      const {type: type, tracked: tracked, elements: elements} = this.detailsByOuterHTML[outerHTML];
-      if (type == null && !tracked) {
-        return [ ...result, ...elements ];
-      } else if (elements.length > 1) {
-        return [ ...result, ...elements.slice(1) ];
-      } else {
-        return result;
-      }
-    }), []);
-  }
-  getMetaValue(name) {
-    const element = this.findMetaElementByName(name);
-    return element ? element.getAttribute("content") : null;
-  }
-  findMetaElementByName(name) {
-    return Object.keys(this.detailsByOuterHTML).reduce(((result, outerHTML) => {
-      const {elements: [element]} = this.detailsByOuterHTML[outerHTML];
-      return elementIsMetaElementWithName(element, name) ? element : result;
-    }), undefined | undefined);
-  }
-}
-
-function elementType(element) {
-  if (elementIsScript(element)) {
-    return "script";
-  } else if (elementIsStylesheet(element)) {
-    return "stylesheet";
-  }
-}
-
-function elementIsTracked(element) {
-  return element.getAttribute("data-turbo-track") == "reload";
-}
-
-function elementIsScript(element) {
-  const tagName = element.localName;
-  return tagName == "script";
-}
-
-function elementIsNoscript(element) {
-  const tagName = element.localName;
-  return tagName == "noscript";
-}
-
-function elementIsStylesheet(element) {
-  const tagName = element.localName;
-  return tagName == "style" || tagName == "link" && element.getAttribute("rel") == "stylesheet";
-}
-
-function elementIsMetaElementWithName(element, name) {
-  const tagName = element.localName;
-  return tagName == "meta" && element.getAttribute("name") == name;
-}
-
-function elementWithoutNonce(element) {
-  if (element.hasAttribute("nonce")) {
-    element.setAttribute("nonce", "");
-  }
-  return element;
-}
-
-class PageSnapshot extends Snapshot {
-  static fromHTMLString(html = "") {
-    return this.fromDocument(parseHTMLDocument(html));
-  }
-  static fromElement(element) {
-    return this.fromDocument(element.ownerDocument);
-  }
-  static fromDocument({documentElement: documentElement, body: body, head: head}) {
-    return new this(documentElement, body, new HeadSnapshot(head));
-  }
-  constructor(documentElement, body, headSnapshot) {
-    super(body);
-    this.documentElement = documentElement;
-    this.headSnapshot = headSnapshot;
-  }
-  clone() {
-    const clonedElement = this.element.cloneNode(true);
-    const selectElements = this.element.querySelectorAll("select");
-    const clonedSelectElements = clonedElement.querySelectorAll("select");
-    for (const [index, source] of selectElements.entries()) {
-      const clone = clonedSelectElements[index];
-      for (const option of clone.selectedOptions) option.selected = false;
-      for (const option of source.selectedOptions) clone.options[option.index].selected = true;
-    }
-    for (const clonedPasswordInput of clonedElement.querySelectorAll('input[type="password"]')) {
-      clonedPasswordInput.value = "";
-    }
-    for (const clonedNoscriptElement of clonedElement.querySelectorAll("noscript")) {
-      clonedNoscriptElement.remove();
-    }
-    return new PageSnapshot(this.documentElement, clonedElement, this.headSnapshot);
-  }
-  get lang() {
-    return this.documentElement.getAttribute("lang");
-  }
-  get dir() {
-    return this.documentElement.getAttribute("dir");
-  }
-  get headElement() {
-    return this.headSnapshot.element;
-  }
-  get rootLocation() {
-    const root = this.getSetting("root") ?? "/";
-    return expandURL(root);
-  }
-  get cacheControlValue() {
-    return this.getSetting("cache-control");
-  }
-  get isPreviewable() {
-    return this.cacheControlValue != "no-preview";
-  }
-  get isCacheable() {
-    return this.cacheControlValue != "no-cache";
-  }
-  get isVisitable() {
-    return this.getSetting("visit-control") != "reload";
-  }
-  get prefersViewTransitions() {
-    const viewTransitionEnabled = this.getSetting("view-transition") === "true" || this.headSnapshot.getMetaValue("view-transition") === "same-origin";
-    return viewTransitionEnabled && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  }
-  get refreshMethod() {
-    return this.getSetting("refresh-method");
-  }
-  get refreshScroll() {
-    return this.getSetting("refresh-scroll");
-  }
-  getSetting(name) {
-    return this.headSnapshot.getMetaValue(`turbo-${name}`);
-  }
-}
-
-class ViewTransitioner {
-  #viewTransitionStarted=false;
-  #lastOperation=Promise.resolve();
-  renderChange(useViewTransition, render) {
-    if (useViewTransition && this.viewTransitionsAvailable && !this.#viewTransitionStarted) {
-      this.#viewTransitionStarted = true;
-      this.#lastOperation = this.#lastOperation.then((async () => {
-        await document.startViewTransition(render).finished;
-      }));
-    } else {
-      this.#lastOperation = this.#lastOperation.then(render);
-    }
-    return this.#lastOperation;
-  }
-  get viewTransitionsAvailable() {
-    return document.startViewTransition;
-  }
-}
-
-const defaultOptions = {
-  action: "advance",
-  historyChanged: false,
-  visitCachedSnapshot: () => {},
-  willRender: true,
-  updateHistory: true,
-  shouldCacheSnapshot: true,
-  acceptsStreamResponse: false,
-  refresh: {}
-};
-
-const TimingMetric = {
-  visitStart: "visitStart",
-  requestStart: "requestStart",
-  requestEnd: "requestEnd",
-  visitEnd: "visitEnd"
-};
-
-const VisitState = {
-  initialized: "initialized",
-  started: "started",
-  canceled: "canceled",
-  failed: "failed",
-  completed: "completed"
-};
-
-const SystemStatusCode = {
-  networkFailure: 0,
-  timeoutFailure: -1,
-  contentTypeMismatch: -2
-};
-
-const Direction = {
-  advance: "forward",
-  restore: "back",
-  replace: "none"
-};
-
-class Visit {
-  identifier=uuid();
-  timingMetrics={};
-  followedRedirect=false;
-  historyChanged=false;
-  scrolled=false;
-  shouldCacheSnapshot=true;
-  acceptsStreamResponse=false;
-  snapshotCached=false;
-  state=VisitState.initialized;
-  viewTransitioner=new ViewTransitioner;
-  constructor(delegate, location, restorationIdentifier, options = {}) {
-    this.delegate = delegate;
-    this.location = location;
-    this.restorationIdentifier = restorationIdentifier || uuid();
-    const {action: action, historyChanged: historyChanged, referrer: referrer, snapshot: snapshot, snapshotHTML: snapshotHTML, response: response, visitCachedSnapshot: visitCachedSnapshot, willRender: willRender, updateHistory: updateHistory, shouldCacheSnapshot: shouldCacheSnapshot, acceptsStreamResponse: acceptsStreamResponse, direction: direction, refresh: refresh} = {
-      ...defaultOptions,
-      ...options
-    };
-    this.action = action;
-    this.historyChanged = historyChanged;
-    this.referrer = referrer;
-    this.snapshot = snapshot;
-    this.snapshotHTML = snapshotHTML;
-    this.response = response;
-    this.isPageRefresh = this.view.isPageRefresh(this);
-    this.visitCachedSnapshot = visitCachedSnapshot;
-    this.willRender = willRender;
-    this.updateHistory = updateHistory;
-    this.scrolled = !willRender;
-    this.shouldCacheSnapshot = shouldCacheSnapshot;
-    this.acceptsStreamResponse = acceptsStreamResponse;
-    this.direction = direction || Direction[action];
-    this.refresh = refresh;
-  }
-  get adapter() {
-    return this.delegate.adapter;
-  }
-  get view() {
-    return this.delegate.view;
-  }
-  get history() {
-    return this.delegate.history;
-  }
-  get restorationData() {
-    return this.history.getRestorationDataForIdentifier(this.restorationIdentifier);
-  }
-  start() {
-    if (this.state == VisitState.initialized) {
-      this.recordTimingMetric(TimingMetric.visitStart);
-      this.state = VisitState.started;
-      this.adapter.visitStarted(this);
-      this.delegate.visitStarted(this);
-    }
-  }
-  cancel() {
-    if (this.state == VisitState.started) {
-      if (this.request) {
-        this.request.cancel();
-      }
-      this.cancelRender();
-      this.state = VisitState.canceled;
-    }
-  }
-  complete() {
-    if (this.state == VisitState.started) {
-      this.recordTimingMetric(TimingMetric.visitEnd);
-      this.adapter.visitCompleted(this);
-      this.state = VisitState.completed;
-      this.followRedirect();
-      if (!this.followedRedirect) {
-        this.delegate.visitCompleted(this);
-      }
-    }
-  }
-  fail() {
-    if (this.state == VisitState.started) {
-      this.state = VisitState.failed;
-      this.adapter.visitFailed(this);
-      this.delegate.visitCompleted(this);
-    }
-  }
-  changeHistory() {
-    if (!this.historyChanged && this.updateHistory) {
-      const actionForHistory = this.location.href === this.referrer?.href ? "replace" : this.action;
-      const method = getHistoryMethodForAction(actionForHistory);
-      this.history.update(method, this.location, this.restorationIdentifier);
-      this.historyChanged = true;
-    }
-  }
-  issueRequest() {
-    if (this.hasPreloadedResponse()) {
-      this.simulateRequest();
-    } else if (this.shouldIssueRequest() && !this.request) {
-      this.request = new FetchRequest(this, FetchMethod.get, this.location);
-      this.request.perform();
-    }
-  }
-  simulateRequest() {
-    if (this.response) {
-      this.startRequest();
-      this.recordResponse();
-      this.finishRequest();
-    }
-  }
-  startRequest() {
-    this.recordTimingMetric(TimingMetric.requestStart);
-    this.adapter.visitRequestStarted(this);
-  }
-  recordResponse(response = this.response) {
-    this.response = response;
-    if (response) {
-      const {statusCode: statusCode} = response;
-      if (isSuccessful(statusCode)) {
-        this.adapter.visitRequestCompleted(this);
-      } else {
-        this.adapter.visitRequestFailedWithStatusCode(this, statusCode);
-      }
-    }
-  }
-  finishRequest() {
-    this.recordTimingMetric(TimingMetric.requestEnd);
-    this.adapter.visitRequestFinished(this);
-  }
-  loadResponse() {
-    if (this.response) {
-      const {statusCode: statusCode, responseHTML: responseHTML} = this.response;
-      this.render((async () => {
-        if (this.shouldCacheSnapshot) this.cacheSnapshot();
-        if (this.view.renderPromise) await this.view.renderPromise;
-        if (isSuccessful(statusCode) && responseHTML != null) {
-          const snapshot = PageSnapshot.fromHTMLString(responseHTML);
-          await this.renderPageSnapshot(snapshot, false);
-          this.adapter.visitRendered(this);
-          this.complete();
-        } else {
-          await this.view.renderError(PageSnapshot.fromHTMLString(responseHTML), this);
-          this.adapter.visitRendered(this);
-          this.fail();
-        }
-      }));
-    }
-  }
-  getCachedSnapshot() {
-    const snapshot = this.view.getCachedSnapshotForLocation(this.location) || this.getPreloadedSnapshot();
-    if (snapshot && (!getAnchor(this.location) || snapshot.hasAnchor(getAnchor(this.location)))) {
-      if (this.action == "restore" || snapshot.isPreviewable) {
-        return snapshot;
-      }
-    }
-  }
-  getPreloadedSnapshot() {
-    if (this.snapshotHTML) {
-      return PageSnapshot.fromHTMLString(this.snapshotHTML);
-    }
-  }
-  hasCachedSnapshot() {
-    return this.getCachedSnapshot() != null;
-  }
-  loadCachedSnapshot() {
-    const snapshot = this.getCachedSnapshot();
-    if (snapshot) {
-      const isPreview = this.shouldIssueRequest();
-      this.render((async () => {
-        this.cacheSnapshot();
-        if (this.isPageRefresh) {
-          this.adapter.visitRendered(this);
-        } else {
-          if (this.view.renderPromise) await this.view.renderPromise;
-          await this.renderPageSnapshot(snapshot, isPreview);
-          this.adapter.visitRendered(this);
-          if (!isPreview) {
-            this.complete();
-          }
-        }
-      }));
-    }
-  }
-  followRedirect() {
-    if (this.redirectedToLocation && !this.followedRedirect && this.response?.redirected) {
-      this.adapter.visitProposedToLocation(this.redirectedToLocation, {
-        action: "replace",
-        response: this.response,
-        shouldCacheSnapshot: false,
-        willRender: false
-      });
-      this.followedRedirect = true;
-    }
-  }
-  prepareRequest(request) {
-    if (this.acceptsStreamResponse) {
-      request.acceptResponseType(StreamMessage.contentType);
-    }
-  }
-  requestStarted() {
-    this.startRequest();
-  }
-  requestPreventedHandlingResponse(_request, _response) {}
-  async requestSucceededWithResponse(request, response) {
-    const responseHTML = await response.responseHTML;
-    const {redirected: redirected, statusCode: statusCode} = response;
-    if (responseHTML == undefined) {
-      this.recordResponse({
-        statusCode: SystemStatusCode.contentTypeMismatch,
-        redirected: redirected
-      });
-    } else {
-      this.redirectedToLocation = response.redirected ? response.location : undefined;
-      this.recordResponse({
-        statusCode: statusCode,
-        responseHTML: responseHTML,
-        redirected: redirected
-      });
-    }
-  }
-  async requestFailedWithResponse(request, response) {
-    const responseHTML = await response.responseHTML;
-    const {redirected: redirected, statusCode: statusCode} = response;
-    if (responseHTML == undefined) {
-      this.recordResponse({
-        statusCode: SystemStatusCode.contentTypeMismatch,
-        redirected: redirected
-      });
-    } else {
-      this.recordResponse({
-        statusCode: statusCode,
-        responseHTML: responseHTML,
-        redirected: redirected
-      });
-    }
-  }
-  requestErrored(_request, _error) {
-    this.recordResponse({
-      statusCode: SystemStatusCode.networkFailure,
-      redirected: false
-    });
-  }
-  requestFinished() {
-    this.finishRequest();
-  }
-  performScroll() {
-    if (!this.scrolled && !this.view.forceReloaded && !this.view.shouldPreserveScrollPosition(this)) {
-      if (this.action == "restore") {
-        this.scrollToRestoredPosition() || this.scrollToAnchor() || this.view.scrollToTop();
-      } else {
-        this.scrollToAnchor() || this.view.scrollToTop();
-      }
-      this.scrolled = true;
-    }
-  }
-  scrollToRestoredPosition() {
-    const {scrollPosition: scrollPosition} = this.restorationData;
-    if (scrollPosition) {
-      this.view.scrollToPosition(scrollPosition);
-      return true;
-    }
-  }
-  scrollToAnchor() {
-    const anchor = getAnchor(this.location);
-    if (anchor != null) {
-      this.view.scrollToAnchor(anchor);
-      return true;
-    }
-  }
-  recordTimingMetric(metric) {
-    this.timingMetrics[metric] = (new Date).getTime();
-  }
-  getTimingMetrics() {
-    return {
-      ...this.timingMetrics
-    };
-  }
-  hasPreloadedResponse() {
-    return typeof this.response == "object";
-  }
-  shouldIssueRequest() {
-    if (this.action == "restore") {
-      return !this.hasCachedSnapshot();
-    } else {
-      return this.willRender;
-    }
-  }
-  cacheSnapshot() {
-    if (!this.snapshotCached) {
-      this.view.cacheSnapshot(this.snapshot).then((snapshot => snapshot && this.visitCachedSnapshot(snapshot)));
-      this.snapshotCached = true;
-    }
-  }
-  async render(callback) {
-    this.cancelRender();
-    await new Promise((resolve => {
-      this.frame = document.visibilityState === "hidden" ? setTimeout((() => resolve()), 0) : requestAnimationFrame((() => resolve()));
-    }));
-    await callback();
-    delete this.frame;
-  }
-  async renderPageSnapshot(snapshot, isPreview) {
-    await this.viewTransitioner.renderChange(this.view.shouldTransitionTo(snapshot), (async () => {
-      await this.view.renderPage(snapshot, isPreview, this.willRender, this);
-      this.performScroll();
-    }));
-  }
-  cancelRender() {
-    if (this.frame) {
-      cancelAnimationFrame(this.frame);
-      delete this.frame;
-    }
-  }
-}
-
-function isSuccessful(statusCode) {
-  return statusCode >= 200 && statusCode < 300;
-}
-
-class BrowserAdapter {
-  progressBar=new ProgressBar;
-  constructor(session) {
-    this.session = session;
-  }
-  visitProposedToLocation(location, options) {
-    if (locationIsVisitable(location, this.navigator.rootLocation)) {
-      this.navigator.startVisit(location, options?.restorationIdentifier || uuid(), options);
-    } else {
-      window.location.href = location.toString();
-    }
-  }
-  visitStarted(visit) {
-    this.location = visit.location;
-    this.redirectedToLocation = null;
-    visit.loadCachedSnapshot();
-    visit.issueRequest();
-  }
-  visitRequestStarted(visit) {
-    this.progressBar.setValue(0);
-    if (visit.hasCachedSnapshot() || visit.action != "restore") {
-      this.showVisitProgressBarAfterDelay();
-    } else {
-      this.showProgressBar();
-    }
-  }
-  visitRequestCompleted(visit) {
-    visit.loadResponse();
-    if (visit.response.redirected) {
-      this.redirectedToLocation = visit.redirectedToLocation;
-    }
-  }
-  visitRequestFailedWithStatusCode(visit, statusCode) {
-    switch (statusCode) {
-     case SystemStatusCode.networkFailure:
-     case SystemStatusCode.timeoutFailure:
-     case SystemStatusCode.contentTypeMismatch:
-      return this.reload({
-        reason: "request_failed",
-        context: {
-          statusCode: statusCode
-        }
-      });
-
-     default:
-      return visit.loadResponse();
-    }
-  }
-  visitRequestFinished(_visit) {}
-  visitCompleted(_visit) {
-    this.progressBar.setValue(1);
-    this.hideVisitProgressBar();
-  }
-  pageInvalidated(reason) {
-    this.reload(reason);
-  }
-  visitFailed(_visit) {
-    this.progressBar.setValue(1);
-    this.hideVisitProgressBar();
-  }
-  visitRendered(_visit) {}
-  linkPrefetchingIsEnabledForLocation(location) {
-    return true;
-  }
-  formSubmissionStarted(_formSubmission) {
-    this.progressBar.setValue(0);
-    this.showFormProgressBarAfterDelay();
-  }
-  formSubmissionFinished(_formSubmission) {
-    this.progressBar.setValue(1);
-    this.hideFormProgressBar();
-  }
-  showVisitProgressBarAfterDelay() {
-    this.visitProgressBarTimeout = window.setTimeout(this.showProgressBar, this.session.progressBarDelay);
-  }
-  hideVisitProgressBar() {
-    this.progressBar.hide();
-    if (this.visitProgressBarTimeout != null) {
-      window.clearTimeout(this.visitProgressBarTimeout);
-      delete this.visitProgressBarTimeout;
-    }
-  }
-  showFormProgressBarAfterDelay() {
-    if (this.formProgressBarTimeout == null) {
-      this.formProgressBarTimeout = window.setTimeout(this.showProgressBar, this.session.progressBarDelay);
-    }
-  }
-  hideFormProgressBar() {
-    this.progressBar.hide();
-    if (this.formProgressBarTimeout != null) {
-      window.clearTimeout(this.formProgressBarTimeout);
-      delete this.formProgressBarTimeout;
-    }
-  }
-  showProgressBar=() => {
-    this.progressBar.show();
-  };
-  reload(reason) {
-    dispatch("turbo:reload", {
-      detail: reason
-    });
-    window.location.href = (this.redirectedToLocation || this.location)?.toString() || window.location.href;
-  }
-  get navigator() {
-    return this.session.navigator;
-  }
-}
-
-class CacheObserver {
-  selector="[data-turbo-temporary]";
-  started=false;
-  start() {
-    if (!this.started) {
-      this.started = true;
-      addEventListener("turbo:before-cache", this.removeTemporaryElements, false);
-    }
-  }
-  stop() {
-    if (this.started) {
-      this.started = false;
-      removeEventListener("turbo:before-cache", this.removeTemporaryElements, false);
-    }
-  }
-  removeTemporaryElements=_event => {
-    for (const element of this.temporaryElements) {
-      element.remove();
-    }
-  };
-  get temporaryElements() {
-    return [ ...document.querySelectorAll(this.selector) ];
-  }
-}
-
-class FrameRedirector {
-  constructor(session, element) {
-    this.session = session;
-    this.element = element;
-    this.linkInterceptor = new LinkInterceptor(this, element);
-    this.formSubmitObserver = new FormSubmitObserver(this, element);
-  }
-  start() {
-    this.linkInterceptor.start();
-    this.formSubmitObserver.start();
-  }
-  stop() {
-    this.linkInterceptor.stop();
-    this.formSubmitObserver.stop();
-  }
-  shouldInterceptLinkClick(element, _location, _event) {
-    return this.#shouldRedirect(element);
-  }
-  linkClickIntercepted(element, url, event) {
-    const frame = this.#findFrameElement(element);
-    if (frame) {
-      frame.delegate.linkClickIntercepted(element, url, event);
-    }
-  }
-  willSubmitForm(element, submitter) {
-    return element.closest("turbo-frame") == null && this.#shouldSubmit(element, submitter) && this.#shouldRedirect(element, submitter);
-  }
-  formSubmitted(element, submitter) {
-    const frame = this.#findFrameElement(element, submitter);
-    if (frame) {
-      frame.delegate.formSubmitted(element, submitter);
-    }
-  }
-  #shouldSubmit(form, submitter) {
-    const action = getAction$1(form, submitter);
-    const meta = this.element.ownerDocument.querySelector(`meta[name="turbo-root"]`);
-    const rootLocation = expandURL(meta?.content ?? "/");
-    return this.#shouldRedirect(form, submitter) && locationIsVisitable(action, rootLocation);
-  }
-  #shouldRedirect(element, submitter) {
-    const isNavigatable = element instanceof HTMLFormElement ? this.session.submissionIsNavigatable(element, submitter) : this.session.elementIsNavigatable(element);
-    if (isNavigatable) {
-      const frame = this.#findFrameElement(element, submitter);
-      return frame ? frame != element.closest("turbo-frame") : false;
-    } else {
-      return false;
-    }
-  }
-  #findFrameElement(element, submitter) {
-    const id = submitter?.getAttribute("data-turbo-frame") || element.getAttribute("data-turbo-frame");
-    if (id && id != "_top") {
-      const frame = this.element.querySelector(`#${id}:not([disabled])`);
-      if (frame instanceof FrameElement) {
-        return frame;
-      }
-    }
-  }
-}
-
-class History {
-  location;
-  restorationIdentifier=uuid();
-  restorationData={};
-  started=false;
-  currentIndex=0;
-  constructor(delegate) {
-    this.delegate = delegate;
-  }
-  start() {
-    if (!this.started) {
-      addEventListener("popstate", this.onPopState, false);
-      this.currentIndex = history.state?.turbo?.restorationIndex || 0;
-      this.started = true;
-      this.replace(new URL(window.location.href));
-    }
-  }
-  stop() {
-    if (this.started) {
-      removeEventListener("popstate", this.onPopState, false);
-      this.started = false;
-    }
-  }
-  push(location, restorationIdentifier) {
-    this.update(history.pushState, location, restorationIdentifier);
-  }
-  replace(location, restorationIdentifier) {
-    this.update(history.replaceState, location, restorationIdentifier);
-  }
-  update(method, location, restorationIdentifier = uuid()) {
-    if (method === history.pushState) ++this.currentIndex;
-    const state = {
-      turbo: {
-        restorationIdentifier: restorationIdentifier,
-        restorationIndex: this.currentIndex
-      }
-    };
-    method.call(history, state, "", location.href);
-    this.location = location;
-    this.restorationIdentifier = restorationIdentifier;
-  }
-  getRestorationDataForIdentifier(restorationIdentifier) {
-    return this.restorationData[restorationIdentifier] || {};
-  }
-  updateRestorationData(additionalData) {
-    const {restorationIdentifier: restorationIdentifier} = this;
-    const restorationData = this.restorationData[restorationIdentifier];
-    this.restorationData[restorationIdentifier] = {
-      ...restorationData,
-      ...additionalData
-    };
-  }
-  assumeControlOfScrollRestoration() {
-    if (!this.previousScrollRestoration) {
-      this.previousScrollRestoration = history.scrollRestoration ?? "auto";
-      history.scrollRestoration = "manual";
-    }
-  }
-  relinquishControlOfScrollRestoration() {
-    if (this.previousScrollRestoration) {
-      history.scrollRestoration = this.previousScrollRestoration;
-      delete this.previousScrollRestoration;
-    }
-  }
-  onPopState=event => {
-    const {turbo: turbo} = event.state || {};
-    this.location = new URL(window.location.href);
-    if (turbo) {
-      const {restorationIdentifier: restorationIdentifier, restorationIndex: restorationIndex} = turbo;
-      this.restorationIdentifier = restorationIdentifier;
-      const direction = restorationIndex > this.currentIndex ? "forward" : "back";
-      this.delegate.historyPoppedToLocationWithRestorationIdentifierAndDirection(this.location, restorationIdentifier, direction);
-      this.currentIndex = restorationIndex;
-    } else {
-      this.currentIndex++;
-      this.delegate.historyPoppedWithEmptyState(this.location);
-    }
-  };
-}
-
-class LinkPrefetchObserver {
-  started=false;
-  #prefetchedLink=null;
-  constructor(delegate, eventTarget) {
-    this.delegate = delegate;
-    this.eventTarget = eventTarget;
-  }
-  start() {
-    if (this.started) return;
-    if (this.eventTarget.readyState === "loading") {
-      this.eventTarget.addEventListener("DOMContentLoaded", this.#enable, {
-        once: true
-      });
-    } else {
-      this.#enable();
-    }
-  }
-  stop() {
-    if (!this.started) return;
-    this.eventTarget.removeEventListener("mouseenter", this.#tryToPrefetchRequest, {
-      capture: true,
-      passive: true
-    });
-    this.eventTarget.removeEventListener("mouseleave", this.#cancelRequestIfObsolete, {
-      capture: true,
-      passive: true
-    });
-    this.eventTarget.removeEventListener("turbo:before-fetch-request", this.#tryToUsePrefetchedRequest, true);
-    this.started = false;
-  }
-  #enable=() => {
-    this.eventTarget.addEventListener("mouseenter", this.#tryToPrefetchRequest, {
-      capture: true,
-      passive: true
-    });
-    this.eventTarget.addEventListener("mouseleave", this.#cancelRequestIfObsolete, {
-      capture: true,
-      passive: true
-    });
-    this.eventTarget.addEventListener("turbo:before-fetch-request", this.#tryToUsePrefetchedRequest, true);
-    this.started = true;
-  };
-  #tryToPrefetchRequest=event => {
-    if (getMetaContent("turbo-prefetch") === "false") return;
-    const target = event.target;
-    const isLink = target.matches && target.matches("a[href]:not([target^=_]):not([download])");
-    if (isLink && this.#isPrefetchable(target)) {
-      const link = target;
-      const location = getLocationForLink(link);
-      if (this.delegate.canPrefetchRequestToLocation(link, location)) {
-        this.#prefetchedLink = link;
-        const fetchRequest = new FetchRequest(this, FetchMethod.get, location, new URLSearchParams, target);
-        fetchRequest.fetchOptions.priority = "low";
-        prefetchCache.putLater(location, fetchRequest, this.#cacheTtl);
-      }
-    }
-  };
-  #cancelRequestIfObsolete=event => {
-    if (event.target === this.#prefetchedLink) this.#cancelPrefetchRequest();
-  };
-  #cancelPrefetchRequest=() => {
-    prefetchCache.clear();
-    this.#prefetchedLink = null;
-  };
-  #tryToUsePrefetchedRequest=event => {
-    if (event.target.tagName !== "FORM" && event.detail.fetchOptions.method === "GET") {
-      const cached = prefetchCache.get(event.detail.url);
-      if (cached) {
-        event.detail.fetchRequest = cached;
-      }
-      prefetchCache.clear();
-    }
-  };
-  prepareRequest(request) {
-    const link = request.target;
-    request.headers["X-Sec-Purpose"] = "prefetch";
-    const turboFrame = link.closest("turbo-frame");
-    const turboFrameTarget = link.getAttribute("data-turbo-frame") || turboFrame?.getAttribute("target") || turboFrame?.id;
-    if (turboFrameTarget && turboFrameTarget !== "_top") {
-      request.headers["Turbo-Frame"] = turboFrameTarget;
-    }
-  }
-  requestSucceededWithResponse() {}
-  requestStarted(fetchRequest) {}
-  requestErrored(fetchRequest) {}
-  requestFinished(fetchRequest) {}
-  requestPreventedHandlingResponse(fetchRequest, fetchResponse) {}
-  requestFailedWithResponse(fetchRequest, fetchResponse) {}
-  get #cacheTtl() {
-    return Number(getMetaContent("turbo-prefetch-cache-time")) || cacheTtl;
-  }
-  #isPrefetchable(link) {
-    const href = link.getAttribute("href");
-    if (!href) return false;
-    if (unfetchableLink(link)) return false;
-    if (linkToTheSamePage(link)) return false;
-    if (linkOptsOut(link)) return false;
-    if (nonSafeLink(link)) return false;
-    if (eventPrevented(link)) return false;
-    return true;
-  }
-}
-
-const unfetchableLink = link => link.origin !== document.location.origin || ![ "http:", "https:" ].includes(link.protocol) || link.hasAttribute("target");
-
-const linkToTheSamePage = link => link.pathname + link.search === document.location.pathname + document.location.search || link.href.startsWith("#");
-
-const linkOptsOut = link => {
-  if (link.getAttribute("data-turbo-prefetch") === "false") return true;
-  if (link.getAttribute("data-turbo") === "false") return true;
-  const turboPrefetchParent = findClosestRecursively(link, "[data-turbo-prefetch]");
-  if (turboPrefetchParent && turboPrefetchParent.getAttribute("data-turbo-prefetch") === "false") return true;
-  return false;
-};
-
-const nonSafeLink = link => {
-  const turboMethod = link.getAttribute("data-turbo-method");
-  if (turboMethod && turboMethod.toLowerCase() !== "get") return true;
-  if (isUJS(link)) return true;
-  if (link.hasAttribute("data-turbo-confirm")) return true;
-  if (link.hasAttribute("data-turbo-stream")) return true;
-  return false;
-};
-
-const isUJS = link => link.hasAttribute("data-remote") || link.hasAttribute("data-behavior") || link.hasAttribute("data-confirm") || link.hasAttribute("data-method");
-
-const eventPrevented = link => {
-  const event = dispatch("turbo:before-prefetch", {
-    target: link,
-    cancelable: true
-  });
-  return event.defaultPrevented;
-};
-
-class Navigator {
-  constructor(delegate) {
-    this.delegate = delegate;
-  }
-  proposeVisit(location, options = {}) {
-    if (this.delegate.allowsVisitingLocationWithAction(location, options.action)) {
-      this.delegate.visitProposedToLocation(location, options);
-    }
-  }
-  startVisit(locatable, restorationIdentifier, options = {}) {
-    this.stop();
-    this.currentVisit = new Visit(this, expandURL(locatable), restorationIdentifier, {
-      referrer: this.location,
-      ...options
-    });
-    this.currentVisit.start();
-  }
-  submitForm(form, submitter) {
-    this.stop();
-    this.formSubmission = new FormSubmission(this, form, submitter, true);
-    this.formSubmission.start();
-  }
-  stop() {
-    if (this.formSubmission) {
-      this.formSubmission.stop();
-      delete this.formSubmission;
-    }
-    if (this.currentVisit) {
-      this.currentVisit.cancel();
-      delete this.currentVisit;
-    }
-  }
-  get adapter() {
-    return this.delegate.adapter;
-  }
-  get view() {
-    return this.delegate.view;
-  }
-  get rootLocation() {
-    return this.view.snapshot.rootLocation;
-  }
-  get history() {
-    return this.delegate.history;
-  }
-  formSubmissionStarted(formSubmission) {
-    if (typeof this.adapter.formSubmissionStarted === "function") {
-      this.adapter.formSubmissionStarted(formSubmission);
-    }
-  }
-  async formSubmissionSucceededWithResponse(formSubmission, fetchResponse) {
-    if (formSubmission == this.formSubmission) {
-      const responseHTML = await fetchResponse.responseHTML;
-      if (responseHTML) {
-        const shouldCacheSnapshot = formSubmission.isSafe;
-        if (!shouldCacheSnapshot) {
-          this.view.clearSnapshotCache();
-        }
-        const {statusCode: statusCode, redirected: redirected} = fetchResponse;
-        const action = this.#getActionForFormSubmission(formSubmission, fetchResponse);
-        const visitOptions = {
-          action: action,
-          shouldCacheSnapshot: shouldCacheSnapshot,
-          response: {
-            statusCode: statusCode,
-            responseHTML: responseHTML,
-            redirected: redirected
-          }
-        };
-        this.proposeVisit(fetchResponse.location, visitOptions);
-      }
-    }
-  }
-  async formSubmissionFailedWithResponse(formSubmission, fetchResponse) {
-    const responseHTML = await fetchResponse.responseHTML;
-    if (responseHTML) {
-      const snapshot = PageSnapshot.fromHTMLString(responseHTML);
-      if (fetchResponse.serverError) {
-        await this.view.renderError(snapshot, this.currentVisit);
-      } else {
-        await this.view.renderPage(snapshot, false, true, this.currentVisit);
-      }
-      if (snapshot.refreshScroll !== "preserve") {
-        this.view.scrollToTop();
-      }
-      this.view.clearSnapshotCache();
-    }
-  }
-  formSubmissionErrored(formSubmission, error) {
-    console.error(error);
-  }
-  formSubmissionFinished(formSubmission) {
-    if (typeof this.adapter.formSubmissionFinished === "function") {
-      this.adapter.formSubmissionFinished(formSubmission);
-    }
-  }
-  linkPrefetchingIsEnabledForLocation(location) {
-    if (typeof this.adapter.linkPrefetchingIsEnabledForLocation === "function") {
-      return this.adapter.linkPrefetchingIsEnabledForLocation(location);
-    }
-    return true;
-  }
-  visitStarted(visit) {
-    this.delegate.visitStarted(visit);
-  }
-  visitCompleted(visit) {
-    this.delegate.visitCompleted(visit);
-    delete this.currentVisit;
-  }
-  locationWithActionIsSamePage(location, action) {
-    return false;
-  }
-  get location() {
-    return this.history.location;
-  }
-  get restorationIdentifier() {
-    return this.history.restorationIdentifier;
-  }
-  #getActionForFormSubmission(formSubmission, fetchResponse) {
-    const {submitter: submitter, formElement: formElement} = formSubmission;
-    return getVisitAction(submitter, formElement) || this.#getDefaultAction(fetchResponse);
-  }
-  #getDefaultAction(fetchResponse) {
-    const sameLocationRedirect = fetchResponse.redirected && fetchResponse.location.href === this.location?.href;
-    return sameLocationRedirect ? "replace" : "advance";
-  }
-}
-
-const PageStage = {
-  initial: 0,
-  loading: 1,
-  interactive: 2,
-  complete: 3
-};
-
-class PageObserver {
-  stage=PageStage.initial;
-  started=false;
-  constructor(delegate) {
-    this.delegate = delegate;
-  }
-  start() {
-    if (!this.started) {
-      if (this.stage == PageStage.initial) {
-        this.stage = PageStage.loading;
-      }
-      document.addEventListener("readystatechange", this.interpretReadyState, false);
-      addEventListener("pagehide", this.pageWillUnload, false);
-      this.started = true;
-    }
-  }
-  stop() {
-    if (this.started) {
-      document.removeEventListener("readystatechange", this.interpretReadyState, false);
-      removeEventListener("pagehide", this.pageWillUnload, false);
-      this.started = false;
-    }
-  }
-  interpretReadyState=() => {
-    const {readyState: readyState} = this;
-    if (readyState == "interactive") {
-      this.pageIsInteractive();
-    } else if (readyState == "complete") {
-      this.pageIsComplete();
-    }
-  };
-  pageIsInteractive() {
-    if (this.stage == PageStage.loading) {
-      this.stage = PageStage.interactive;
-      this.delegate.pageBecameInteractive();
-    }
-  }
-  pageIsComplete() {
-    this.pageIsInteractive();
-    if (this.stage == PageStage.interactive) {
-      this.stage = PageStage.complete;
-      this.delegate.pageLoaded();
-    }
-  }
-  pageWillUnload=() => {
-    this.delegate.pageWillUnload();
-  };
-  get readyState() {
-    return document.readyState;
-  }
-}
-
-class ScrollObserver {
-  started=false;
-  constructor(delegate) {
-    this.delegate = delegate;
-  }
-  start() {
-    if (!this.started) {
-      addEventListener("scroll", this.onScroll, false);
-      this.onScroll();
-      this.started = true;
-    }
-  }
-  stop() {
-    if (this.started) {
-      removeEventListener("scroll", this.onScroll, false);
-      this.started = false;
-    }
-  }
-  onScroll=() => {
-    this.updatePosition({
-      x: window.pageXOffset,
-      y: window.pageYOffset
-    });
-  };
-  updatePosition(position) {
-    this.delegate.scrollPositionChanged(position);
-  }
-}
-
-class StreamMessageRenderer {
-  render({fragment: fragment}) {
-    Bardo.preservingPermanentElements(this, getPermanentElementMapForFragment(fragment), (() => {
-      withAutofocusFromFragment(fragment, (() => {
-        withPreservedFocus((() => {
-          document.documentElement.appendChild(fragment);
-        }));
-      }));
-    }));
-  }
-  enteringBardo(currentPermanentElement, newPermanentElement) {
-    newPermanentElement.replaceWith(currentPermanentElement.cloneNode(true));
-  }
-  leavingBardo() {}
-}
-
-function getPermanentElementMapForFragment(fragment) {
-  const permanentElementsInDocument = queryPermanentElementsAll(document.documentElement);
-  const permanentElementMap = {};
-  for (const permanentElementInDocument of permanentElementsInDocument) {
-    const {id: id} = permanentElementInDocument;
-    for (const streamElement of fragment.querySelectorAll("turbo-stream")) {
-      const elementInStream = getPermanentElementById(streamElement.templateElement.content, id);
-      if (elementInStream) {
-        permanentElementMap[id] = [ permanentElementInDocument, elementInStream ];
-      }
-    }
-  }
-  return permanentElementMap;
-}
-
-async function withAutofocusFromFragment(fragment, callback) {
-  const generatedID = `turbo-stream-autofocus-${uuid()}`;
-  const turboStreams = fragment.querySelectorAll("turbo-stream");
-  const elementWithAutofocus = firstAutofocusableElementInStreams(turboStreams);
-  let willAutofocusId = null;
-  if (elementWithAutofocus) {
-    if (elementWithAutofocus.id) {
-      willAutofocusId = elementWithAutofocus.id;
-    } else {
-      willAutofocusId = generatedID;
-    }
-    elementWithAutofocus.id = willAutofocusId;
-  }
-  callback();
-  await nextRepaint();
-  const hasNoActiveElement = document.activeElement == null || document.activeElement == document.body;
-  if (hasNoActiveElement && willAutofocusId) {
-    const elementToAutofocus = document.getElementById(willAutofocusId);
-    if (elementIsFocusable(elementToAutofocus)) {
-      elementToAutofocus.focus();
-    }
-    if (elementToAutofocus && elementToAutofocus.id == generatedID) {
-      elementToAutofocus.removeAttribute("id");
-    }
-  }
-}
-
-async function withPreservedFocus(callback) {
-  const [activeElementBeforeRender, activeElementAfterRender] = await around(callback, (() => document.activeElement));
-  const restoreFocusTo = activeElementBeforeRender && activeElementBeforeRender.id;
-  if (restoreFocusTo) {
-    const elementToFocus = document.getElementById(restoreFocusTo);
-    if (elementIsFocusable(elementToFocus) && elementToFocus != activeElementAfterRender) {
-      elementToFocus.focus();
-    }
-  }
-}
-
-function firstAutofocusableElementInStreams(nodeListOfStreamElements) {
-  for (const streamElement of nodeListOfStreamElements) {
-    const elementWithAutofocus = queryAutofocusableElement(streamElement.templateElement.content);
-    if (elementWithAutofocus) return elementWithAutofocus;
-  }
-  return null;
-}
-
-class StreamObserver {
-  sources=new Set;
-  #started=false;
-  constructor(delegate) {
-    this.delegate = delegate;
-  }
-  start() {
-    if (!this.#started) {
-      this.#started = true;
-      addEventListener("turbo:before-fetch-response", this.inspectFetchResponse, false);
-    }
-  }
-  stop() {
-    if (this.#started) {
-      this.#started = false;
-      removeEventListener("turbo:before-fetch-response", this.inspectFetchResponse, false);
-    }
-  }
-  connectStreamSource(source) {
-    if (!this.streamSourceIsConnected(source)) {
-      this.sources.add(source);
-      source.addEventListener("message", this.receiveMessageEvent, false);
-    }
-  }
-  disconnectStreamSource(source) {
-    if (this.streamSourceIsConnected(source)) {
-      this.sources.delete(source);
-      source.removeEventListener("message", this.receiveMessageEvent, false);
-    }
-  }
-  streamSourceIsConnected(source) {
-    return this.sources.has(source);
-  }
-  inspectFetchResponse=event => {
-    const response = fetchResponseFromEvent(event);
-    if (response && fetchResponseIsStream(response)) {
-      event.preventDefault();
-      this.receiveMessageResponse(response);
-    }
-  };
-  receiveMessageEvent=event => {
-    if (this.#started && typeof event.data == "string") {
-      this.receiveMessageHTML(event.data);
-    }
-  };
-  async receiveMessageResponse(response) {
-    const html = await response.responseHTML;
-    if (html) {
-      this.receiveMessageHTML(html);
-    }
-  }
-  receiveMessageHTML(html) {
-    this.delegate.receivedMessageFromStream(StreamMessage.wrap(html));
-  }
-}
-
-function fetchResponseFromEvent(event) {
-  const fetchResponse = event.detail?.fetchResponse;
-  if (fetchResponse instanceof FetchResponse) {
-    return fetchResponse;
-  }
-}
-
-function fetchResponseIsStream(response) {
-  const contentType = response.contentType ?? "";
-  return contentType.startsWith(StreamMessage.contentType);
-}
-
-class ErrorRenderer extends Renderer {
-  static renderElement(currentElement, newElement) {
-    const {documentElement: documentElement, body: body} = document;
-    documentElement.replaceChild(newElement, body);
-  }
-  async render() {
-    this.replaceHeadAndBody();
-    this.activateScriptElements();
-  }
-  replaceHeadAndBody() {
-    const {documentElement: documentElement, head: head} = document;
-    documentElement.replaceChild(this.newHead, head);
-    this.renderElement(this.currentElement, this.newElement);
-  }
-  activateScriptElements() {
-    for (const replaceableElement of this.scriptElements) {
-      const parentNode = replaceableElement.parentNode;
-      if (parentNode) {
-        const element = activateScriptElement(replaceableElement);
-        parentNode.replaceChild(element, replaceableElement);
-      }
-    }
-  }
-  get newHead() {
-    return this.newSnapshot.headSnapshot.element;
-  }
-  get scriptElements() {
-    return document.documentElement.querySelectorAll("script");
-  }
-}
-
-class PageRenderer extends Renderer {
-  static renderElement(currentElement, newElement) {
-    if (document.body && newElement instanceof HTMLBodyElement) {
-      document.body.replaceWith(newElement);
-    } else {
-      document.documentElement.appendChild(newElement);
-    }
-  }
-  get shouldRender() {
-    return this.newSnapshot.isVisitable && this.trackedElementsAreIdentical;
-  }
-  get reloadReason() {
-    if (!this.newSnapshot.isVisitable) {
-      return {
-        reason: "turbo_visit_control_is_reload"
-      };
-    }
-    if (!this.trackedElementsAreIdentical) {
-      return {
-        reason: "tracked_element_mismatch"
-      };
-    }
-  }
-  async prepareToRender() {
-    this.#setLanguage();
-    await this.mergeHead();
-  }
-  async render() {
-    if (this.willRender) {
-      await this.replaceBody();
-    }
-  }
-  finishRendering() {
-    super.finishRendering();
-    if (!this.isPreview) {
-      this.focusFirstAutofocusableElement();
-    }
-  }
-  get currentHeadSnapshot() {
-    return this.currentSnapshot.headSnapshot;
-  }
-  get newHeadSnapshot() {
-    return this.newSnapshot.headSnapshot;
-  }
-  get newElement() {
-    return this.newSnapshot.element;
-  }
-  #setLanguage() {
-    const {documentElement: documentElement} = this.currentSnapshot;
-    const {dir: dir, lang: lang} = this.newSnapshot;
-    if (lang) {
-      documentElement.setAttribute("lang", lang);
-    } else {
-      documentElement.removeAttribute("lang");
-    }
-    if (dir) {
-      documentElement.setAttribute("dir", dir);
-    } else {
-      documentElement.removeAttribute("dir");
-    }
-  }
-  async mergeHead() {
-    const mergedHeadElements = this.mergeProvisionalElements();
-    const newStylesheetElements = this.copyNewHeadStylesheetElements();
-    this.copyNewHeadScriptElements();
-    await mergedHeadElements;
-    await newStylesheetElements;
-    if (this.willRender) {
-      this.removeUnusedDynamicStylesheetElements();
-    }
-  }
-  async replaceBody() {
-    await this.preservingPermanentElements((async () => {
-      this.activateNewBody();
-      await this.assignNewBody();
-    }));
-  }
-  get trackedElementsAreIdentical() {
-    return this.currentHeadSnapshot.trackedElementSignature == this.newHeadSnapshot.trackedElementSignature;
-  }
-  async copyNewHeadStylesheetElements() {
-    const loadingElements = [];
-    for (const element of this.newHeadStylesheetElements) {
-      loadingElements.push(waitForLoad(element));
-      document.head.appendChild(element);
-    }
-    await Promise.all(loadingElements);
-  }
-  copyNewHeadScriptElements() {
-    for (const element of this.newHeadScriptElements) {
-      document.head.appendChild(activateScriptElement(element));
-    }
-  }
-  removeUnusedDynamicStylesheetElements() {
-    for (const element of this.unusedDynamicStylesheetElements) {
-      document.head.removeChild(element);
-    }
-  }
-  async mergeProvisionalElements() {
-    const newHeadElements = [ ...this.newHeadProvisionalElements ];
-    for (const element of this.currentHeadProvisionalElements) {
-      if (!this.isCurrentElementInElementList(element, newHeadElements)) {
-        document.head.removeChild(element);
-      }
-    }
-    for (const element of newHeadElements) {
-      document.head.appendChild(element);
-    }
-  }
-  isCurrentElementInElementList(element, elementList) {
-    for (const [index, newElement] of elementList.entries()) {
-      if (element.tagName == "TITLE") {
-        if (newElement.tagName != "TITLE") {
-          continue;
-        }
-        if (element.innerHTML == newElement.innerHTML) {
-          elementList.splice(index, 1);
-          return true;
-        }
-      }
-      if (newElement.isEqualNode(element)) {
-        elementList.splice(index, 1);
-        return true;
-      }
-    }
-    return false;
-  }
-  removeCurrentHeadProvisionalElements() {
-    for (const element of this.currentHeadProvisionalElements) {
-      document.head.removeChild(element);
-    }
-  }
-  copyNewHeadProvisionalElements() {
-    for (const element of this.newHeadProvisionalElements) {
-      document.head.appendChild(element);
-    }
-  }
-  activateNewBody() {
-    document.adoptNode(this.newElement);
-    this.removeNoscriptElements();
-    this.activateNewBodyScriptElements();
-  }
-  removeNoscriptElements() {
-    for (const noscriptElement of this.newElement.querySelectorAll("noscript")) {
-      noscriptElement.remove();
-    }
-  }
-  activateNewBodyScriptElements() {
-    for (const inertScriptElement of this.newBodyScriptElements) {
-      const activatedScriptElement = activateScriptElement(inertScriptElement);
-      inertScriptElement.replaceWith(activatedScriptElement);
-    }
-  }
-  async assignNewBody() {
-    await this.renderElement(this.currentElement, this.newElement);
-  }
-  get unusedDynamicStylesheetElements() {
-    return this.oldHeadStylesheetElements.filter((element => element.getAttribute("data-turbo-track") === "dynamic"));
-  }
-  get oldHeadStylesheetElements() {
-    return this.currentHeadSnapshot.getStylesheetElementsNotInSnapshot(this.newHeadSnapshot);
-  }
-  get newHeadStylesheetElements() {
-    return this.newHeadSnapshot.getStylesheetElementsNotInSnapshot(this.currentHeadSnapshot);
-  }
-  get newHeadScriptElements() {
-    return this.newHeadSnapshot.getScriptElementsNotInSnapshot(this.currentHeadSnapshot);
-  }
-  get currentHeadProvisionalElements() {
-    return this.currentHeadSnapshot.provisionalElements;
-  }
-  get newHeadProvisionalElements() {
-    return this.newHeadSnapshot.provisionalElements;
-  }
-  get newBodyScriptElements() {
-    return this.newElement.querySelectorAll("script");
-  }
-}
-
-class MorphingPageRenderer extends PageRenderer {
-  static renderElement(currentElement, newElement) {
-    morphElements(currentElement, newElement, {
-      callbacks: {
-        beforeNodeMorphed: (node, newNode) => {
-          if (shouldRefreshFrameWithMorphing(node, newNode) && !closestFrameReloadableWithMorphing(node)) {
-            node.reload();
-            return false;
-          }
-          return true;
-        }
-      }
-    });
-    dispatch("turbo:morph", {
-      detail: {
-        currentElement: currentElement,
-        newElement: newElement
-      }
-    });
-  }
-  async preservingPermanentElements(callback) {
-    return await callback();
-  }
-  get renderMethod() {
-    return "morph";
-  }
-  get shouldAutofocus() {
-    return false;
-  }
-}
-
-class SnapshotCache extends LRUCache {
-  constructor(size) {
-    super(size, toCacheKey);
-  }
-  get snapshots() {
-    return this.entries;
-  }
-}
-
-class PageView extends View {
-  snapshotCache=new SnapshotCache(10);
-  lastRenderedLocation=new URL(location.href);
-  forceReloaded=false;
-  shouldTransitionTo(newSnapshot) {
-    return this.snapshot.prefersViewTransitions && newSnapshot.prefersViewTransitions;
-  }
-  renderPage(snapshot, isPreview = false, willRender = true, visit) {
-    const shouldMorphPage = this.isPageRefresh(visit) && (visit?.refresh?.method || this.snapshot.refreshMethod) === "morph";
-    const rendererClass = shouldMorphPage ? MorphingPageRenderer : PageRenderer;
-    const renderer = new rendererClass(this.snapshot, snapshot, isPreview, willRender);
-    if (!renderer.shouldRender) {
-      this.forceReloaded = true;
-    } else {
-      visit?.changeHistory();
-    }
-    return this.render(renderer);
-  }
-  renderError(snapshot, visit) {
-    visit?.changeHistory();
-    const renderer = new ErrorRenderer(this.snapshot, snapshot, false);
-    return this.render(renderer);
-  }
-  clearSnapshotCache() {
-    this.snapshotCache.clear();
-  }
-  async cacheSnapshot(snapshot = this.snapshot) {
-    if (snapshot.isCacheable) {
-      this.delegate.viewWillCacheSnapshot();
-      const {lastRenderedLocation: location} = this;
-      await nextEventLoopTick();
-      const cachedSnapshot = snapshot.clone();
-      this.snapshotCache.put(location, cachedSnapshot);
-      return cachedSnapshot;
-    }
-  }
-  getCachedSnapshotForLocation(location) {
-    return this.snapshotCache.get(location);
-  }
-  isPageRefresh(visit) {
-    return !visit || this.lastRenderedLocation.pathname === visit.location.pathname && visit.action === "replace";
-  }
-  shouldPreserveScrollPosition(visit) {
-    return this.isPageRefresh(visit) && (visit?.refresh?.scroll || this.snapshot.refreshScroll) === "preserve";
-  }
-  get snapshot() {
-    return PageSnapshot.fromElement(this.element);
-  }
-}
-
-class Preloader {
-  selector="a[data-turbo-preload]";
-  constructor(delegate, snapshotCache) {
-    this.delegate = delegate;
-    this.snapshotCache = snapshotCache;
-  }
-  start() {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", this.#preloadAll);
-    } else {
-      this.preloadOnLoadLinksForView(document.body);
-    }
-  }
-  stop() {
-    document.removeEventListener("DOMContentLoaded", this.#preloadAll);
-  }
-  preloadOnLoadLinksForView(element) {
-    for (const link of element.querySelectorAll(this.selector)) {
-      if (this.delegate.shouldPreloadLink(link)) {
-        this.preloadURL(link);
-      }
-    }
-  }
-  async preloadURL(link) {
-    const location = new URL(link.href);
-    if (this.snapshotCache.has(location)) {
-      return;
-    }
-    const fetchRequest = new FetchRequest(this, FetchMethod.get, location, new URLSearchParams, link);
-    await fetchRequest.perform();
-  }
-  prepareRequest(fetchRequest) {
-    fetchRequest.headers["X-Sec-Purpose"] = "prefetch";
-  }
-  async requestSucceededWithResponse(fetchRequest, fetchResponse) {
-    try {
-      const responseHTML = await fetchResponse.responseHTML;
-      const snapshot = PageSnapshot.fromHTMLString(responseHTML);
-      this.snapshotCache.put(fetchRequest.url, snapshot);
-    } catch (_) {}
-  }
-  requestStarted(fetchRequest) {}
-  requestErrored(fetchRequest) {}
-  requestFinished(fetchRequest) {}
-  requestPreventedHandlingResponse(fetchRequest, fetchResponse) {}
-  requestFailedWithResponse(fetchRequest, fetchResponse) {}
-  #preloadAll=() => {
-    this.preloadOnLoadLinksForView(document.body);
-  };
-}
-
-class Cache {
-  constructor(session) {
-    this.session = session;
-  }
-  clear() {
-    this.session.clearCache();
-  }
-  resetCacheControl() {
-    this.#setCacheControl("");
-  }
-  exemptPageFromCache() {
-    this.#setCacheControl("no-cache");
-  }
-  exemptPageFromPreview() {
-    this.#setCacheControl("no-preview");
-  }
-  #setCacheControl(value) {
-    setMetaContent("turbo-cache-control", value);
-  }
-}
-
-class Session {
-  navigator=new Navigator(this);
-  history=new History(this);
-  view=new PageView(this, document.documentElement);
-  adapter=new BrowserAdapter(this);
-  pageObserver=new PageObserver(this);
-  cacheObserver=new CacheObserver;
-  linkPrefetchObserver=new LinkPrefetchObserver(this, document);
-  linkClickObserver=new LinkClickObserver(this, window);
-  formSubmitObserver=new FormSubmitObserver(this, document);
-  scrollObserver=new ScrollObserver(this);
-  streamObserver=new StreamObserver(this);
-  formLinkClickObserver=new FormLinkClickObserver(this, document.documentElement);
-  frameRedirector=new FrameRedirector(this, document.documentElement);
-  streamMessageRenderer=new StreamMessageRenderer;
-  cache=new Cache(this);
-  enabled=true;
-  started=false;
-  #pageRefreshDebouncePeriod=150;
-  constructor(recentRequests) {
-    this.recentRequests = recentRequests;
-    this.preloader = new Preloader(this, this.view.snapshotCache);
-    this.debouncedRefresh = this.refresh;
-    this.pageRefreshDebouncePeriod = this.pageRefreshDebouncePeriod;
-  }
-  start() {
-    if (!this.started) {
-      this.pageObserver.start();
-      this.cacheObserver.start();
-      this.linkPrefetchObserver.start();
-      this.formLinkClickObserver.start();
-      this.linkClickObserver.start();
-      this.formSubmitObserver.start();
-      this.scrollObserver.start();
-      this.streamObserver.start();
-      this.frameRedirector.start();
-      this.history.start();
-      this.preloader.start();
-      this.started = true;
-      this.enabled = true;
-    }
-  }
-  disable() {
-    this.enabled = false;
-  }
-  stop() {
-    if (this.started) {
-      this.pageObserver.stop();
-      this.cacheObserver.stop();
-      this.linkPrefetchObserver.stop();
-      this.formLinkClickObserver.stop();
-      this.linkClickObserver.stop();
-      this.formSubmitObserver.stop();
-      this.scrollObserver.stop();
-      this.streamObserver.stop();
-      this.frameRedirector.stop();
-      this.history.stop();
-      this.preloader.stop();
-      this.started = false;
-    }
-  }
-  registerAdapter(adapter) {
-    this.adapter = adapter;
-  }
-  visit(location, options = {}) {
-    const frameElement = options.frame ? document.getElementById(options.frame) : null;
-    if (frameElement instanceof FrameElement) {
-      const action = options.action || getVisitAction(frameElement);
-      frameElement.delegate.proposeVisitIfNavigatedWithAction(frameElement, action);
-      frameElement.src = location.toString();
-    } else {
-      this.navigator.proposeVisit(expandURL(location), options);
-    }
-  }
-  refresh(url, options = {}) {
-    options = typeof options === "string" ? {
-      requestId: options
-    } : options;
-    const {method: method, requestId: requestId, scroll: scroll} = options;
-    const isRecentRequest = requestId && this.recentRequests.has(requestId);
-    const isCurrentUrl = url === document.baseURI;
-    if (!isRecentRequest && !this.navigator.currentVisit && isCurrentUrl) {
-      this.visit(url, {
-        action: "replace",
-        shouldCacheSnapshot: false,
-        refresh: {
-          method: method,
-          scroll: scroll
-        }
-      });
-    }
-  }
-  connectStreamSource(source) {
-    this.streamObserver.connectStreamSource(source);
-  }
-  disconnectStreamSource(source) {
-    this.streamObserver.disconnectStreamSource(source);
-  }
-  renderStreamMessage(message) {
-    this.streamMessageRenderer.render(StreamMessage.wrap(message));
-  }
-  clearCache() {
-    this.view.clearSnapshotCache();
-  }
-  setProgressBarDelay(delay) {
-    console.warn("Please replace `session.setProgressBarDelay(delay)` with `session.progressBarDelay = delay`. The function is deprecated and will be removed in a future version of Turbo.`");
-    this.progressBarDelay = delay;
-  }
-  set progressBarDelay(delay) {
-    config.drive.progressBarDelay = delay;
-  }
-  get progressBarDelay() {
-    return config.drive.progressBarDelay;
-  }
-  set drive(value) {
-    config.drive.enabled = value;
-  }
-  get drive() {
-    return config.drive.enabled;
-  }
-  set formMode(value) {
-    config.forms.mode = value;
-  }
-  get formMode() {
-    return config.forms.mode;
-  }
-  get location() {
-    return this.history.location;
-  }
-  get restorationIdentifier() {
-    return this.history.restorationIdentifier;
-  }
-  get pageRefreshDebouncePeriod() {
-    return this.#pageRefreshDebouncePeriod;
-  }
-  set pageRefreshDebouncePeriod(value) {
-    this.refresh = debounce(this.debouncedRefresh.bind(this), value);
-    this.#pageRefreshDebouncePeriod = value;
-  }
-  shouldPreloadLink(element) {
-    const isUnsafe = element.hasAttribute("data-turbo-method");
-    const isStream = element.hasAttribute("data-turbo-stream");
-    const frameTarget = element.getAttribute("data-turbo-frame");
-    const frame = frameTarget == "_top" ? null : document.getElementById(frameTarget) || findClosestRecursively(element, "turbo-frame:not([disabled])");
-    if (isUnsafe || isStream || frame instanceof FrameElement) {
-      return false;
-    } else {
-      const location = new URL(element.href);
-      return this.elementIsNavigatable(element) && locationIsVisitable(location, this.snapshot.rootLocation);
-    }
-  }
-  historyPoppedToLocationWithRestorationIdentifierAndDirection(location, restorationIdentifier, direction) {
-    if (this.enabled) {
-      this.navigator.startVisit(location, restorationIdentifier, {
-        action: "restore",
-        historyChanged: true,
-        direction: direction
-      });
-    } else {
-      this.adapter.pageInvalidated({
-        reason: "turbo_disabled"
-      });
-    }
-  }
-  historyPoppedWithEmptyState(location) {
-    this.history.replace(location);
-    this.view.lastRenderedLocation = location;
-    this.view.cacheSnapshot();
-  }
-  scrollPositionChanged(position) {
-    this.history.updateRestorationData({
-      scrollPosition: position
-    });
-  }
-  willSubmitFormLinkToLocation(link, location) {
-    return this.elementIsNavigatable(link) && locationIsVisitable(location, this.snapshot.rootLocation);
-  }
-  submittedFormLinkToLocation() {}
-  canPrefetchRequestToLocation(link, location) {
-    return this.elementIsNavigatable(link) && locationIsVisitable(location, this.snapshot.rootLocation) && this.navigator.linkPrefetchingIsEnabledForLocation(location);
-  }
-  willFollowLinkToLocation(link, location, event) {
-    return this.elementIsNavigatable(link) && locationIsVisitable(location, this.snapshot.rootLocation) && this.applicationAllowsFollowingLinkToLocation(link, location, event);
-  }
-  followedLinkToLocation(link, location) {
-    const action = this.getActionForLink(link);
-    const acceptsStreamResponse = link.hasAttribute("data-turbo-stream");
-    this.visit(location.href, {
-      action: action,
-      acceptsStreamResponse: acceptsStreamResponse
-    });
-  }
-  allowsVisitingLocationWithAction(location, action) {
-    return this.applicationAllowsVisitingLocation(location);
-  }
-  visitProposedToLocation(location, options) {
-    extendURLWithDeprecatedProperties(location);
-    this.adapter.visitProposedToLocation(location, options);
-  }
-  visitStarted(visit) {
-    if (!visit.acceptsStreamResponse) {
-      markAsBusy(document.documentElement);
-      this.view.markVisitDirection(visit.direction);
-    }
-    extendURLWithDeprecatedProperties(visit.location);
-    this.notifyApplicationAfterVisitingLocation(visit.location, visit.action);
-  }
-  visitCompleted(visit) {
-    this.view.unmarkVisitDirection();
-    clearBusyState(document.documentElement);
-    this.notifyApplicationAfterPageLoad(visit.getTimingMetrics());
-  }
-  willSubmitForm(form, submitter) {
-    const action = getAction$1(form, submitter);
-    return this.submissionIsNavigatable(form, submitter) && locationIsVisitable(expandURL(action), this.snapshot.rootLocation);
-  }
-  formSubmitted(form, submitter) {
-    this.navigator.submitForm(form, submitter);
-  }
-  pageBecameInteractive() {
-    this.view.lastRenderedLocation = this.location;
-    this.notifyApplicationAfterPageLoad();
-  }
-  pageLoaded() {
-    this.history.assumeControlOfScrollRestoration();
-  }
-  pageWillUnload() {
-    this.history.relinquishControlOfScrollRestoration();
-  }
-  receivedMessageFromStream(message) {
-    this.renderStreamMessage(message);
-  }
-  viewWillCacheSnapshot() {
-    this.notifyApplicationBeforeCachingSnapshot();
-  }
-  allowsImmediateRender({element: element}, options) {
-    const event = this.notifyApplicationBeforeRender(element, options);
-    const {defaultPrevented: defaultPrevented, detail: {render: render}} = event;
-    if (this.view.renderer && render) {
-      this.view.renderer.renderElement = render;
-    }
-    return !defaultPrevented;
-  }
-  viewRenderedSnapshot(_snapshot, _isPreview, renderMethod) {
-    this.view.lastRenderedLocation = this.history.location;
-    this.notifyApplicationAfterRender(renderMethod);
-  }
-  preloadOnLoadLinksForView(element) {
-    this.preloader.preloadOnLoadLinksForView(element);
-  }
-  viewInvalidated(reason) {
-    this.adapter.pageInvalidated(reason);
-  }
-  frameLoaded(frame) {
-    this.notifyApplicationAfterFrameLoad(frame);
-  }
-  frameRendered(fetchResponse, frame) {
-    this.notifyApplicationAfterFrameRender(fetchResponse, frame);
-  }
-  applicationAllowsFollowingLinkToLocation(link, location, ev) {
-    const event = this.notifyApplicationAfterClickingLinkToLocation(link, location, ev);
-    return !event.defaultPrevented;
-  }
-  applicationAllowsVisitingLocation(location) {
-    const event = this.notifyApplicationBeforeVisitingLocation(location);
-    return !event.defaultPrevented;
-  }
-  notifyApplicationAfterClickingLinkToLocation(link, location, event) {
-    return dispatch("turbo:click", {
-      target: link,
-      detail: {
-        url: location.href,
-        originalEvent: event
-      },
-      cancelable: true
-    });
-  }
-  notifyApplicationBeforeVisitingLocation(location) {
-    return dispatch("turbo:before-visit", {
-      detail: {
-        url: location.href
-      },
-      cancelable: true
-    });
-  }
-  notifyApplicationAfterVisitingLocation(location, action) {
-    return dispatch("turbo:visit", {
-      detail: {
-        url: location.href,
-        action: action
-      }
-    });
-  }
-  notifyApplicationBeforeCachingSnapshot() {
-    return dispatch("turbo:before-cache");
-  }
-  notifyApplicationBeforeRender(newBody, options) {
-    return dispatch("turbo:before-render", {
-      detail: {
-        newBody: newBody,
-        ...options
-      },
-      cancelable: true
-    });
-  }
-  notifyApplicationAfterRender(renderMethod) {
-    return dispatch("turbo:render", {
-      detail: {
-        renderMethod: renderMethod
-      }
-    });
-  }
-  notifyApplicationAfterPageLoad(timing = {}) {
-    return dispatch("turbo:load", {
-      detail: {
-        url: this.location.href,
-        timing: timing
-      }
-    });
-  }
-  notifyApplicationAfterFrameLoad(frame) {
-    return dispatch("turbo:frame-load", {
-      target: frame
-    });
-  }
-  notifyApplicationAfterFrameRender(fetchResponse, frame) {
-    return dispatch("turbo:frame-render", {
-      detail: {
-        fetchResponse: fetchResponse
-      },
-      target: frame,
-      cancelable: true
-    });
-  }
-  submissionIsNavigatable(form, submitter) {
-    if (config.forms.mode == "off") {
-      return false;
-    } else {
-      const submitterIsNavigatable = submitter ? this.elementIsNavigatable(submitter) : true;
-      if (config.forms.mode == "optin") {
-        return submitterIsNavigatable && form.closest('[data-turbo="true"]') != null;
-      } else {
-        return submitterIsNavigatable && this.elementIsNavigatable(form);
-      }
-    }
-  }
-  elementIsNavigatable(element) {
-    const container = findClosestRecursively(element, "[data-turbo]");
-    const withinFrame = findClosestRecursively(element, "turbo-frame");
-    if (config.drive.enabled || withinFrame) {
-      if (container) {
-        return container.getAttribute("data-turbo") != "false";
-      } else {
-        return true;
-      }
-    } else {
-      if (container) {
-        return container.getAttribute("data-turbo") == "true";
-      } else {
-        return false;
-      }
-    }
-  }
-  getActionForLink(link) {
-    return getVisitAction(link) || "advance";
-  }
-  get snapshot() {
-    return this.view.snapshot;
-  }
-}
-
-function extendURLWithDeprecatedProperties(url) {
-  Object.defineProperties(url, deprecatedLocationPropertyDescriptors);
-}
-
-const deprecatedLocationPropertyDescriptors = {
-  absoluteURL: {
-    get() {
-      return this.toString();
-    }
-  }
-};
-
-const session = new Session(recentRequests);
-
-const {cache: cache, navigator: sessionNavigator} = session;
-
-function start() {
-  session.start();
-}
-
-function registerAdapter(adapter) {
-  session.registerAdapter(adapter);
-}
-
-function visit(location, options) {
-  session.visit(location, options);
-}
-
-function connectStreamSource(source) {
-  session.connectStreamSource(source);
-}
-
-function disconnectStreamSource(source) {
-  session.disconnectStreamSource(source);
-}
-
-function renderStreamMessage(message) {
-  session.renderStreamMessage(message);
-}
-
-function setProgressBarDelay(delay) {
-  console.warn("Please replace `Turbo.setProgressBarDelay(delay)` with `Turbo.config.drive.progressBarDelay = delay`. The top-level function is deprecated and will be removed in a future version of Turbo.`");
-  config.drive.progressBarDelay = delay;
-}
-
-function setConfirmMethod(confirmMethod) {
-  console.warn("Please replace `Turbo.setConfirmMethod(confirmMethod)` with `Turbo.config.forms.confirm = confirmMethod`. The top-level function is deprecated and will be removed in a future version of Turbo.`");
-  config.forms.confirm = confirmMethod;
-}
-
-function setFormMode(mode) {
-  console.warn("Please replace `Turbo.setFormMode(mode)` with `Turbo.config.forms.mode = mode`. The top-level function is deprecated and will be removed in a future version of Turbo.`");
-  config.forms.mode = mode;
-}
-
-function morphBodyElements(currentBody, newBody) {
-  MorphingPageRenderer.renderElement(currentBody, newBody);
-}
-
-function morphTurboFrameElements(currentFrame, newFrame) {
-  MorphingFrameRenderer.renderElement(currentFrame, newFrame);
-}
-
-var Turbo = Object.freeze({
-  __proto__: null,
-  PageRenderer: PageRenderer,
-  PageSnapshot: PageSnapshot,
-  FrameRenderer: FrameRenderer,
-  fetch: fetchWithTurboHeaders,
-  config: config,
-  session: session,
-  cache: cache,
-  navigator: sessionNavigator,
-  start: start,
-  registerAdapter: registerAdapter,
-  visit: visit,
-  connectStreamSource: connectStreamSource,
-  disconnectStreamSource: disconnectStreamSource,
-  renderStreamMessage: renderStreamMessage,
-  setProgressBarDelay: setProgressBarDelay,
-  setConfirmMethod: setConfirmMethod,
-  setFormMode: setFormMode,
-  morphBodyElements: morphBodyElements,
-  morphTurboFrameElements: morphTurboFrameElements,
-  morphChildren: morphChildren,
-  morphElements: morphElements
-});
-
-class TurboFrameMissingError extends Error {}
-
-class FrameController {
-  fetchResponseLoaded=_fetchResponse => Promise.resolve();
-  #currentFetchRequest=null;
-  #resolveVisitPromise=() => {};
-  #connected=false;
-  #hasBeenLoaded=false;
-  #ignoredAttributes=new Set;
-  #shouldMorphFrame=false;
-  action=null;
-  constructor(element) {
-    this.element = element;
-    this.view = new FrameView(this, this.element);
-    this.appearanceObserver = new AppearanceObserver(this, this.element);
-    this.formLinkClickObserver = new FormLinkClickObserver(this, this.element);
-    this.linkInterceptor = new LinkInterceptor(this, this.element);
-    this.restorationIdentifier = uuid();
-    this.formSubmitObserver = new FormSubmitObserver(this, this.element);
-  }
-  connect() {
-    if (!this.#connected) {
-      this.#connected = true;
-      if (this.loadingStyle == FrameLoadingStyle.lazy) {
-        this.appearanceObserver.start();
-      } else {
-        this.#loadSourceURL();
-      }
-      this.formLinkClickObserver.start();
-      this.linkInterceptor.start();
-      this.formSubmitObserver.start();
-    }
-  }
-  disconnect() {
-    if (this.#connected) {
-      this.#connected = false;
-      this.appearanceObserver.stop();
-      this.formLinkClickObserver.stop();
-      this.linkInterceptor.stop();
-      this.formSubmitObserver.stop();
-      if (!this.element.hasAttribute("recurse")) {
-        this.#currentFetchRequest?.cancel();
-      }
-    }
-  }
-  disabledChanged() {
-    if (this.disabled) {
-      this.#currentFetchRequest?.cancel();
-    } else if (this.loadingStyle == FrameLoadingStyle.eager) {
-      this.#loadSourceURL();
-    }
-  }
-  sourceURLChanged() {
-    if (this.#isIgnoringChangesTo("src")) return;
-    if (!this.sourceURL) {
-      this.#currentFetchRequest?.cancel();
-    }
-    if (this.element.isConnected) {
-      this.complete = false;
-    }
-    if (this.loadingStyle == FrameLoadingStyle.eager || this.#hasBeenLoaded) {
-      this.#loadSourceURL();
-    }
-  }
-  sourceURLReloaded() {
-    const {refresh: refresh, src: src} = this.element;
-    this.#shouldMorphFrame = src && refresh === "morph";
-    this.element.removeAttribute("complete");
-    this.element.src = null;
-    this.element.src = src;
-    return this.element.loaded;
-  }
-  loadingStyleChanged() {
-    if (this.loadingStyle == FrameLoadingStyle.lazy) {
-      this.appearanceObserver.start();
-    } else {
-      this.appearanceObserver.stop();
-      this.#loadSourceURL();
-    }
-  }
-  async #loadSourceURL() {
-    if (this.enabled && this.isActive && !this.complete && this.sourceURL) {
-      this.element.loaded = this.#visit(expandURL(this.sourceURL));
-      this.appearanceObserver.stop();
-      await this.element.loaded;
-      this.#hasBeenLoaded = true;
-    }
-  }
-  async loadResponse(fetchResponse) {
-    if (fetchResponse.redirected || fetchResponse.succeeded && fetchResponse.isHTML) {
-      this.sourceURL = fetchResponse.response.url;
-    }
-    try {
-      const html = await fetchResponse.responseHTML;
-      if (html) {
-        const document = parseHTMLDocument(html);
-        const pageSnapshot = PageSnapshot.fromDocument(document);
-        if (pageSnapshot.isVisitable) {
-          await this.#loadFrameResponse(fetchResponse, document);
-        } else {
-          await this.#handleUnvisitableFrameResponse(fetchResponse);
-        }
-      }
-    } finally {
-      this.#shouldMorphFrame = false;
-      this.fetchResponseLoaded = () => Promise.resolve();
-    }
-  }
-  elementAppearedInViewport(element) {
-    this.proposeVisitIfNavigatedWithAction(element, getVisitAction(element));
-    this.#loadSourceURL();
-  }
-  willSubmitFormLinkToLocation(link) {
-    return this.#shouldInterceptNavigation(link);
-  }
-  submittedFormLinkToLocation(link, _location, form) {
-    const frame = this.#findFrameElement(link);
-    if (frame) form.setAttribute("data-turbo-frame", frame.id);
-  }
-  shouldInterceptLinkClick(element, _location, _event) {
-    return this.#shouldInterceptNavigation(element);
-  }
-  linkClickIntercepted(element, location) {
-    this.#navigateFrame(element, location);
-  }
-  willSubmitForm(element, submitter) {
-    return element.closest("turbo-frame") == this.element && this.#shouldInterceptNavigation(element, submitter);
-  }
-  formSubmitted(element, submitter) {
-    if (this.formSubmission) {
-      this.formSubmission.stop();
-    }
-    this.formSubmission = new FormSubmission(this, element, submitter);
-    const {fetchRequest: fetchRequest} = this.formSubmission;
-    const frame = this.#findFrameElement(element, submitter);
-    this.prepareRequest(fetchRequest, frame);
-    this.formSubmission.start();
-  }
-  prepareRequest(request, frame = this) {
-    request.headers["Turbo-Frame"] = frame.id;
-    if (this.currentNavigationElement?.hasAttribute("data-turbo-stream")) {
-      request.acceptResponseType(StreamMessage.contentType);
-    }
-  }
-  requestStarted(_request) {
-    markAsBusy(this.element);
-  }
-  requestPreventedHandlingResponse(_request, _response) {
-    this.#resolveVisitPromise();
-  }
-  async requestSucceededWithResponse(request, response) {
-    await this.loadResponse(response);
-    this.#resolveVisitPromise();
-  }
-  async requestFailedWithResponse(request, response) {
-    await this.loadResponse(response);
-    this.#resolveVisitPromise();
-  }
-  requestErrored(request, error) {
-    console.error(error);
-    this.#resolveVisitPromise();
-  }
-  requestFinished(_request) {
-    clearBusyState(this.element);
-  }
-  formSubmissionStarted({formElement: formElement}) {
-    markAsBusy(formElement, this.#findFrameElement(formElement));
-  }
-  formSubmissionSucceededWithResponse(formSubmission, response) {
-    const frame = this.#findFrameElement(formSubmission.formElement, formSubmission.submitter);
-    frame.delegate.proposeVisitIfNavigatedWithAction(frame, getVisitAction(formSubmission.submitter, formSubmission.formElement, frame));
-    frame.delegate.loadResponse(response);
-    if (!formSubmission.isSafe) {
-      session.clearCache();
-    }
-  }
-  formSubmissionFailedWithResponse(formSubmission, fetchResponse) {
-    this.element.delegate.loadResponse(fetchResponse);
-    session.clearCache();
-  }
-  formSubmissionErrored(formSubmission, error) {
-    console.error(error);
-  }
-  formSubmissionFinished({formElement: formElement}) {
-    clearBusyState(formElement, this.#findFrameElement(formElement));
-  }
-  allowsImmediateRender({element: newFrame}, options) {
-    const event = dispatch("turbo:before-frame-render", {
-      target: this.element,
-      detail: {
-        newFrame: newFrame,
-        ...options
-      },
-      cancelable: true
-    });
-    const {defaultPrevented: defaultPrevented, detail: {render: render}} = event;
-    if (this.view.renderer && render) {
-      this.view.renderer.renderElement = render;
-    }
-    return !defaultPrevented;
-  }
-  viewRenderedSnapshot(_snapshot, _isPreview, _renderMethod) {}
-  preloadOnLoadLinksForView(element) {
-    session.preloadOnLoadLinksForView(element);
-  }
-  viewInvalidated() {}
-  willRenderFrame(currentElement, _newElement) {
-    this.previousFrameElement = currentElement.cloneNode(true);
-  }
-  visitCachedSnapshot=({element: element}) => {
-    const frame = element.querySelector("#" + this.element.id);
-    if (frame && this.previousFrameElement) {
-      frame.replaceChildren(...this.previousFrameElement.children);
-    }
-    delete this.previousFrameElement;
-  };
-  async #loadFrameResponse(fetchResponse, document) {
-    const newFrameElement = await this.extractForeignFrameElement(document.body);
-    const rendererClass = this.#shouldMorphFrame ? MorphingFrameRenderer : FrameRenderer;
-    if (newFrameElement) {
-      const snapshot = new Snapshot(newFrameElement);
-      const renderer = new rendererClass(this, this.view.snapshot, snapshot, false, false);
-      if (this.view.renderPromise) await this.view.renderPromise;
-      this.changeHistory();
-      await this.view.render(renderer);
-      this.complete = true;
-      session.frameRendered(fetchResponse, this.element);
-      session.frameLoaded(this.element);
-      await this.fetchResponseLoaded(fetchResponse);
-    } else if (this.#willHandleFrameMissingFromResponse(fetchResponse)) {
-      this.#handleFrameMissingFromResponse(fetchResponse);
-    }
-  }
-  async #visit(url) {
-    const request = new FetchRequest(this, FetchMethod.get, url, new URLSearchParams, this.element);
-    this.#currentFetchRequest?.cancel();
-    this.#currentFetchRequest = request;
-    return new Promise((resolve => {
-      this.#resolveVisitPromise = () => {
-        this.#resolveVisitPromise = () => {};
-        this.#currentFetchRequest = null;
-        resolve();
-      };
-      request.perform();
-    }));
-  }
-  #navigateFrame(element, url, submitter) {
-    const frame = this.#findFrameElement(element, submitter);
-    frame.delegate.proposeVisitIfNavigatedWithAction(frame, getVisitAction(submitter, element, frame));
-    this.#withCurrentNavigationElement(element, (() => {
-      frame.src = url;
-    }));
-  }
-  proposeVisitIfNavigatedWithAction(frame, action = null) {
-    this.action = action;
-    if (this.action) {
-      const pageSnapshot = PageSnapshot.fromElement(frame).clone();
-      const {visitCachedSnapshot: visitCachedSnapshot} = frame.delegate;
-      frame.delegate.fetchResponseLoaded = async fetchResponse => {
-        if (frame.src) {
-          const {statusCode: statusCode, redirected: redirected} = fetchResponse;
-          const responseHTML = await fetchResponse.responseHTML;
-          const response = {
-            statusCode: statusCode,
-            redirected: redirected,
-            responseHTML: responseHTML
-          };
-          const options = {
-            response: response,
-            visitCachedSnapshot: visitCachedSnapshot,
-            willRender: false,
-            updateHistory: false,
-            restorationIdentifier: this.restorationIdentifier,
-            snapshot: pageSnapshot
-          };
-          if (this.action) options.action = this.action;
-          session.visit(frame.src, options);
-        }
-      };
-    }
-  }
-  changeHistory() {
-    if (this.action) {
-      const method = getHistoryMethodForAction(this.action);
-      session.history.update(method, expandURL(this.element.src || ""), this.restorationIdentifier);
-    }
-  }
-  async #handleUnvisitableFrameResponse(fetchResponse) {
-    console.warn(`The response (${fetchResponse.statusCode}) from <turbo-frame id="${this.element.id}"> is performing a full page visit due to turbo-visit-control.`);
-    await this.#visitResponse(fetchResponse.response);
-  }
-  #willHandleFrameMissingFromResponse(fetchResponse) {
-    this.element.setAttribute("complete", "");
-    const response = fetchResponse.response;
-    const visit = async (url, options) => {
-      if (url instanceof Response) {
-        this.#visitResponse(url);
-      } else {
-        session.visit(url, options);
-      }
-    };
-    const event = dispatch("turbo:frame-missing", {
-      target: this.element,
-      detail: {
-        response: response,
-        visit: visit
-      },
-      cancelable: true
-    });
-    return !event.defaultPrevented;
-  }
-  #handleFrameMissingFromResponse(fetchResponse) {
-    this.view.missing();
-    this.#throwFrameMissingError(fetchResponse);
-  }
-  #throwFrameMissingError(fetchResponse) {
-    const message = `The response (${fetchResponse.statusCode}) did not contain the expected <turbo-frame id="${this.element.id}"> and will be ignored. To perform a full page visit instead, set turbo-visit-control to reload.`;
-    throw new TurboFrameMissingError(message);
-  }
-  async #visitResponse(response) {
-    const wrapped = new FetchResponse(response);
-    const responseHTML = await wrapped.responseHTML;
-    const {location: location, redirected: redirected, statusCode: statusCode} = wrapped;
-    return session.visit(location, {
-      response: {
-        redirected: redirected,
-        statusCode: statusCode,
-        responseHTML: responseHTML
-      }
-    });
-  }
-  #findFrameElement(element, submitter) {
-    const id = getAttribute("data-turbo-frame", submitter, element) || this.element.getAttribute("target");
-    const target = this.#getFrameElementById(id);
-    return target instanceof FrameElement ? target : this.element;
-  }
-  async extractForeignFrameElement(container) {
-    let element;
-    const id = CSS.escape(this.id);
-    try {
-      element = activateElement(container.querySelector(`turbo-frame#${id}`), this.sourceURL);
-      if (element) {
-        return element;
-      }
-      element = activateElement(container.querySelector(`turbo-frame[src][recurse~=${id}]`), this.sourceURL);
-      if (element) {
-        await element.loaded;
-        return await this.extractForeignFrameElement(element);
-      }
-    } catch (error) {
-      console.error(error);
-      return new FrameElement;
-    }
-    return null;
-  }
-  #formActionIsVisitable(form, submitter) {
-    const action = getAction$1(form, submitter);
-    return locationIsVisitable(expandURL(action), this.rootLocation);
-  }
-  #shouldInterceptNavigation(element, submitter) {
-    const id = getAttribute("data-turbo-frame", submitter, element) || this.element.getAttribute("target");
-    if (element instanceof HTMLFormElement && !this.#formActionIsVisitable(element, submitter)) {
-      return false;
-    }
-    if (!this.enabled || id == "_top") {
-      return false;
-    }
-    if (id) {
-      const frameElement = this.#getFrameElementById(id);
-      if (frameElement) {
-        return !frameElement.disabled;
-      } else if (id == "_parent") {
-        return false;
-      }
-    }
-    if (!session.elementIsNavigatable(element)) {
-      return false;
-    }
-    if (submitter && !session.elementIsNavigatable(submitter)) {
-      return false;
-    }
-    return true;
-  }
-  get id() {
-    return this.element.id;
-  }
-  get disabled() {
-    return this.element.disabled;
-  }
-  get enabled() {
-    return !this.disabled;
-  }
-  get sourceURL() {
-    if (this.element.src) {
-      return this.element.src;
-    }
-  }
-  set sourceURL(sourceURL) {
-    this.#ignoringChangesToAttribute("src", (() => {
-      this.element.src = sourceURL ?? null;
-    }));
-  }
-  get loadingStyle() {
-    return this.element.loading;
-  }
-  get isLoading() {
-    return this.formSubmission !== undefined || this.#resolveVisitPromise() !== undefined;
-  }
-  get complete() {
-    return this.element.hasAttribute("complete");
-  }
-  set complete(value) {
-    if (value) {
-      this.element.setAttribute("complete", "");
-    } else {
-      this.element.removeAttribute("complete");
-    }
-  }
-  get isActive() {
-    return this.element.isActive && this.#connected;
-  }
-  get rootLocation() {
-    const meta = this.element.ownerDocument.querySelector(`meta[name="turbo-root"]`);
-    const root = meta?.content ?? "/";
-    return expandURL(root);
-  }
-  #isIgnoringChangesTo(attributeName) {
-    return this.#ignoredAttributes.has(attributeName);
-  }
-  #ignoringChangesToAttribute(attributeName, callback) {
-    this.#ignoredAttributes.add(attributeName);
-    callback();
-    this.#ignoredAttributes.delete(attributeName);
-  }
-  #withCurrentNavigationElement(element, callback) {
-    this.currentNavigationElement = element;
-    callback();
-    delete this.currentNavigationElement;
-  }
-  #getFrameElementById(id) {
-    if (id != null) {
-      const element = id === "_parent" ? this.element.parentElement.closest("turbo-frame") : document.getElementById(id);
-      if (element instanceof FrameElement) {
-        return element;
-      }
-    }
-  }
-}
-
-function activateElement(element, currentURL) {
-  if (element) {
-    const src = element.getAttribute("src");
-    if (src != null && currentURL != null && urlsAreEqual(src, currentURL)) {
-      throw new Error(`Matching <turbo-frame id="${element.id}"> element has a source URL which references itself`);
-    }
-    if (element.ownerDocument !== document) {
-      element = document.importNode(element, true);
-    }
-    if (element instanceof FrameElement) {
-      element.connectedCallback();
-      element.disconnectedCallback();
-      return element;
-    }
-  }
-}
-
-const StreamActions = {
-  after() {
-    this.removeDuplicateTargetSiblings();
-    this.targetElements.forEach((e => e.parentElement?.insertBefore(this.templateContent, e.nextSibling)));
-  },
-  append() {
-    this.removeDuplicateTargetChildren();
-    this.targetElements.forEach((e => e.append(this.templateContent)));
-  },
-  before() {
-    this.removeDuplicateTargetSiblings();
-    this.targetElements.forEach((e => e.parentElement?.insertBefore(this.templateContent, e)));
-  },
-  prepend() {
-    this.removeDuplicateTargetChildren();
-    this.targetElements.forEach((e => e.prepend(this.templateContent)));
-  },
-  remove() {
-    this.targetElements.forEach((e => e.remove()));
-  },
-  replace() {
-    const method = this.getAttribute("method");
-    this.targetElements.forEach((targetElement => {
-      if (method === "morph") {
-        morphElements(targetElement, this.templateContent);
-      } else {
-        targetElement.replaceWith(this.templateContent);
-      }
-    }));
-  },
-  update() {
-    const method = this.getAttribute("method");
-    this.targetElements.forEach((targetElement => {
-      if (method === "morph") {
-        morphChildren(targetElement, this.templateContent);
-      } else {
-        targetElement.innerHTML = "";
-        targetElement.append(this.templateContent);
-      }
-    }));
-  },
-  refresh() {
-    const method = this.getAttribute("method");
-    const requestId = this.requestId;
-    const scroll = this.getAttribute("scroll");
-    session.refresh(this.baseURI, {
-      method: method,
-      requestId: requestId,
-      scroll: scroll
-    });
-  }
-};
-
-class StreamElement extends HTMLElement {
-  static async renderElement(newElement) {
-    await newElement.performAction();
-  }
-  async connectedCallback() {
-    try {
-      await this.render();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      this.disconnect();
-    }
-  }
-  async render() {
-    return this.renderPromise ??= (async () => {
-      const event = this.beforeRenderEvent;
-      if (this.dispatchEvent(event)) {
-        await nextRepaint();
-        await event.detail.render(this);
-      }
-    })();
-  }
-  disconnect() {
-    try {
-      this.remove();
-    } catch {}
-  }
-  removeDuplicateTargetChildren() {
-    this.duplicateChildren.forEach((c => c.remove()));
-  }
-  get duplicateChildren() {
-    const existingChildren = this.targetElements.flatMap((e => [ ...e.children ])).filter((c => !!c.getAttribute("id")));
-    const newChildrenIds = [ ...this.templateContent?.children || [] ].filter((c => !!c.getAttribute("id"))).map((c => c.getAttribute("id")));
-    return existingChildren.filter((c => newChildrenIds.includes(c.getAttribute("id"))));
-  }
-  removeDuplicateTargetSiblings() {
-    this.duplicateSiblings.forEach((c => c.remove()));
-  }
-  get duplicateSiblings() {
-    const existingChildren = this.targetElements.flatMap((e => [ ...e.parentElement.children ])).filter((c => !!c.id));
-    const newChildrenIds = [ ...this.templateContent?.children || [] ].filter((c => !!c.id)).map((c => c.id));
-    return existingChildren.filter((c => newChildrenIds.includes(c.id)));
-  }
-  get performAction() {
-    if (this.action) {
-      const actionFunction = StreamActions[this.action];
-      if (actionFunction) {
-        return actionFunction;
-      }
-      this.#raise("unknown action");
-    }
-    this.#raise("action attribute is missing");
-  }
-  get targetElements() {
-    if (this.target) {
-      return this.targetElementsById;
-    } else if (this.targets) {
-      return this.targetElementsByQuery;
-    } else {
-      this.#raise("target or targets attribute is missing");
-    }
-  }
-  get templateContent() {
-    return this.templateElement.content.cloneNode(true);
-  }
-  get templateElement() {
-    if (this.firstElementChild === null) {
-      const template = this.ownerDocument.createElement("template");
-      this.appendChild(template);
-      return template;
-    } else if (this.firstElementChild instanceof HTMLTemplateElement) {
-      return this.firstElementChild;
-    }
-    this.#raise("first child element must be a <template> element");
-  }
-  get action() {
-    return this.getAttribute("action");
-  }
-  get target() {
-    return this.getAttribute("target");
-  }
-  get targets() {
-    return this.getAttribute("targets");
-  }
-  get requestId() {
-    return this.getAttribute("request-id");
-  }
-  #raise(message) {
-    throw new Error(`${this.description}: ${message}`);
-  }
-  get description() {
-    return (this.outerHTML.match(/<[^>]+>/) ?? [])[0] ?? "<turbo-stream>";
-  }
-  get beforeRenderEvent() {
-    return new CustomEvent("turbo:before-stream-render", {
-      bubbles: true,
-      cancelable: true,
-      detail: {
-        newStream: this,
-        render: StreamElement.renderElement
-      }
-    });
-  }
-  get targetElementsById() {
-    const element = this.ownerDocument?.getElementById(this.target);
-    if (element !== null) {
-      return [ element ];
-    } else {
-      return [];
-    }
-  }
-  get targetElementsByQuery() {
-    const elements = this.ownerDocument?.querySelectorAll(this.targets);
-    if (elements.length !== 0) {
-      return Array.prototype.slice.call(elements);
-    } else {
-      return [];
-    }
-  }
-}
-
-class StreamSourceElement extends HTMLElement {
-  streamSource=null;
-  connectedCallback() {
-    this.streamSource = this.src.match(/^ws{1,2}:/) ? new WebSocket(this.src) : new EventSource(this.src);
-    connectStreamSource(this.streamSource);
-  }
-  disconnectedCallback() {
-    if (this.streamSource) {
-      this.streamSource.close();
-      disconnectStreamSource(this.streamSource);
-    }
-  }
-  get src() {
-    return this.getAttribute("src") || "";
-  }
-}
-
-FrameElement.delegateConstructor = FrameController;
-
-if (customElements.get("turbo-frame") === undefined) {
-  customElements.define("turbo-frame", FrameElement);
-}
-
-if (customElements.get("turbo-stream") === undefined) {
-  customElements.define("turbo-stream", StreamElement);
-}
-
-if (customElements.get("turbo-stream-source") === undefined) {
-  customElements.define("turbo-stream-source", StreamSourceElement);
-}
-
-(() => {
-  const scriptElement = document.currentScript;
-  if (!scriptElement) return;
-  if (scriptElement.hasAttribute("data-turbo-suppress-warning")) return;
-  let element = scriptElement.parentElement;
-  while (element) {
-    if (element == document.body) {
-      return console.warn(unindent`
-        You are loading Turbo from a <script> element inside the <body> element. This is probably not what you meant to do!
-
-        Load your application’s JavaScript bundle inside the <head> element instead. <script> elements in <body> are evaluated with each page change.
-
-        For more information, see: https://turbo.hotwired.dev/handbook/building#working-with-script-elements
-
-        ——
-        Suppress this warning by adding a "data-turbo-suppress-warning" attribute to: %s
-      `, scriptElement.outerHTML);
-    }
-    element = element.parentElement;
-  }
-})();
-
-window.Turbo = {
-  ...Turbo,
-  StreamActions: StreamActions
-};
-
-start();
-
-var Turbo$1 = Object.freeze({
-  __proto__: null,
-  FetchEnctype: FetchEnctype,
-  FetchMethod: FetchMethod,
-  FetchRequest: FetchRequest,
-  FetchResponse: FetchResponse,
-  FrameElement: FrameElement,
-  FrameLoadingStyle: FrameLoadingStyle,
-  FrameRenderer: FrameRenderer,
-  PageRenderer: PageRenderer,
-  PageSnapshot: PageSnapshot,
-  StreamActions: StreamActions,
-  StreamElement: StreamElement,
-  StreamSourceElement: StreamSourceElement,
-  cache: cache,
-  config: config,
-  connectStreamSource: connectStreamSource,
-  disconnectStreamSource: disconnectStreamSource,
-  fetch: fetchWithTurboHeaders,
-  fetchEnctypeFromString: fetchEnctypeFromString,
-  fetchMethodFromString: fetchMethodFromString,
-  isSafe: isSafe,
-  morphBodyElements: morphBodyElements,
-  morphChildren: morphChildren,
-  morphElements: morphElements,
-  morphTurboFrameElements: morphTurboFrameElements,
-  navigator: sessionNavigator,
-  registerAdapter: registerAdapter,
-  renderStreamMessage: renderStreamMessage,
-  session: session,
-  setConfirmMethod: setConfirmMethod,
-  setFormMode: setFormMode,
-  setProgressBarDelay: setProgressBarDelay,
-  start: start,
-  visit: visit
-});
-
-let consumer;
-
-async function getConsumer() {
-  return consumer || setConsumer(createConsumer$1().then(setConsumer));
-}
-
-function setConsumer(newConsumer) {
-  return consumer = newConsumer;
-}
-
-async function createConsumer$1() {
-  const {createConsumer: createConsumer} = await Promise.resolve().then((function() {
-    return index;
-  }));
-  return createConsumer();
-}
-
-async function subscribeTo(channel, mixin) {
-  const {subscriptions: subscriptions} = await getConsumer();
-  return subscriptions.create(channel, mixin);
-}
-
-var cable = Object.freeze({
-  __proto__: null,
-  getConsumer: getConsumer,
-  setConsumer: setConsumer,
-  createConsumer: createConsumer$1,
-  subscribeTo: subscribeTo
-});
-
-function walk(obj) {
-  if (!obj || typeof obj !== "object") return obj;
-  if (obj instanceof Date || obj instanceof RegExp) return obj;
-  if (Array.isArray(obj)) return obj.map(walk);
-  return Object.keys(obj).reduce((function(acc, key) {
-    var camel = key[0].toLowerCase() + key.slice(1).replace(/([A-Z]+)/g, (function(m, x) {
-      return "_" + x.toLowerCase();
-    }));
-    acc[camel] = walk(obj[key]);
-    return acc;
-  }), {});
-}
-
-class TurboCableStreamSourceElement extends HTMLElement {
-  static observedAttributes=[ "channel", "signed-stream-name" ];
-  async connectedCallback() {
-    connectStreamSource(this);
-    this.subscription = await subscribeTo(this.channel, {
-      received: this.dispatchMessageEvent.bind(this),
-      connected: this.subscriptionConnected.bind(this),
-      disconnected: this.subscriptionDisconnected.bind(this)
-    });
-  }
-  disconnectedCallback() {
-    disconnectStreamSource(this);
-    if (this.subscription) this.subscription.unsubscribe();
-    this.subscriptionDisconnected();
-  }
-  attributeChangedCallback() {
-    if (this.subscription) {
-      this.disconnectedCallback();
-      this.connectedCallback();
-    }
-  }
-  dispatchMessageEvent(data) {
-    const event = new MessageEvent("message", {
-      data: data
-    });
-    return this.dispatchEvent(event);
-  }
-  subscriptionConnected() {
-    this.setAttribute("connected", "");
-  }
-  subscriptionDisconnected() {
-    this.removeAttribute("connected");
-  }
-  get channel() {
-    const channel = this.getAttribute("channel");
-    const signed_stream_name = this.getAttribute("signed-stream-name");
-    return {
-      channel: channel,
-      signed_stream_name: signed_stream_name,
-      ...walk({
-        ...this.dataset
-      })
-    };
-  }
-}
-
-if (customElements.get("turbo-cable-stream-source") === undefined) {
-  customElements.define("turbo-cable-stream-source", TurboCableStreamSourceElement);
-}
-
-function encodeMethodIntoRequestBody(event) {
-  if (event.target instanceof HTMLFormElement) {
-    const {target: form, detail: {fetchOptions: fetchOptions}} = event;
-    form.addEventListener("turbo:submit-start", (({detail: {formSubmission: {submitter: submitter}}}) => {
-      const body = isBodyInit(fetchOptions.body) ? fetchOptions.body : new URLSearchParams;
-      const method = determineFetchMethod(submitter, body, form);
-      if (!/get/i.test(method)) {
-        if (/post/i.test(method)) {
-          body.delete("_method");
-        } else {
-          body.set("_method", method);
-        }
-        fetchOptions.method = "post";
-      }
-    }), {
-      once: true
-    });
-  }
-}
-
-function determineFetchMethod(submitter, body, form) {
-  const formMethod = determineFormMethod(submitter);
-  const overrideMethod = body.get("_method");
-  const method = form.getAttribute("method") || "get";
-  if (typeof formMethod == "string") {
-    return formMethod;
-  } else if (typeof overrideMethod == "string") {
-    return overrideMethod;
-  } else {
-    return method;
-  }
-}
-
-function determineFormMethod(submitter) {
-  if (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement) {
-    if (submitter.name === "_method") {
-      return submitter.value;
-    } else if (submitter.hasAttribute("formmethod")) {
-      return submitter.formMethod;
-    } else {
-      return null;
-    }
-  } else {
-    return null;
-  }
-}
-
-function isBodyInit(body) {
-  return body instanceof FormData || body instanceof URLSearchParams;
-}
-
-window.Turbo = Turbo$1;
-
-addEventListener("turbo:before-fetch-request", encodeMethodIntoRequestBody);
-
-var adapters = {
-  logger: typeof console !== "undefined" ? console : undefined,
-  WebSocket: typeof WebSocket !== "undefined" ? WebSocket : undefined
-};
-
-var logger = {
-  log(...messages) {
-    if (this.enabled) {
-      messages.push(Date.now());
-      adapters.logger.log("[ActionCable]", ...messages);
-    }
-  }
-};
-
-const now = () => (new Date).getTime();
-
-const secondsSince = time => (now() - time) / 1e3;
-
-class ConnectionMonitor {
-  constructor(connection) {
-    this.visibilityDidChange = this.visibilityDidChange.bind(this);
-    this.connection = connection;
-    this.reconnectAttempts = 0;
-  }
-  start() {
-    if (!this.isRunning()) {
-      this.startedAt = now();
-      delete this.stoppedAt;
-      this.startPolling();
-      addEventListener("visibilitychange", this.visibilityDidChange);
-      logger.log(`ConnectionMonitor started. stale threshold = ${this.constructor.staleThreshold} s`);
-    }
-  }
-  stop() {
-    if (this.isRunning()) {
-      this.stoppedAt = now();
-      this.stopPolling();
-      removeEventListener("visibilitychange", this.visibilityDidChange);
-      logger.log("ConnectionMonitor stopped");
-    }
-  }
-  isRunning() {
-    return this.startedAt && !this.stoppedAt;
-  }
-  recordMessage() {
-    this.pingedAt = now();
-  }
-  recordConnect() {
-    this.reconnectAttempts = 0;
-    delete this.disconnectedAt;
-    logger.log("ConnectionMonitor recorded connect");
-  }
-  recordDisconnect() {
-    this.disconnectedAt = now();
-    logger.log("ConnectionMonitor recorded disconnect");
-  }
-  startPolling() {
-    this.stopPolling();
-    this.poll();
-  }
-  stopPolling() {
-    clearTimeout(this.pollTimeout);
-  }
-  poll() {
-    this.pollTimeout = setTimeout((() => {
-      this.reconnectIfStale();
-      this.poll();
-    }), this.getPollInterval());
-  }
-  getPollInterval() {
-    const {staleThreshold: staleThreshold, reconnectionBackoffRate: reconnectionBackoffRate} = this.constructor;
-    const backoff = Math.pow(1 + reconnectionBackoffRate, Math.min(this.reconnectAttempts, 10));
-    const jitterMax = this.reconnectAttempts === 0 ? 1 : reconnectionBackoffRate;
-    const jitter = jitterMax * Math.random();
-    return staleThreshold * 1e3 * backoff * (1 + jitter);
-  }
-  reconnectIfStale() {
-    if (this.connectionIsStale()) {
-      logger.log(`ConnectionMonitor detected stale connection. reconnectAttempts = ${this.reconnectAttempts}, time stale = ${secondsSince(this.refreshedAt)} s, stale threshold = ${this.constructor.staleThreshold} s`);
-      this.reconnectAttempts++;
-      if (this.disconnectedRecently()) {
-        logger.log(`ConnectionMonitor skipping reopening recent disconnect. time disconnected = ${secondsSince(this.disconnectedAt)} s`);
-      } else {
-        logger.log("ConnectionMonitor reopening");
-        this.connection.reopen();
-      }
-    }
-  }
-  get refreshedAt() {
-    return this.pingedAt ? this.pingedAt : this.startedAt;
-  }
-  connectionIsStale() {
-    return secondsSince(this.refreshedAt) > this.constructor.staleThreshold;
-  }
-  disconnectedRecently() {
-    return this.disconnectedAt && secondsSince(this.disconnectedAt) < this.constructor.staleThreshold;
-  }
-  visibilityDidChange() {
-    if (document.visibilityState === "visible") {
-      setTimeout((() => {
-        if (this.connectionIsStale() || !this.connection.isOpen()) {
-          logger.log(`ConnectionMonitor reopening stale connection on visibilitychange. visibilityState = ${document.visibilityState}`);
-          this.connection.reopen();
-        }
-      }), 200);
-    }
-  }
-}
-
-ConnectionMonitor.staleThreshold = 6;
-
-ConnectionMonitor.reconnectionBackoffRate = .15;
-
-var ConnectionMonitor$1 = ConnectionMonitor;
-
-var INTERNAL = {
-  message_types: {
-    welcome: "welcome",
-    disconnect: "disconnect",
-    ping: "ping",
-    confirmation: "confirm_subscription",
-    rejection: "reject_subscription"
-  },
-  disconnect_reasons: {
-    unauthorized: "unauthorized",
-    invalid_request: "invalid_request",
-    server_restart: "server_restart",
-    remote: "remote"
-  },
-  default_mount_path: "/cable",
-  protocols: [ "actioncable-v1-json", "actioncable-unsupported" ]
-};
-
-const {message_types: message_types, protocols: protocols} = INTERNAL;
-
-const supportedProtocols = protocols.slice(0, protocols.length - 1);
-
-const indexOf = [].indexOf;
-
-class Connection {
-  constructor(consumer) {
-    this.open = this.open.bind(this);
-    this.consumer = consumer;
-    this.subscriptions = this.consumer.subscriptions;
-    this.monitor = new ConnectionMonitor$1(this);
-    this.disconnected = true;
-  }
-  send(data) {
-    if (this.isOpen()) {
-      this.webSocket.send(JSON.stringify(data));
-      return true;
-    } else {
-      return false;
-    }
-  }
-  open() {
-    if (this.isActive()) {
-      logger.log(`Attempted to open WebSocket, but existing socket is ${this.getState()}`);
-      return false;
-    } else {
-      const socketProtocols = [ ...protocols, ...this.consumer.subprotocols || [] ];
-      logger.log(`Opening WebSocket, current state is ${this.getState()}, subprotocols: ${socketProtocols}`);
-      if (this.webSocket) {
-        this.uninstallEventHandlers();
-      }
-      this.webSocket = new adapters.WebSocket(this.consumer.url, socketProtocols);
-      this.installEventHandlers();
-      this.monitor.start();
-      return true;
-    }
-  }
-  close({allowReconnect: allowReconnect} = {
-    allowReconnect: true
-  }) {
-    if (!allowReconnect) {
-      this.monitor.stop();
-    }
-    if (this.isOpen()) {
-      return this.webSocket.close();
-    }
-  }
-  reopen() {
-    logger.log(`Reopening WebSocket, current state is ${this.getState()}`);
-    if (this.isActive()) {
-      try {
-        return this.close();
-      } catch (error) {
-        logger.log("Failed to reopen WebSocket", error);
-      } finally {
-        logger.log(`Reopening WebSocket in ${this.constructor.reopenDelay}ms`);
-        setTimeout(this.open, this.constructor.reopenDelay);
-      }
-    } else {
-      return this.open();
-    }
-  }
-  getProtocol() {
-    if (this.webSocket) {
-      return this.webSocket.protocol;
-    }
-  }
-  isOpen() {
-    return this.isState("open");
-  }
-  isActive() {
-    return this.isState("open", "connecting");
-  }
-  triedToReconnect() {
-    return this.monitor.reconnectAttempts > 0;
-  }
-  isProtocolSupported() {
-    return indexOf.call(supportedProtocols, this.getProtocol()) >= 0;
-  }
-  isState(...states) {
-    return indexOf.call(states, this.getState()) >= 0;
-  }
-  getState() {
-    if (this.webSocket) {
-      for (let state in adapters.WebSocket) {
-        if (adapters.WebSocket[state] === this.webSocket.readyState) {
-          return state.toLowerCase();
-        }
-      }
-    }
-    return null;
-  }
-  installEventHandlers() {
-    for (let eventName in this.events) {
-      const handler = this.events[eventName].bind(this);
-      this.webSocket[`on${eventName}`] = handler;
-    }
-  }
-  uninstallEventHandlers() {
-    for (let eventName in this.events) {
-      this.webSocket[`on${eventName}`] = function() {};
-    }
-  }
-}
-
-Connection.reopenDelay = 500;
-
-Connection.prototype.events = {
-  message(event) {
-    if (!this.isProtocolSupported()) {
-      return;
-    }
-    const {identifier: identifier, message: message, reason: reason, reconnect: reconnect, type: type} = JSON.parse(event.data);
-    this.monitor.recordMessage();
-    switch (type) {
-     case message_types.welcome:
-      if (this.triedToReconnect()) {
-        this.reconnectAttempted = true;
-      }
-      this.monitor.recordConnect();
-      return this.subscriptions.reload();
-
-     case message_types.disconnect:
-      logger.log(`Disconnecting. Reason: ${reason}`);
-      return this.close({
-        allowReconnect: reconnect
-      });
-
-     case message_types.ping:
-      return null;
-
-     case message_types.confirmation:
-      this.subscriptions.confirmSubscription(identifier);
-      if (this.reconnectAttempted) {
-        this.reconnectAttempted = false;
-        return this.subscriptions.notify(identifier, "connected", {
-          reconnected: true
-        });
-      } else {
-        return this.subscriptions.notify(identifier, "connected", {
-          reconnected: false
-        });
-      }
-
-     case message_types.rejection:
-      return this.subscriptions.reject(identifier);
-
-     default:
-      return this.subscriptions.notify(identifier, "received", message);
-    }
-  },
-  open() {
-    logger.log(`WebSocket onopen event, using '${this.getProtocol()}' subprotocol`);
-    this.disconnected = false;
-    if (!this.isProtocolSupported()) {
-      logger.log("Protocol is unsupported. Stopping monitor and disconnecting.");
-      return this.close({
-        allowReconnect: false
-      });
-    }
-  },
-  close(event) {
-    logger.log("WebSocket onclose event");
-    if (this.disconnected) {
-      return;
-    }
-    this.disconnected = true;
-    this.monitor.recordDisconnect();
-    return this.subscriptions.notifyAll("disconnected", {
-      willAttemptReconnect: this.monitor.isRunning()
-    });
-  },
-  error() {
-    logger.log("WebSocket onerror event");
-  }
-};
-
-var Connection$1 = Connection;
-
-const extend = function(object, properties) {
-  if (properties != null) {
-    for (let key in properties) {
-      const value = properties[key];
-      object[key] = value;
-    }
-  }
-  return object;
-};
-
-class Subscription {
-  constructor(consumer, params = {}, mixin) {
-    this.consumer = consumer;
-    this.identifier = JSON.stringify(params);
-    extend(this, mixin);
-  }
-  perform(action, data = {}) {
-    data.action = action;
-    return this.send(data);
-  }
-  send(data) {
-    return this.consumer.send({
-      command: "message",
-      identifier: this.identifier,
-      data: JSON.stringify(data)
-    });
-  }
-  unsubscribe() {
-    return this.consumer.subscriptions.remove(this);
-  }
-}
-
-class SubscriptionGuarantor {
-  constructor(subscriptions) {
-    this.subscriptions = subscriptions;
-    this.pendingSubscriptions = [];
-  }
-  guarantee(subscription) {
-    if (this.pendingSubscriptions.indexOf(subscription) == -1) {
-      logger.log(`SubscriptionGuarantor guaranteeing ${subscription.identifier}`);
-      this.pendingSubscriptions.push(subscription);
-    } else {
-      logger.log(`SubscriptionGuarantor already guaranteeing ${subscription.identifier}`);
-    }
-    this.startGuaranteeing();
-  }
-  forget(subscription) {
-    logger.log(`SubscriptionGuarantor forgetting ${subscription.identifier}`);
-    this.pendingSubscriptions = this.pendingSubscriptions.filter((s => s !== subscription));
-  }
-  startGuaranteeing() {
-    this.stopGuaranteeing();
-    this.retrySubscribing();
-  }
-  stopGuaranteeing() {
-    clearTimeout(this.retryTimeout);
-  }
-  retrySubscribing() {
-    this.retryTimeout = setTimeout((() => {
-      if (this.subscriptions && typeof this.subscriptions.subscribe === "function") {
-        this.pendingSubscriptions.map((subscription => {
-          logger.log(`SubscriptionGuarantor resubscribing ${subscription.identifier}`);
-          this.subscriptions.subscribe(subscription);
-        }));
-      }
-    }), 500);
-  }
-}
-
-var SubscriptionGuarantor$1 = SubscriptionGuarantor;
-
-class Subscriptions {
-  constructor(consumer) {
-    this.consumer = consumer;
-    this.guarantor = new SubscriptionGuarantor$1(this);
-    this.subscriptions = [];
-  }
-  create(channelName, mixin) {
-    const channel = channelName;
-    const params = typeof channel === "object" ? channel : {
-      channel: channel
-    };
-    const subscription = new Subscription(this.consumer, params, mixin);
-    return this.add(subscription);
-  }
-  add(subscription) {
-    this.subscriptions.push(subscription);
-    this.consumer.ensureActiveConnection();
-    this.notify(subscription, "initialized");
-    this.subscribe(subscription);
-    return subscription;
-  }
-  remove(subscription) {
-    this.forget(subscription);
-    if (!this.findAll(subscription.identifier).length) {
-      this.sendCommand(subscription, "unsubscribe");
-    }
-    return subscription;
-  }
-  reject(identifier) {
-    return this.findAll(identifier).map((subscription => {
-      this.forget(subscription);
-      this.notify(subscription, "rejected");
-      return subscription;
-    }));
-  }
-  forget(subscription) {
-    this.guarantor.forget(subscription);
-    this.subscriptions = this.subscriptions.filter((s => s !== subscription));
-    return subscription;
-  }
-  findAll(identifier) {
-    return this.subscriptions.filter((s => s.identifier === identifier));
-  }
-  reload() {
-    return this.subscriptions.map((subscription => this.subscribe(subscription)));
-  }
-  notifyAll(callbackName, ...args) {
-    return this.subscriptions.map((subscription => this.notify(subscription, callbackName, ...args)));
-  }
-  notify(subscription, callbackName, ...args) {
-    let subscriptions;
-    if (typeof subscription === "string") {
-      subscriptions = this.findAll(subscription);
-    } else {
-      subscriptions = [ subscription ];
-    }
-    return subscriptions.map((subscription => typeof subscription[callbackName] === "function" ? subscription[callbackName](...args) : undefined));
-  }
-  subscribe(subscription) {
-    if (this.sendCommand(subscription, "subscribe")) {
-      this.guarantor.guarantee(subscription);
-    }
-  }
-  confirmSubscription(identifier) {
-    logger.log(`Subscription confirmed ${identifier}`);
-    this.findAll(identifier).map((subscription => this.guarantor.forget(subscription)));
-  }
-  sendCommand(subscription, command) {
-    const {identifier: identifier} = subscription;
-    return this.consumer.send({
-      command: command,
-      identifier: identifier
-    });
-  }
-}
-
-class Consumer {
-  constructor(url) {
-    this._url = url;
-    this.subscriptions = new Subscriptions(this);
-    this.connection = new Connection$1(this);
-    this.subprotocols = [];
-  }
-  get url() {
-    return createWebSocketURL(this._url);
-  }
-  send(data) {
-    return this.connection.send(data);
-  }
-  connect() {
-    return this.connection.open();
-  }
-  disconnect() {
-    return this.connection.close({
-      allowReconnect: false
-    });
-  }
-  ensureActiveConnection() {
-    if (!this.connection.isActive()) {
-      return this.connection.open();
-    }
-  }
-  addSubProtocol(subprotocol) {
-    this.subprotocols = [ ...this.subprotocols, subprotocol ];
-  }
-}
-
-function createWebSocketURL(url) {
-  if (typeof url === "function") {
-    url = url();
-  }
-  if (url && !/^wss?:/i.test(url)) {
-    const a = document.createElement("a");
-    a.href = url;
-    a.href = a.href;
-    a.protocol = a.protocol.replace("http", "ws");
-    return a.href;
-  } else {
-    return url;
-  }
-}
-
-function createConsumer(url = getConfig("url") || INTERNAL.default_mount_path) {
-  return new Consumer(url);
-}
-
-function getConfig(name) {
-  const element = document.head.querySelector(`meta[name='action-cable-${name}']`);
-  if (element) {
-    return element.getAttribute("content");
-  }
-}
-
-var index = Object.freeze({
-  __proto__: null,
-  Connection: Connection$1,
-  ConnectionMonitor: ConnectionMonitor$1,
-  Consumer: Consumer,
-  INTERNAL: INTERNAL,
-  Subscription: Subscription,
-  Subscriptions: Subscriptions,
-  SubscriptionGuarantor: SubscriptionGuarantor$1,
-  adapters: adapters,
-  createWebSocketURL: createWebSocketURL,
-  logger: logger,
-  createConsumer: createConsumer,
-  getConfig: getConfig
-});
-
-export { Turbo$1 as Turbo, cable };
-// Set a `globalThis` so that bootstrap components are defined on window.bootstrap instead of window.
-window['bootstrap'] = {
-  "@popperjs/core": window.Popper,
-  _originalGlobalThis: window['globalThis']
-};
-window['globalThis'] = window['bootstrap'];
+!function(e,t){"object"==typeof exports&&"undefined"!=typeof module?t(exports):"function"==typeof define&&define.amd?define(["exports"],t):t((e="undefined"!=typeof globalThis?globalThis:e||self).Popper={})}(this,(function(e){"use strict";function t(e){if(null==e)return window;if("[object Window]"!==e.toString()){var t=e.ownerDocument;return t&&t.defaultView||window}return e}function n(e){return e instanceof t(e).Element||e instanceof Element}function r(e){return e instanceof t(e).HTMLElement||e instanceof HTMLElement}function o(e){return"undefined"!=typeof ShadowRoot&&(e instanceof t(e).ShadowRoot||e instanceof ShadowRoot)}var i=Math.max,a=Math.min,s=Math.round;function f(){var e=navigator.userAgentData;return null!=e&&e.brands&&Array.isArray(e.brands)?e.brands.map((function(e){return e.brand+"/"+e.version})).join(" "):navigator.userAgent}function c(){return!/^((?!chrome|android).)*safari/i.test(f())}function p(e,o,i){void 0===o&&(o=!1),void 0===i&&(i=!1);var a=e.getBoundingClientRect(),f=1,p=1;o&&r(e)&&(f=e.offsetWidth>0&&s(a.width)/e.offsetWidth||1,p=e.offsetHeight>0&&s(a.height)/e.offsetHeight||1);var u=(n(e)?t(e):window).visualViewport,l=!c()&&i,d=(a.left+(l&&u?u.offsetLeft:0))/f,h=(a.top+(l&&u?u.offsetTop:0))/p,m=a.width/f,v=a.height/p;return{width:m,height:v,top:h,right:d+m,bottom:h+v,left:d,x:d,y:h}}function u(e){var n=t(e);return{scrollLeft:n.pageXOffset,scrollTop:n.pageYOffset}}function l(e){return e?(e.nodeName||"").toLowerCase():null}function d(e){return((n(e)?e.ownerDocument:e.document)||window.document).documentElement}function h(e){return p(d(e)).left+u(e).scrollLeft}function m(e){return t(e).getComputedStyle(e)}function v(e){var t=m(e),n=t.overflow,r=t.overflowX,o=t.overflowY;return/auto|scroll|overlay|hidden/.test(n+o+r)}function y(e,n,o){void 0===o&&(o=!1);var i,a,f=r(n),c=r(n)&&function(e){var t=e.getBoundingClientRect(),n=s(t.width)/e.offsetWidth||1,r=s(t.height)/e.offsetHeight||1;return 1!==n||1!==r}(n),m=d(n),y=p(e,c,o),g={scrollLeft:0,scrollTop:0},b={x:0,y:0};return(f||!f&&!o)&&(("body"!==l(n)||v(m))&&(g=(i=n)!==t(i)&&r(i)?{scrollLeft:(a=i).scrollLeft,scrollTop:a.scrollTop}:u(i)),r(n)?((b=p(n,!0)).x+=n.clientLeft,b.y+=n.clientTop):m&&(b.x=h(m))),{x:y.left+g.scrollLeft-b.x,y:y.top+g.scrollTop-b.y,width:y.width,height:y.height}}function g(e){var t=p(e),n=e.offsetWidth,r=e.offsetHeight;return Math.abs(t.width-n)<=1&&(n=t.width),Math.abs(t.height-r)<=1&&(r=t.height),{x:e.offsetLeft,y:e.offsetTop,width:n,height:r}}function b(e){return"html"===l(e)?e:e.assignedSlot||e.parentNode||(o(e)?e.host:null)||d(e)}function x(e){return["html","body","#document"].indexOf(l(e))>=0?e.ownerDocument.body:r(e)&&v(e)?e:x(b(e))}function w(e,n){var r;void 0===n&&(n=[]);var o=x(e),i=o===(null==(r=e.ownerDocument)?void 0:r.body),a=t(o),s=i?[a].concat(a.visualViewport||[],v(o)?o:[]):o,f=n.concat(s);return i?f:f.concat(w(b(s)))}function O(e){return["table","td","th"].indexOf(l(e))>=0}function j(e){return r(e)&&"fixed"!==m(e).position?e.offsetParent:null}function E(e){for(var n=t(e),i=j(e);i&&O(i)&&"static"===m(i).position;)i=j(i);return i&&("html"===l(i)||"body"===l(i)&&"static"===m(i).position)?n:i||function(e){var t=/firefox/i.test(f());if(/Trident/i.test(f())&&r(e)&&"fixed"===m(e).position)return null;var n=b(e);for(o(n)&&(n=n.host);r(n)&&["html","body"].indexOf(l(n))<0;){var i=m(n);if("none"!==i.transform||"none"!==i.perspective||"paint"===i.contain||-1!==["transform","perspective"].indexOf(i.willChange)||t&&"filter"===i.willChange||t&&i.filter&&"none"!==i.filter)return n;n=n.parentNode}return null}(e)||n}var D="top",A="bottom",L="right",P="left",M="auto",k=[D,A,L,P],W="start",B="end",H="viewport",T="popper",R=k.reduce((function(e,t){return e.concat([t+"-"+W,t+"-"+B])}),[]),S=[].concat(k,[M]).reduce((function(e,t){return e.concat([t,t+"-"+W,t+"-"+B])}),[]),V=["beforeRead","read","afterRead","beforeMain","main","afterMain","beforeWrite","write","afterWrite"];function q(e){var t=new Map,n=new Set,r=[];function o(e){n.add(e.name),[].concat(e.requires||[],e.requiresIfExists||[]).forEach((function(e){if(!n.has(e)){var r=t.get(e);r&&o(r)}})),r.push(e)}return e.forEach((function(e){t.set(e.name,e)})),e.forEach((function(e){n.has(e.name)||o(e)})),r}function C(e,t){var n=t.getRootNode&&t.getRootNode();if(e.contains(t))return!0;if(n&&o(n)){var r=t;do{if(r&&e.isSameNode(r))return!0;r=r.parentNode||r.host}while(r)}return!1}function N(e){return Object.assign({},e,{left:e.x,top:e.y,right:e.x+e.width,bottom:e.y+e.height})}function I(e,r,o){return r===H?N(function(e,n){var r=t(e),o=d(e),i=r.visualViewport,a=o.clientWidth,s=o.clientHeight,f=0,p=0;if(i){a=i.width,s=i.height;var u=c();(u||!u&&"fixed"===n)&&(f=i.offsetLeft,p=i.offsetTop)}return{width:a,height:s,x:f+h(e),y:p}}(e,o)):n(r)?function(e,t){var n=p(e,!1,"fixed"===t);return n.top=n.top+e.clientTop,n.left=n.left+e.clientLeft,n.bottom=n.top+e.clientHeight,n.right=n.left+e.clientWidth,n.width=e.clientWidth,n.height=e.clientHeight,n.x=n.left,n.y=n.top,n}(r,o):N(function(e){var t,n=d(e),r=u(e),o=null==(t=e.ownerDocument)?void 0:t.body,a=i(n.scrollWidth,n.clientWidth,o?o.scrollWidth:0,o?o.clientWidth:0),s=i(n.scrollHeight,n.clientHeight,o?o.scrollHeight:0,o?o.clientHeight:0),f=-r.scrollLeft+h(e),c=-r.scrollTop;return"rtl"===m(o||n).direction&&(f+=i(n.clientWidth,o?o.clientWidth:0)-a),{width:a,height:s,x:f,y:c}}(d(e)))}function _(e,t,o,s){var f="clippingParents"===t?function(e){var t=w(b(e)),o=["absolute","fixed"].indexOf(m(e).position)>=0&&r(e)?E(e):e;return n(o)?t.filter((function(e){return n(e)&&C(e,o)&&"body"!==l(e)})):[]}(e):[].concat(t),c=[].concat(f,[o]),p=c[0],u=c.reduce((function(t,n){var r=I(e,n,s);return t.top=i(r.top,t.top),t.right=a(r.right,t.right),t.bottom=a(r.bottom,t.bottom),t.left=i(r.left,t.left),t}),I(e,p,s));return u.width=u.right-u.left,u.height=u.bottom-u.top,u.x=u.left,u.y=u.top,u}function F(e){return e.split("-")[0]}function U(e){return e.split("-")[1]}function z(e){return["top","bottom"].indexOf(e)>=0?"x":"y"}function X(e){var t,n=e.reference,r=e.element,o=e.placement,i=o?F(o):null,a=o?U(o):null,s=n.x+n.width/2-r.width/2,f=n.y+n.height/2-r.height/2;switch(i){case D:t={x:s,y:n.y-r.height};break;case A:t={x:s,y:n.y+n.height};break;case L:t={x:n.x+n.width,y:f};break;case P:t={x:n.x-r.width,y:f};break;default:t={x:n.x,y:n.y}}var c=i?z(i):null;if(null!=c){var p="y"===c?"height":"width";switch(a){case W:t[c]=t[c]-(n[p]/2-r[p]/2);break;case B:t[c]=t[c]+(n[p]/2-r[p]/2)}}return t}function Y(e){return Object.assign({},{top:0,right:0,bottom:0,left:0},e)}function G(e,t){return t.reduce((function(t,n){return t[n]=e,t}),{})}function J(e,t){void 0===t&&(t={});var r=t,o=r.placement,i=void 0===o?e.placement:o,a=r.strategy,s=void 0===a?e.strategy:a,f=r.boundary,c=void 0===f?"clippingParents":f,u=r.rootBoundary,l=void 0===u?H:u,h=r.elementContext,m=void 0===h?T:h,v=r.altBoundary,y=void 0!==v&&v,g=r.padding,b=void 0===g?0:g,x=Y("number"!=typeof b?b:G(b,k)),w=m===T?"reference":T,O=e.rects.popper,j=e.elements[y?w:m],E=_(n(j)?j:j.contextElement||d(e.elements.popper),c,l,s),P=p(e.elements.reference),M=X({reference:P,element:O,strategy:"absolute",placement:i}),W=N(Object.assign({},O,M)),B=m===T?W:P,R={top:E.top-B.top+x.top,bottom:B.bottom-E.bottom+x.bottom,left:E.left-B.left+x.left,right:B.right-E.right+x.right},S=e.modifiersData.offset;if(m===T&&S){var V=S[i];Object.keys(R).forEach((function(e){var t=[L,A].indexOf(e)>=0?1:-1,n=[D,A].indexOf(e)>=0?"y":"x";R[e]+=V[n]*t}))}return R}var K={placement:"bottom",modifiers:[],strategy:"absolute"};function Q(){for(var e=arguments.length,t=new Array(e),n=0;n<e;n++)t[n]=arguments[n];return!t.some((function(e){return!(e&&"function"==typeof e.getBoundingClientRect)}))}function Z(e){void 0===e&&(e={});var t=e,r=t.defaultModifiers,o=void 0===r?[]:r,i=t.defaultOptions,a=void 0===i?K:i;return function(e,t,r){void 0===r&&(r=a);var i,s,f={placement:"bottom",orderedModifiers:[],options:Object.assign({},K,a),modifiersData:{},elements:{reference:e,popper:t},attributes:{},styles:{}},c=[],p=!1,u={state:f,setOptions:function(r){var i="function"==typeof r?r(f.options):r;l(),f.options=Object.assign({},a,f.options,i),f.scrollParents={reference:n(e)?w(e):e.contextElement?w(e.contextElement):[],popper:w(t)};var s,p,d=function(e){var t=q(e);return V.reduce((function(e,n){return e.concat(t.filter((function(e){return e.phase===n})))}),[])}((s=[].concat(o,f.options.modifiers),p=s.reduce((function(e,t){var n=e[t.name];return e[t.name]=n?Object.assign({},n,t,{options:Object.assign({},n.options,t.options),data:Object.assign({},n.data,t.data)}):t,e}),{}),Object.keys(p).map((function(e){return p[e]}))));return f.orderedModifiers=d.filter((function(e){return e.enabled})),f.orderedModifiers.forEach((function(e){var t=e.name,n=e.options,r=void 0===n?{}:n,o=e.effect;if("function"==typeof o){var i=o({state:f,name:t,instance:u,options:r}),a=function(){};c.push(i||a)}})),u.update()},forceUpdate:function(){if(!p){var e=f.elements,t=e.reference,n=e.popper;if(Q(t,n)){f.rects={reference:y(t,E(n),"fixed"===f.options.strategy),popper:g(n)},f.reset=!1,f.placement=f.options.placement,f.orderedModifiers.forEach((function(e){return f.modifiersData[e.name]=Object.assign({},e.data)}));for(var r=0;r<f.orderedModifiers.length;r++)if(!0!==f.reset){var o=f.orderedModifiers[r],i=o.fn,a=o.options,s=void 0===a?{}:a,c=o.name;"function"==typeof i&&(f=i({state:f,options:s,name:c,instance:u})||f)}else f.reset=!1,r=-1}}},update:(i=function(){return new Promise((function(e){u.forceUpdate(),e(f)}))},function(){return s||(s=new Promise((function(e){Promise.resolve().then((function(){s=void 0,e(i())}))}))),s}),destroy:function(){l(),p=!0}};if(!Q(e,t))return u;function l(){c.forEach((function(e){return e()})),c=[]}return u.setOptions(r).then((function(e){!p&&r.onFirstUpdate&&r.onFirstUpdate(e)})),u}}var $={passive:!0};var ee={name:"eventListeners",enabled:!0,phase:"write",fn:function(){},effect:function(e){var n=e.state,r=e.instance,o=e.options,i=o.scroll,a=void 0===i||i,s=o.resize,f=void 0===s||s,c=t(n.elements.popper),p=[].concat(n.scrollParents.reference,n.scrollParents.popper);return a&&p.forEach((function(e){e.addEventListener("scroll",r.update,$)})),f&&c.addEventListener("resize",r.update,$),function(){a&&p.forEach((function(e){e.removeEventListener("scroll",r.update,$)})),f&&c.removeEventListener("resize",r.update,$)}},data:{}};var te={name:"popperOffsets",enabled:!0,phase:"read",fn:function(e){var t=e.state,n=e.name;t.modifiersData[n]=X({reference:t.rects.reference,element:t.rects.popper,strategy:"absolute",placement:t.placement})},data:{}},ne={top:"auto",right:"auto",bottom:"auto",left:"auto"};function re(e){var n,r=e.popper,o=e.popperRect,i=e.placement,a=e.variation,f=e.offsets,c=e.position,p=e.gpuAcceleration,u=e.adaptive,l=e.roundOffsets,h=e.isFixed,v=f.x,y=void 0===v?0:v,g=f.y,b=void 0===g?0:g,x="function"==typeof l?l({x:y,y:b}):{x:y,y:b};y=x.x,b=x.y;var w=f.hasOwnProperty("x"),O=f.hasOwnProperty("y"),j=P,M=D,k=window;if(u){var W=E(r),H="clientHeight",T="clientWidth";if(W===t(r)&&"static"!==m(W=d(r)).position&&"absolute"===c&&(H="scrollHeight",T="scrollWidth"),W=W,i===D||(i===P||i===L)&&a===B)M=A,b-=(h&&W===k&&k.visualViewport?k.visualViewport.height:W[H])-o.height,b*=p?1:-1;if(i===P||(i===D||i===A)&&a===B)j=L,y-=(h&&W===k&&k.visualViewport?k.visualViewport.width:W[T])-o.width,y*=p?1:-1}var R,S=Object.assign({position:c},u&&ne),V=!0===l?function(e,t){var n=e.x,r=e.y,o=t.devicePixelRatio||1;return{x:s(n*o)/o||0,y:s(r*o)/o||0}}({x:y,y:b},t(r)):{x:y,y:b};return y=V.x,b=V.y,p?Object.assign({},S,((R={})[M]=O?"0":"",R[j]=w?"0":"",R.transform=(k.devicePixelRatio||1)<=1?"translate("+y+"px, "+b+"px)":"translate3d("+y+"px, "+b+"px, 0)",R)):Object.assign({},S,((n={})[M]=O?b+"px":"",n[j]=w?y+"px":"",n.transform="",n))}var oe={name:"computeStyles",enabled:!0,phase:"beforeWrite",fn:function(e){var t=e.state,n=e.options,r=n.gpuAcceleration,o=void 0===r||r,i=n.adaptive,a=void 0===i||i,s=n.roundOffsets,f=void 0===s||s,c={placement:F(t.placement),variation:U(t.placement),popper:t.elements.popper,popperRect:t.rects.popper,gpuAcceleration:o,isFixed:"fixed"===t.options.strategy};null!=t.modifiersData.popperOffsets&&(t.styles.popper=Object.assign({},t.styles.popper,re(Object.assign({},c,{offsets:t.modifiersData.popperOffsets,position:t.options.strategy,adaptive:a,roundOffsets:f})))),null!=t.modifiersData.arrow&&(t.styles.arrow=Object.assign({},t.styles.arrow,re(Object.assign({},c,{offsets:t.modifiersData.arrow,position:"absolute",adaptive:!1,roundOffsets:f})))),t.attributes.popper=Object.assign({},t.attributes.popper,{"data-popper-placement":t.placement})},data:{}};var ie={name:"applyStyles",enabled:!0,phase:"write",fn:function(e){var t=e.state;Object.keys(t.elements).forEach((function(e){var n=t.styles[e]||{},o=t.attributes[e]||{},i=t.elements[e];r(i)&&l(i)&&(Object.assign(i.style,n),Object.keys(o).forEach((function(e){var t=o[e];!1===t?i.removeAttribute(e):i.setAttribute(e,!0===t?"":t)})))}))},effect:function(e){var t=e.state,n={popper:{position:t.options.strategy,left:"0",top:"0",margin:"0"},arrow:{position:"absolute"},reference:{}};return Object.assign(t.elements.popper.style,n.popper),t.styles=n,t.elements.arrow&&Object.assign(t.elements.arrow.style,n.arrow),function(){Object.keys(t.elements).forEach((function(e){var o=t.elements[e],i=t.attributes[e]||{},a=Object.keys(t.styles.hasOwnProperty(e)?t.styles[e]:n[e]).reduce((function(e,t){return e[t]="",e}),{});r(o)&&l(o)&&(Object.assign(o.style,a),Object.keys(i).forEach((function(e){o.removeAttribute(e)})))}))}},requires:["computeStyles"]};var ae={name:"offset",enabled:!0,phase:"main",requires:["popperOffsets"],fn:function(e){var t=e.state,n=e.options,r=e.name,o=n.offset,i=void 0===o?[0,0]:o,a=S.reduce((function(e,n){return e[n]=function(e,t,n){var r=F(e),o=[P,D].indexOf(r)>=0?-1:1,i="function"==typeof n?n(Object.assign({},t,{placement:e})):n,a=i[0],s=i[1];return a=a||0,s=(s||0)*o,[P,L].indexOf(r)>=0?{x:s,y:a}:{x:a,y:s}}(n,t.rects,i),e}),{}),s=a[t.placement],f=s.x,c=s.y;null!=t.modifiersData.popperOffsets&&(t.modifiersData.popperOffsets.x+=f,t.modifiersData.popperOffsets.y+=c),t.modifiersData[r]=a}},se={left:"right",right:"left",bottom:"top",top:"bottom"};function fe(e){return e.replace(/left|right|bottom|top/g,(function(e){return se[e]}))}var ce={start:"end",end:"start"};function pe(e){return e.replace(/start|end/g,(function(e){return ce[e]}))}function ue(e,t){void 0===t&&(t={});var n=t,r=n.placement,o=n.boundary,i=n.rootBoundary,a=n.padding,s=n.flipVariations,f=n.allowedAutoPlacements,c=void 0===f?S:f,p=U(r),u=p?s?R:R.filter((function(e){return U(e)===p})):k,l=u.filter((function(e){return c.indexOf(e)>=0}));0===l.length&&(l=u);var d=l.reduce((function(t,n){return t[n]=J(e,{placement:n,boundary:o,rootBoundary:i,padding:a})[F(n)],t}),{});return Object.keys(d).sort((function(e,t){return d[e]-d[t]}))}var le={name:"flip",enabled:!0,phase:"main",fn:function(e){var t=e.state,n=e.options,r=e.name;if(!t.modifiersData[r]._skip){for(var o=n.mainAxis,i=void 0===o||o,a=n.altAxis,s=void 0===a||a,f=n.fallbackPlacements,c=n.padding,p=n.boundary,u=n.rootBoundary,l=n.altBoundary,d=n.flipVariations,h=void 0===d||d,m=n.allowedAutoPlacements,v=t.options.placement,y=F(v),g=f||(y===v||!h?[fe(v)]:function(e){if(F(e)===M)return[];var t=fe(e);return[pe(e),t,pe(t)]}(v)),b=[v].concat(g).reduce((function(e,n){return e.concat(F(n)===M?ue(t,{placement:n,boundary:p,rootBoundary:u,padding:c,flipVariations:h,allowedAutoPlacements:m}):n)}),[]),x=t.rects.reference,w=t.rects.popper,O=new Map,j=!0,E=b[0],k=0;k<b.length;k++){var B=b[k],H=F(B),T=U(B)===W,R=[D,A].indexOf(H)>=0,S=R?"width":"height",V=J(t,{placement:B,boundary:p,rootBoundary:u,altBoundary:l,padding:c}),q=R?T?L:P:T?A:D;x[S]>w[S]&&(q=fe(q));var C=fe(q),N=[];if(i&&N.push(V[H]<=0),s&&N.push(V[q]<=0,V[C]<=0),N.every((function(e){return e}))){E=B,j=!1;break}O.set(B,N)}if(j)for(var I=function(e){var t=b.find((function(t){var n=O.get(t);if(n)return n.slice(0,e).every((function(e){return e}))}));if(t)return E=t,"break"},_=h?3:1;_>0;_--){if("break"===I(_))break}t.placement!==E&&(t.modifiersData[r]._skip=!0,t.placement=E,t.reset=!0)}},requiresIfExists:["offset"],data:{_skip:!1}};function de(e,t,n){return i(e,a(t,n))}var he={name:"preventOverflow",enabled:!0,phase:"main",fn:function(e){var t=e.state,n=e.options,r=e.name,o=n.mainAxis,s=void 0===o||o,f=n.altAxis,c=void 0!==f&&f,p=n.boundary,u=n.rootBoundary,l=n.altBoundary,d=n.padding,h=n.tether,m=void 0===h||h,v=n.tetherOffset,y=void 0===v?0:v,b=J(t,{boundary:p,rootBoundary:u,padding:d,altBoundary:l}),x=F(t.placement),w=U(t.placement),O=!w,j=z(x),M="x"===j?"y":"x",k=t.modifiersData.popperOffsets,B=t.rects.reference,H=t.rects.popper,T="function"==typeof y?y(Object.assign({},t.rects,{placement:t.placement})):y,R="number"==typeof T?{mainAxis:T,altAxis:T}:Object.assign({mainAxis:0,altAxis:0},T),S=t.modifiersData.offset?t.modifiersData.offset[t.placement]:null,V={x:0,y:0};if(k){if(s){var q,C="y"===j?D:P,N="y"===j?A:L,I="y"===j?"height":"width",_=k[j],X=_+b[C],Y=_-b[N],G=m?-H[I]/2:0,K=w===W?B[I]:H[I],Q=w===W?-H[I]:-B[I],Z=t.elements.arrow,$=m&&Z?g(Z):{width:0,height:0},ee=t.modifiersData["arrow#persistent"]?t.modifiersData["arrow#persistent"].padding:{top:0,right:0,bottom:0,left:0},te=ee[C],ne=ee[N],re=de(0,B[I],$[I]),oe=O?B[I]/2-G-re-te-R.mainAxis:K-re-te-R.mainAxis,ie=O?-B[I]/2+G+re+ne+R.mainAxis:Q+re+ne+R.mainAxis,ae=t.elements.arrow&&E(t.elements.arrow),se=ae?"y"===j?ae.clientTop||0:ae.clientLeft||0:0,fe=null!=(q=null==S?void 0:S[j])?q:0,ce=_+ie-fe,pe=de(m?a(X,_+oe-fe-se):X,_,m?i(Y,ce):Y);k[j]=pe,V[j]=pe-_}if(c){var ue,le="x"===j?D:P,he="x"===j?A:L,me=k[M],ve="y"===M?"height":"width",ye=me+b[le],ge=me-b[he],be=-1!==[D,P].indexOf(x),xe=null!=(ue=null==S?void 0:S[M])?ue:0,we=be?ye:me-B[ve]-H[ve]-xe+R.altAxis,Oe=be?me+B[ve]+H[ve]-xe-R.altAxis:ge,je=m&&be?function(e,t,n){var r=de(e,t,n);return r>n?n:r}(we,me,Oe):de(m?we:ye,me,m?Oe:ge);k[M]=je,V[M]=je-me}t.modifiersData[r]=V}},requiresIfExists:["offset"]};var me={name:"arrow",enabled:!0,phase:"main",fn:function(e){var t,n=e.state,r=e.name,o=e.options,i=n.elements.arrow,a=n.modifiersData.popperOffsets,s=F(n.placement),f=z(s),c=[P,L].indexOf(s)>=0?"height":"width";if(i&&a){var p=function(e,t){return Y("number"!=typeof(e="function"==typeof e?e(Object.assign({},t.rects,{placement:t.placement})):e)?e:G(e,k))}(o.padding,n),u=g(i),l="y"===f?D:P,d="y"===f?A:L,h=n.rects.reference[c]+n.rects.reference[f]-a[f]-n.rects.popper[c],m=a[f]-n.rects.reference[f],v=E(i),y=v?"y"===f?v.clientHeight||0:v.clientWidth||0:0,b=h/2-m/2,x=p[l],w=y-u[c]-p[d],O=y/2-u[c]/2+b,j=de(x,O,w),M=f;n.modifiersData[r]=((t={})[M]=j,t.centerOffset=j-O,t)}},effect:function(e){var t=e.state,n=e.options.element,r=void 0===n?"[data-popper-arrow]":n;null!=r&&("string"!=typeof r||(r=t.elements.popper.querySelector(r)))&&C(t.elements.popper,r)&&(t.elements.arrow=r)},requires:["popperOffsets"],requiresIfExists:["preventOverflow"]};function ve(e,t,n){return void 0===n&&(n={x:0,y:0}),{top:e.top-t.height-n.y,right:e.right-t.width+n.x,bottom:e.bottom-t.height+n.y,left:e.left-t.width-n.x}}function ye(e){return[D,L,A,P].some((function(t){return e[t]>=0}))}var ge={name:"hide",enabled:!0,phase:"main",requiresIfExists:["preventOverflow"],fn:function(e){var t=e.state,n=e.name,r=t.rects.reference,o=t.rects.popper,i=t.modifiersData.preventOverflow,a=J(t,{elementContext:"reference"}),s=J(t,{altBoundary:!0}),f=ve(a,r),c=ve(s,o,i),p=ye(f),u=ye(c);t.modifiersData[n]={referenceClippingOffsets:f,popperEscapeOffsets:c,isReferenceHidden:p,hasPopperEscaped:u},t.attributes.popper=Object.assign({},t.attributes.popper,{"data-popper-reference-hidden":p,"data-popper-escaped":u})}},be=Z({defaultModifiers:[ee,te,oe,ie]}),xe=[ee,te,oe,ie,ae,le,he,me,ge],we=Z({defaultModifiers:xe});e.applyStyles=ie,e.arrow=me,e.computeStyles=oe,e.createPopper=we,e.createPopperLite=be,e.defaultModifiers=xe,e.detectOverflow=J,e.eventListeners=ee,e.flip=le,e.hide=ge,e.offset=ae,e.popperGenerator=Z,e.popperOffsets=te,e.preventOverflow=he,Object.defineProperty(e,"__esModule",{value:!0})}));
 /*!
-  * Bootstrap data.js v5.3.8 (https://getbootstrap.com/)
+  * Bootstrap v5.3.8 (https://getbootstrap.com/)
   * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
   */
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Data = factory());
-})(this, (function () { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('@popperjs/core')) :
+  typeof define === 'function' && define.amd ? define(['@popperjs/core'], factory) :
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.bootstrap = factory(global.Popper));
+})(this, (function (Popper) { 'use strict';
+
+  function _interopNamespaceDefault(e) {
+    const n = Object.create(null, { [Symbol.toStringTag]: { value: 'Module' } });
+    if (e) {
+      for (const k in e) {
+        if (k !== 'default') {
+          const d = Object.getOwnPropertyDescriptor(e, k);
+          Object.defineProperty(n, k, d.get ? d : {
+            enumerable: true,
+            get: () => e[k]
+          });
+        }
+      }
+    }
+    n.default = e;
+    return Object.freeze(n);
+  }
+
+  const Popper__namespace = /*#__PURE__*/_interopNamespaceDefault(Popper);
 
   /**
    * --------------------------------------------------------------------------
@@ -6087,7 +45,7 @@ window['globalThis'] = window['bootstrap'];
    */
 
   const elementMap = new Map();
-  const data = {
+  const Data = {
     set(element, key, instance) {
       if (!elementMap.has(element)) {
         elementMap.set(element, new Map());
@@ -6122,20 +80,6 @@ window['globalThis'] = window['bootstrap'];
       }
     }
   };
-
-  return data;
-
-}));
-/*!
-  * Bootstrap index.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.Index = {}));
-})(this, (function (exports) { 'use strict';
 
   /**
    * --------------------------------------------------------------------------
@@ -6383,40 +327,6 @@ window['globalThis'] = window['bootstrap'];
     return list[Math.max(0, Math.min(index, listLength - 1))];
   };
 
-  exports.defineJQueryPlugin = defineJQueryPlugin;
-  exports.execute = execute;
-  exports.executeAfterTransition = executeAfterTransition;
-  exports.findShadowRoot = findShadowRoot;
-  exports.getElement = getElement;
-  exports.getNextActiveElement = getNextActiveElement;
-  exports.getTransitionDurationFromElement = getTransitionDurationFromElement;
-  exports.getUID = getUID;
-  exports.getjQuery = getjQuery;
-  exports.isDisabled = isDisabled;
-  exports.isElement = isElement;
-  exports.isRTL = isRTL;
-  exports.isVisible = isVisible;
-  exports.noop = noop;
-  exports.onDOMContentLoaded = onDOMContentLoaded;
-  exports.parseSelector = parseSelector;
-  exports.reflow = reflow;
-  exports.toType = toType;
-  exports.triggerTransitionEnd = triggerTransitionEnd;
-
-  Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-
-}));
-/*!
-  * Bootstrap event-handler.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('../util/index.js')) :
-  typeof define === 'function' && define.amd ? define(['../util/index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.EventHandler = factory(global.Index));
-})(this, (function (index_js) { 'use strict';
-
   /**
    * --------------------------------------------------------------------------
    * Bootstrap dom/event-handler.js
@@ -6593,7 +503,7 @@ window['globalThis'] = window['bootstrap'];
       if (typeof event !== 'string' || !element) {
         return null;
       }
-      const $ = index_js.getjQuery();
+      const $ = getjQuery();
       const typeEvent = getTypeEvent(event);
       const inNamespace = event !== typeEvent;
       let jQueryEvent = null;
@@ -6638,20 +548,6 @@ window['globalThis'] = window['bootstrap'];
     }
     return obj;
   }
-
-  return EventHandler;
-
-}));
-/*!
-  * Bootstrap manipulator.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Manipulator = factory());
-})(this, (function () { 'use strict';
 
   /**
    * --------------------------------------------------------------------------
@@ -6710,20 +606,6 @@ window['globalThis'] = window['bootstrap'];
     }
   };
 
-  return Manipulator;
-
-}));
-/*!
-  * Bootstrap config.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('../dom/manipulator.js'), require('./index.js')) :
-  typeof define === 'function' && define.amd ? define(['../dom/manipulator', './index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Config = factory(global.Manipulator, global.Index));
-})(this, (function (Manipulator, index_js) { 'use strict';
-
   /**
    * --------------------------------------------------------------------------
    * Bootstrap util/config.js
@@ -6757,39 +639,25 @@ window['globalThis'] = window['bootstrap'];
       return config;
     }
     _mergeConfigObj(config, element) {
-      const jsonConfig = index_js.isElement(element) ? Manipulator.getDataAttribute(element, 'config') : {}; // try to parse
+      const jsonConfig = isElement(element) ? Manipulator.getDataAttribute(element, 'config') : {}; // try to parse
 
       return {
         ...this.constructor.Default,
         ...(typeof jsonConfig === 'object' ? jsonConfig : {}),
-        ...(index_js.isElement(element) ? Manipulator.getDataAttributes(element) : {}),
+        ...(isElement(element) ? Manipulator.getDataAttributes(element) : {}),
         ...(typeof config === 'object' ? config : {})
       };
     }
     _typeCheckConfig(config, configTypes = this.constructor.DefaultType) {
       for (const [property, expectedTypes] of Object.entries(configTypes)) {
         const value = config[property];
-        const valueType = index_js.isElement(value) ? 'element' : index_js.toType(value);
+        const valueType = isElement(value) ? 'element' : toType(value);
         if (!new RegExp(expectedTypes).test(valueType)) {
           throw new TypeError(`${this.constructor.NAME.toUpperCase()}: Option "${property}" provided type "${valueType}" but expected type "${expectedTypes}".`);
         }
       }
     }
   }
-
-  return Config;
-
-}));
-/*!
-  * Bootstrap base-component.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('./dom/data.js'), require('./dom/event-handler.js'), require('./util/config.js'), require('./util/index.js')) :
-  typeof define === 'function' && define.amd ? define(['./dom/data', './dom/event-handler', './util/config', './util/index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.BaseComponent = factory(global.Data, global.EventHandler, global.Config, global.Index));
-})(this, (function (Data, EventHandler, Config, index_js) { 'use strict';
 
   /**
    * --------------------------------------------------------------------------
@@ -6812,7 +680,7 @@ window['globalThis'] = window['bootstrap'];
   class BaseComponent extends Config {
     constructor(element, config) {
       super();
-      element = index_js.getElement(element);
+      element = getElement(element);
       if (!element) {
         return;
       }
@@ -6832,7 +700,7 @@ window['globalThis'] = window['bootstrap'];
 
     // Private
     _queueCallback(callback, element, isAnimated = true) {
-      index_js.executeAfterTransition(callback, element, isAnimated);
+      executeAfterTransition(callback, element, isAnimated);
     }
     _getConfig(config) {
       config = this._mergeConfigObj(config, this._element);
@@ -6843,7 +711,7 @@ window['globalThis'] = window['bootstrap'];
 
     // Static
     static getInstance(element) {
-      return Data.get(index_js.getElement(element), this.DATA_KEY);
+      return Data.get(getElement(element), this.DATA_KEY);
     }
     static getOrCreateInstance(element, config = {}) {
       return this.getInstance(element) || new this(element, typeof config === 'object' ? config : null);
@@ -6862,19 +730,2209 @@ window['globalThis'] = window['bootstrap'];
     }
   }
 
-  return BaseComponent;
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap dom/selector-engine.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
 
-}));
-/*!
-  * Bootstrap sanitizer.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.Sanitizer = {}));
-})(this, (function (exports) { 'use strict';
+  const getSelector = element => {
+    let selector = element.getAttribute('data-bs-target');
+    if (!selector || selector === '#') {
+      let hrefAttribute = element.getAttribute('href');
+
+      // The only valid content that could double as a selector are IDs or classes,
+      // so everything starting with `#` or `.`. If a "real" URL is used as the selector,
+      // `document.querySelector` will rightfully complain it is invalid.
+      // See https://github.com/twbs/bootstrap/issues/32273
+      if (!hrefAttribute || !hrefAttribute.includes('#') && !hrefAttribute.startsWith('.')) {
+        return null;
+      }
+
+      // Just in case some CMS puts out a full URL with the anchor appended
+      if (hrefAttribute.includes('#') && !hrefAttribute.startsWith('#')) {
+        hrefAttribute = `#${hrefAttribute.split('#')[1]}`;
+      }
+      selector = hrefAttribute && hrefAttribute !== '#' ? hrefAttribute.trim() : null;
+    }
+    return selector ? selector.split(',').map(sel => parseSelector(sel)).join(',') : null;
+  };
+  const SelectorEngine = {
+    find(selector, element = document.documentElement) {
+      return [].concat(...Element.prototype.querySelectorAll.call(element, selector));
+    },
+    findOne(selector, element = document.documentElement) {
+      return Element.prototype.querySelector.call(element, selector);
+    },
+    children(element, selector) {
+      return [].concat(...element.children).filter(child => child.matches(selector));
+    },
+    parents(element, selector) {
+      const parents = [];
+      let ancestor = element.parentNode.closest(selector);
+      while (ancestor) {
+        parents.push(ancestor);
+        ancestor = ancestor.parentNode.closest(selector);
+      }
+      return parents;
+    },
+    prev(element, selector) {
+      let previous = element.previousElementSibling;
+      while (previous) {
+        if (previous.matches(selector)) {
+          return [previous];
+        }
+        previous = previous.previousElementSibling;
+      }
+      return [];
+    },
+    // TODO: this is now unused; remove later along with prev()
+    next(element, selector) {
+      let next = element.nextElementSibling;
+      while (next) {
+        if (next.matches(selector)) {
+          return [next];
+        }
+        next = next.nextElementSibling;
+      }
+      return [];
+    },
+    focusableChildren(element) {
+      const focusables = ['a', 'button', 'input', 'textarea', 'select', 'details', '[tabindex]', '[contenteditable="true"]'].map(selector => `${selector}:not([tabindex^="-"])`).join(',');
+      return this.find(focusables, element).filter(el => !isDisabled(el) && isVisible(el));
+    },
+    getSelectorFromElement(element) {
+      const selector = getSelector(element);
+      if (selector) {
+        return SelectorEngine.findOne(selector) ? selector : null;
+      }
+      return null;
+    },
+    getElementFromSelector(element) {
+      const selector = getSelector(element);
+      return selector ? SelectorEngine.findOne(selector) : null;
+    },
+    getMultipleElementsFromSelector(element) {
+      const selector = getSelector(element);
+      return selector ? SelectorEngine.find(selector) : [];
+    }
+  };
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap util/component-functions.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+  const enableDismissTrigger = (component, method = 'hide') => {
+    const clickEvent = `click.dismiss${component.EVENT_KEY}`;
+    const name = component.NAME;
+    EventHandler.on(document, clickEvent, `[data-bs-dismiss="${name}"]`, function (event) {
+      if (['A', 'AREA'].includes(this.tagName)) {
+        event.preventDefault();
+      }
+      if (isDisabled(this)) {
+        return;
+      }
+      const target = SelectorEngine.getElementFromSelector(this) || this.closest(`.${name}`);
+      const instance = component.getOrCreateInstance(target);
+
+      // Method argument is left, for Alert and only, as it doesn't implement the 'hide' method
+      instance[method]();
+    });
+  };
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap alert.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const NAME$f = 'alert';
+  const DATA_KEY$a = 'bs.alert';
+  const EVENT_KEY$b = `.${DATA_KEY$a}`;
+  const EVENT_CLOSE = `close${EVENT_KEY$b}`;
+  const EVENT_CLOSED = `closed${EVENT_KEY$b}`;
+  const CLASS_NAME_FADE$5 = 'fade';
+  const CLASS_NAME_SHOW$8 = 'show';
+
+  /**
+   * Class definition
+   */
+
+  class Alert extends BaseComponent {
+    // Getters
+    static get NAME() {
+      return NAME$f;
+    }
+
+    // Public
+    close() {
+      const closeEvent = EventHandler.trigger(this._element, EVENT_CLOSE);
+      if (closeEvent.defaultPrevented) {
+        return;
+      }
+      this._element.classList.remove(CLASS_NAME_SHOW$8);
+      const isAnimated = this._element.classList.contains(CLASS_NAME_FADE$5);
+      this._queueCallback(() => this._destroyElement(), this._element, isAnimated);
+    }
+
+    // Private
+    _destroyElement() {
+      this._element.remove();
+      EventHandler.trigger(this._element, EVENT_CLOSED);
+      this.dispose();
+    }
+
+    // Static
+    static jQueryInterface(config) {
+      return this.each(function () {
+        const data = Alert.getOrCreateInstance(this);
+        if (typeof config !== 'string') {
+          return;
+        }
+        if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
+          throw new TypeError(`No method named "${config}"`);
+        }
+        data[config](this);
+      });
+    }
+  }
+
+  /**
+   * Data API implementation
+   */
+
+  enableDismissTrigger(Alert, 'close');
+
+  /**
+   * jQuery
+   */
+
+  defineJQueryPlugin(Alert);
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap button.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const NAME$e = 'button';
+  const DATA_KEY$9 = 'bs.button';
+  const EVENT_KEY$a = `.${DATA_KEY$9}`;
+  const DATA_API_KEY$6 = '.data-api';
+  const CLASS_NAME_ACTIVE$3 = 'active';
+  const SELECTOR_DATA_TOGGLE$5 = '[data-bs-toggle="button"]';
+  const EVENT_CLICK_DATA_API$6 = `click${EVENT_KEY$a}${DATA_API_KEY$6}`;
+
+  /**
+   * Class definition
+   */
+
+  class Button extends BaseComponent {
+    // Getters
+    static get NAME() {
+      return NAME$e;
+    }
+
+    // Public
+    toggle() {
+      // Toggle class and sync the `aria-pressed` attribute with the return value of the `.toggle()` method
+      this._element.setAttribute('aria-pressed', this._element.classList.toggle(CLASS_NAME_ACTIVE$3));
+    }
+
+    // Static
+    static jQueryInterface(config) {
+      return this.each(function () {
+        const data = Button.getOrCreateInstance(this);
+        if (config === 'toggle') {
+          data[config]();
+        }
+      });
+    }
+  }
+
+  /**
+   * Data API implementation
+   */
+
+  EventHandler.on(document, EVENT_CLICK_DATA_API$6, SELECTOR_DATA_TOGGLE$5, event => {
+    event.preventDefault();
+    const button = event.target.closest(SELECTOR_DATA_TOGGLE$5);
+    const data = Button.getOrCreateInstance(button);
+    data.toggle();
+  });
+
+  /**
+   * jQuery
+   */
+
+  defineJQueryPlugin(Button);
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap util/swipe.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const NAME$d = 'swipe';
+  const EVENT_KEY$9 = '.bs.swipe';
+  const EVENT_TOUCHSTART = `touchstart${EVENT_KEY$9}`;
+  const EVENT_TOUCHMOVE = `touchmove${EVENT_KEY$9}`;
+  const EVENT_TOUCHEND = `touchend${EVENT_KEY$9}`;
+  const EVENT_POINTERDOWN = `pointerdown${EVENT_KEY$9}`;
+  const EVENT_POINTERUP = `pointerup${EVENT_KEY$9}`;
+  const POINTER_TYPE_TOUCH = 'touch';
+  const POINTER_TYPE_PEN = 'pen';
+  const CLASS_NAME_POINTER_EVENT = 'pointer-event';
+  const SWIPE_THRESHOLD = 40;
+  const Default$c = {
+    endCallback: null,
+    leftCallback: null,
+    rightCallback: null
+  };
+  const DefaultType$c = {
+    endCallback: '(function|null)',
+    leftCallback: '(function|null)',
+    rightCallback: '(function|null)'
+  };
+
+  /**
+   * Class definition
+   */
+
+  class Swipe extends Config {
+    constructor(element, config) {
+      super();
+      this._element = element;
+      if (!element || !Swipe.isSupported()) {
+        return;
+      }
+      this._config = this._getConfig(config);
+      this._deltaX = 0;
+      this._supportPointerEvents = Boolean(window.PointerEvent);
+      this._initEvents();
+    }
+
+    // Getters
+    static get Default() {
+      return Default$c;
+    }
+    static get DefaultType() {
+      return DefaultType$c;
+    }
+    static get NAME() {
+      return NAME$d;
+    }
+
+    // Public
+    dispose() {
+      EventHandler.off(this._element, EVENT_KEY$9);
+    }
+
+    // Private
+    _start(event) {
+      if (!this._supportPointerEvents) {
+        this._deltaX = event.touches[0].clientX;
+        return;
+      }
+      if (this._eventIsPointerPenTouch(event)) {
+        this._deltaX = event.clientX;
+      }
+    }
+    _end(event) {
+      if (this._eventIsPointerPenTouch(event)) {
+        this._deltaX = event.clientX - this._deltaX;
+      }
+      this._handleSwipe();
+      execute(this._config.endCallback);
+    }
+    _move(event) {
+      this._deltaX = event.touches && event.touches.length > 1 ? 0 : event.touches[0].clientX - this._deltaX;
+    }
+    _handleSwipe() {
+      const absDeltaX = Math.abs(this._deltaX);
+      if (absDeltaX <= SWIPE_THRESHOLD) {
+        return;
+      }
+      const direction = absDeltaX / this._deltaX;
+      this._deltaX = 0;
+      if (!direction) {
+        return;
+      }
+      execute(direction > 0 ? this._config.rightCallback : this._config.leftCallback);
+    }
+    _initEvents() {
+      if (this._supportPointerEvents) {
+        EventHandler.on(this._element, EVENT_POINTERDOWN, event => this._start(event));
+        EventHandler.on(this._element, EVENT_POINTERUP, event => this._end(event));
+        this._element.classList.add(CLASS_NAME_POINTER_EVENT);
+      } else {
+        EventHandler.on(this._element, EVENT_TOUCHSTART, event => this._start(event));
+        EventHandler.on(this._element, EVENT_TOUCHMOVE, event => this._move(event));
+        EventHandler.on(this._element, EVENT_TOUCHEND, event => this._end(event));
+      }
+    }
+    _eventIsPointerPenTouch(event) {
+      return this._supportPointerEvents && (event.pointerType === POINTER_TYPE_PEN || event.pointerType === POINTER_TYPE_TOUCH);
+    }
+
+    // Static
+    static isSupported() {
+      return 'ontouchstart' in document.documentElement || navigator.maxTouchPoints > 0;
+    }
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap carousel.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const NAME$c = 'carousel';
+  const DATA_KEY$8 = 'bs.carousel';
+  const EVENT_KEY$8 = `.${DATA_KEY$8}`;
+  const DATA_API_KEY$5 = '.data-api';
+  const ARROW_LEFT_KEY$1 = 'ArrowLeft';
+  const ARROW_RIGHT_KEY$1 = 'ArrowRight';
+  const TOUCHEVENT_COMPAT_WAIT = 500; // Time for mouse compat events to fire after touch
+
+  const ORDER_NEXT = 'next';
+  const ORDER_PREV = 'prev';
+  const DIRECTION_LEFT = 'left';
+  const DIRECTION_RIGHT = 'right';
+  const EVENT_SLIDE = `slide${EVENT_KEY$8}`;
+  const EVENT_SLID = `slid${EVENT_KEY$8}`;
+  const EVENT_KEYDOWN$1 = `keydown${EVENT_KEY$8}`;
+  const EVENT_MOUSEENTER$1 = `mouseenter${EVENT_KEY$8}`;
+  const EVENT_MOUSELEAVE$1 = `mouseleave${EVENT_KEY$8}`;
+  const EVENT_DRAG_START = `dragstart${EVENT_KEY$8}`;
+  const EVENT_LOAD_DATA_API$3 = `load${EVENT_KEY$8}${DATA_API_KEY$5}`;
+  const EVENT_CLICK_DATA_API$5 = `click${EVENT_KEY$8}${DATA_API_KEY$5}`;
+  const CLASS_NAME_CAROUSEL = 'carousel';
+  const CLASS_NAME_ACTIVE$2 = 'active';
+  const CLASS_NAME_SLIDE = 'slide';
+  const CLASS_NAME_END = 'carousel-item-end';
+  const CLASS_NAME_START = 'carousel-item-start';
+  const CLASS_NAME_NEXT = 'carousel-item-next';
+  const CLASS_NAME_PREV = 'carousel-item-prev';
+  const SELECTOR_ACTIVE = '.active';
+  const SELECTOR_ITEM = '.carousel-item';
+  const SELECTOR_ACTIVE_ITEM = SELECTOR_ACTIVE + SELECTOR_ITEM;
+  const SELECTOR_ITEM_IMG = '.carousel-item img';
+  const SELECTOR_INDICATORS = '.carousel-indicators';
+  const SELECTOR_DATA_SLIDE = '[data-bs-slide], [data-bs-slide-to]';
+  const SELECTOR_DATA_RIDE = '[data-bs-ride="carousel"]';
+  const KEY_TO_DIRECTION = {
+    [ARROW_LEFT_KEY$1]: DIRECTION_RIGHT,
+    [ARROW_RIGHT_KEY$1]: DIRECTION_LEFT
+  };
+  const Default$b = {
+    interval: 5000,
+    keyboard: true,
+    pause: 'hover',
+    ride: false,
+    touch: true,
+    wrap: true
+  };
+  const DefaultType$b = {
+    interval: '(number|boolean)',
+    // TODO:v6 remove boolean support
+    keyboard: 'boolean',
+    pause: '(string|boolean)',
+    ride: '(boolean|string)',
+    touch: 'boolean',
+    wrap: 'boolean'
+  };
+
+  /**
+   * Class definition
+   */
+
+  class Carousel extends BaseComponent {
+    constructor(element, config) {
+      super(element, config);
+      this._interval = null;
+      this._activeElement = null;
+      this._isSliding = false;
+      this.touchTimeout = null;
+      this._swipeHelper = null;
+      this._indicatorsElement = SelectorEngine.findOne(SELECTOR_INDICATORS, this._element);
+      this._addEventListeners();
+      if (this._config.ride === CLASS_NAME_CAROUSEL) {
+        this.cycle();
+      }
+    }
+
+    // Getters
+    static get Default() {
+      return Default$b;
+    }
+    static get DefaultType() {
+      return DefaultType$b;
+    }
+    static get NAME() {
+      return NAME$c;
+    }
+
+    // Public
+    next() {
+      this._slide(ORDER_NEXT);
+    }
+    nextWhenVisible() {
+      // FIXME TODO use `document.visibilityState`
+      // Don't call next when the page isn't visible
+      // or the carousel or its parent isn't visible
+      if (!document.hidden && isVisible(this._element)) {
+        this.next();
+      }
+    }
+    prev() {
+      this._slide(ORDER_PREV);
+    }
+    pause() {
+      if (this._isSliding) {
+        triggerTransitionEnd(this._element);
+      }
+      this._clearInterval();
+    }
+    cycle() {
+      this._clearInterval();
+      this._updateInterval();
+      this._interval = setInterval(() => this.nextWhenVisible(), this._config.interval);
+    }
+    _maybeEnableCycle() {
+      if (!this._config.ride) {
+        return;
+      }
+      if (this._isSliding) {
+        EventHandler.one(this._element, EVENT_SLID, () => this.cycle());
+        return;
+      }
+      this.cycle();
+    }
+    to(index) {
+      const items = this._getItems();
+      if (index > items.length - 1 || index < 0) {
+        return;
+      }
+      if (this._isSliding) {
+        EventHandler.one(this._element, EVENT_SLID, () => this.to(index));
+        return;
+      }
+      const activeIndex = this._getItemIndex(this._getActive());
+      if (activeIndex === index) {
+        return;
+      }
+      const order = index > activeIndex ? ORDER_NEXT : ORDER_PREV;
+      this._slide(order, items[index]);
+    }
+    dispose() {
+      if (this._swipeHelper) {
+        this._swipeHelper.dispose();
+      }
+      super.dispose();
+    }
+
+    // Private
+    _configAfterMerge(config) {
+      config.defaultInterval = config.interval;
+      return config;
+    }
+    _addEventListeners() {
+      if (this._config.keyboard) {
+        EventHandler.on(this._element, EVENT_KEYDOWN$1, event => this._keydown(event));
+      }
+      if (this._config.pause === 'hover') {
+        EventHandler.on(this._element, EVENT_MOUSEENTER$1, () => this.pause());
+        EventHandler.on(this._element, EVENT_MOUSELEAVE$1, () => this._maybeEnableCycle());
+      }
+      if (this._config.touch && Swipe.isSupported()) {
+        this._addTouchEventListeners();
+      }
+    }
+    _addTouchEventListeners() {
+      for (const img of SelectorEngine.find(SELECTOR_ITEM_IMG, this._element)) {
+        EventHandler.on(img, EVENT_DRAG_START, event => event.preventDefault());
+      }
+      const endCallBack = () => {
+        if (this._config.pause !== 'hover') {
+          return;
+        }
+
+        // If it's a touch-enabled device, mouseenter/leave are fired as
+        // part of the mouse compatibility events on first tap - the carousel
+        // would stop cycling until user tapped out of it;
+        // here, we listen for touchend, explicitly pause the carousel
+        // (as if it's the second time we tap on it, mouseenter compat event
+        // is NOT fired) and after a timeout (to allow for mouse compatibility
+        // events to fire) we explicitly restart cycling
+
+        this.pause();
+        if (this.touchTimeout) {
+          clearTimeout(this.touchTimeout);
+        }
+        this.touchTimeout = setTimeout(() => this._maybeEnableCycle(), TOUCHEVENT_COMPAT_WAIT + this._config.interval);
+      };
+      const swipeConfig = {
+        leftCallback: () => this._slide(this._directionToOrder(DIRECTION_LEFT)),
+        rightCallback: () => this._slide(this._directionToOrder(DIRECTION_RIGHT)),
+        endCallback: endCallBack
+      };
+      this._swipeHelper = new Swipe(this._element, swipeConfig);
+    }
+    _keydown(event) {
+      if (/input|textarea/i.test(event.target.tagName)) {
+        return;
+      }
+      const direction = KEY_TO_DIRECTION[event.key];
+      if (direction) {
+        event.preventDefault();
+        this._slide(this._directionToOrder(direction));
+      }
+    }
+    _getItemIndex(element) {
+      return this._getItems().indexOf(element);
+    }
+    _setActiveIndicatorElement(index) {
+      if (!this._indicatorsElement) {
+        return;
+      }
+      const activeIndicator = SelectorEngine.findOne(SELECTOR_ACTIVE, this._indicatorsElement);
+      activeIndicator.classList.remove(CLASS_NAME_ACTIVE$2);
+      activeIndicator.removeAttribute('aria-current');
+      const newActiveIndicator = SelectorEngine.findOne(`[data-bs-slide-to="${index}"]`, this._indicatorsElement);
+      if (newActiveIndicator) {
+        newActiveIndicator.classList.add(CLASS_NAME_ACTIVE$2);
+        newActiveIndicator.setAttribute('aria-current', 'true');
+      }
+    }
+    _updateInterval() {
+      const element = this._activeElement || this._getActive();
+      if (!element) {
+        return;
+      }
+      const elementInterval = Number.parseInt(element.getAttribute('data-bs-interval'), 10);
+      this._config.interval = elementInterval || this._config.defaultInterval;
+    }
+    _slide(order, element = null) {
+      if (this._isSliding) {
+        return;
+      }
+      const activeElement = this._getActive();
+      const isNext = order === ORDER_NEXT;
+      const nextElement = element || getNextActiveElement(this._getItems(), activeElement, isNext, this._config.wrap);
+      if (nextElement === activeElement) {
+        return;
+      }
+      const nextElementIndex = this._getItemIndex(nextElement);
+      const triggerEvent = eventName => {
+        return EventHandler.trigger(this._element, eventName, {
+          relatedTarget: nextElement,
+          direction: this._orderToDirection(order),
+          from: this._getItemIndex(activeElement),
+          to: nextElementIndex
+        });
+      };
+      const slideEvent = triggerEvent(EVENT_SLIDE);
+      if (slideEvent.defaultPrevented) {
+        return;
+      }
+      if (!activeElement || !nextElement) {
+        // Some weirdness is happening, so we bail
+        // TODO: change tests that use empty divs to avoid this check
+        return;
+      }
+      const isCycling = Boolean(this._interval);
+      this.pause();
+      this._isSliding = true;
+      this._setActiveIndicatorElement(nextElementIndex);
+      this._activeElement = nextElement;
+      const directionalClassName = isNext ? CLASS_NAME_START : CLASS_NAME_END;
+      const orderClassName = isNext ? CLASS_NAME_NEXT : CLASS_NAME_PREV;
+      nextElement.classList.add(orderClassName);
+      reflow(nextElement);
+      activeElement.classList.add(directionalClassName);
+      nextElement.classList.add(directionalClassName);
+      const completeCallBack = () => {
+        nextElement.classList.remove(directionalClassName, orderClassName);
+        nextElement.classList.add(CLASS_NAME_ACTIVE$2);
+        activeElement.classList.remove(CLASS_NAME_ACTIVE$2, orderClassName, directionalClassName);
+        this._isSliding = false;
+        triggerEvent(EVENT_SLID);
+      };
+      this._queueCallback(completeCallBack, activeElement, this._isAnimated());
+      if (isCycling) {
+        this.cycle();
+      }
+    }
+    _isAnimated() {
+      return this._element.classList.contains(CLASS_NAME_SLIDE);
+    }
+    _getActive() {
+      return SelectorEngine.findOne(SELECTOR_ACTIVE_ITEM, this._element);
+    }
+    _getItems() {
+      return SelectorEngine.find(SELECTOR_ITEM, this._element);
+    }
+    _clearInterval() {
+      if (this._interval) {
+        clearInterval(this._interval);
+        this._interval = null;
+      }
+    }
+    _directionToOrder(direction) {
+      if (isRTL()) {
+        return direction === DIRECTION_LEFT ? ORDER_PREV : ORDER_NEXT;
+      }
+      return direction === DIRECTION_LEFT ? ORDER_NEXT : ORDER_PREV;
+    }
+    _orderToDirection(order) {
+      if (isRTL()) {
+        return order === ORDER_PREV ? DIRECTION_LEFT : DIRECTION_RIGHT;
+      }
+      return order === ORDER_PREV ? DIRECTION_RIGHT : DIRECTION_LEFT;
+    }
+
+    // Static
+    static jQueryInterface(config) {
+      return this.each(function () {
+        const data = Carousel.getOrCreateInstance(this, config);
+        if (typeof config === 'number') {
+          data.to(config);
+          return;
+        }
+        if (typeof config === 'string') {
+          if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
+            throw new TypeError(`No method named "${config}"`);
+          }
+          data[config]();
+        }
+      });
+    }
+  }
+
+  /**
+   * Data API implementation
+   */
+
+  EventHandler.on(document, EVENT_CLICK_DATA_API$5, SELECTOR_DATA_SLIDE, function (event) {
+    const target = SelectorEngine.getElementFromSelector(this);
+    if (!target || !target.classList.contains(CLASS_NAME_CAROUSEL)) {
+      return;
+    }
+    event.preventDefault();
+    const carousel = Carousel.getOrCreateInstance(target);
+    const slideIndex = this.getAttribute('data-bs-slide-to');
+    if (slideIndex) {
+      carousel.to(slideIndex);
+      carousel._maybeEnableCycle();
+      return;
+    }
+    if (Manipulator.getDataAttribute(this, 'slide') === 'next') {
+      carousel.next();
+      carousel._maybeEnableCycle();
+      return;
+    }
+    carousel.prev();
+    carousel._maybeEnableCycle();
+  });
+  EventHandler.on(window, EVENT_LOAD_DATA_API$3, () => {
+    const carousels = SelectorEngine.find(SELECTOR_DATA_RIDE);
+    for (const carousel of carousels) {
+      Carousel.getOrCreateInstance(carousel);
+    }
+  });
+
+  /**
+   * jQuery
+   */
+
+  defineJQueryPlugin(Carousel);
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap collapse.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const NAME$b = 'collapse';
+  const DATA_KEY$7 = 'bs.collapse';
+  const EVENT_KEY$7 = `.${DATA_KEY$7}`;
+  const DATA_API_KEY$4 = '.data-api';
+  const EVENT_SHOW$6 = `show${EVENT_KEY$7}`;
+  const EVENT_SHOWN$6 = `shown${EVENT_KEY$7}`;
+  const EVENT_HIDE$6 = `hide${EVENT_KEY$7}`;
+  const EVENT_HIDDEN$6 = `hidden${EVENT_KEY$7}`;
+  const EVENT_CLICK_DATA_API$4 = `click${EVENT_KEY$7}${DATA_API_KEY$4}`;
+  const CLASS_NAME_SHOW$7 = 'show';
+  const CLASS_NAME_COLLAPSE = 'collapse';
+  const CLASS_NAME_COLLAPSING = 'collapsing';
+  const CLASS_NAME_COLLAPSED = 'collapsed';
+  const CLASS_NAME_DEEPER_CHILDREN = `:scope .${CLASS_NAME_COLLAPSE} .${CLASS_NAME_COLLAPSE}`;
+  const CLASS_NAME_HORIZONTAL = 'collapse-horizontal';
+  const WIDTH = 'width';
+  const HEIGHT = 'height';
+  const SELECTOR_ACTIVES = '.collapse.show, .collapse.collapsing';
+  const SELECTOR_DATA_TOGGLE$4 = '[data-bs-toggle="collapse"]';
+  const Default$a = {
+    parent: null,
+    toggle: true
+  };
+  const DefaultType$a = {
+    parent: '(null|element)',
+    toggle: 'boolean'
+  };
+
+  /**
+   * Class definition
+   */
+
+  class Collapse extends BaseComponent {
+    constructor(element, config) {
+      super(element, config);
+      this._isTransitioning = false;
+      this._triggerArray = [];
+      const toggleList = SelectorEngine.find(SELECTOR_DATA_TOGGLE$4);
+      for (const elem of toggleList) {
+        const selector = SelectorEngine.getSelectorFromElement(elem);
+        const filterElement = SelectorEngine.find(selector).filter(foundElement => foundElement === this._element);
+        if (selector !== null && filterElement.length) {
+          this._triggerArray.push(elem);
+        }
+      }
+      this._initializeChildren();
+      if (!this._config.parent) {
+        this._addAriaAndCollapsedClass(this._triggerArray, this._isShown());
+      }
+      if (this._config.toggle) {
+        this.toggle();
+      }
+    }
+
+    // Getters
+    static get Default() {
+      return Default$a;
+    }
+    static get DefaultType() {
+      return DefaultType$a;
+    }
+    static get NAME() {
+      return NAME$b;
+    }
+
+    // Public
+    toggle() {
+      if (this._isShown()) {
+        this.hide();
+      } else {
+        this.show();
+      }
+    }
+    show() {
+      if (this._isTransitioning || this._isShown()) {
+        return;
+      }
+      let activeChildren = [];
+
+      // find active children
+      if (this._config.parent) {
+        activeChildren = this._getFirstLevelChildren(SELECTOR_ACTIVES).filter(element => element !== this._element).map(element => Collapse.getOrCreateInstance(element, {
+          toggle: false
+        }));
+      }
+      if (activeChildren.length && activeChildren[0]._isTransitioning) {
+        return;
+      }
+      const startEvent = EventHandler.trigger(this._element, EVENT_SHOW$6);
+      if (startEvent.defaultPrevented) {
+        return;
+      }
+      for (const activeInstance of activeChildren) {
+        activeInstance.hide();
+      }
+      const dimension = this._getDimension();
+      this._element.classList.remove(CLASS_NAME_COLLAPSE);
+      this._element.classList.add(CLASS_NAME_COLLAPSING);
+      this._element.style[dimension] = 0;
+      this._addAriaAndCollapsedClass(this._triggerArray, true);
+      this._isTransitioning = true;
+      const complete = () => {
+        this._isTransitioning = false;
+        this._element.classList.remove(CLASS_NAME_COLLAPSING);
+        this._element.classList.add(CLASS_NAME_COLLAPSE, CLASS_NAME_SHOW$7);
+        this._element.style[dimension] = '';
+        EventHandler.trigger(this._element, EVENT_SHOWN$6);
+      };
+      const capitalizedDimension = dimension[0].toUpperCase() + dimension.slice(1);
+      const scrollSize = `scroll${capitalizedDimension}`;
+      this._queueCallback(complete, this._element, true);
+      this._element.style[dimension] = `${this._element[scrollSize]}px`;
+    }
+    hide() {
+      if (this._isTransitioning || !this._isShown()) {
+        return;
+      }
+      const startEvent = EventHandler.trigger(this._element, EVENT_HIDE$6);
+      if (startEvent.defaultPrevented) {
+        return;
+      }
+      const dimension = this._getDimension();
+      this._element.style[dimension] = `${this._element.getBoundingClientRect()[dimension]}px`;
+      reflow(this._element);
+      this._element.classList.add(CLASS_NAME_COLLAPSING);
+      this._element.classList.remove(CLASS_NAME_COLLAPSE, CLASS_NAME_SHOW$7);
+      for (const trigger of this._triggerArray) {
+        const element = SelectorEngine.getElementFromSelector(trigger);
+        if (element && !this._isShown(element)) {
+          this._addAriaAndCollapsedClass([trigger], false);
+        }
+      }
+      this._isTransitioning = true;
+      const complete = () => {
+        this._isTransitioning = false;
+        this._element.classList.remove(CLASS_NAME_COLLAPSING);
+        this._element.classList.add(CLASS_NAME_COLLAPSE);
+        EventHandler.trigger(this._element, EVENT_HIDDEN$6);
+      };
+      this._element.style[dimension] = '';
+      this._queueCallback(complete, this._element, true);
+    }
+
+    // Private
+    _isShown(element = this._element) {
+      return element.classList.contains(CLASS_NAME_SHOW$7);
+    }
+    _configAfterMerge(config) {
+      config.toggle = Boolean(config.toggle); // Coerce string values
+      config.parent = getElement(config.parent);
+      return config;
+    }
+    _getDimension() {
+      return this._element.classList.contains(CLASS_NAME_HORIZONTAL) ? WIDTH : HEIGHT;
+    }
+    _initializeChildren() {
+      if (!this._config.parent) {
+        return;
+      }
+      const children = this._getFirstLevelChildren(SELECTOR_DATA_TOGGLE$4);
+      for (const element of children) {
+        const selected = SelectorEngine.getElementFromSelector(element);
+        if (selected) {
+          this._addAriaAndCollapsedClass([element], this._isShown(selected));
+        }
+      }
+    }
+    _getFirstLevelChildren(selector) {
+      const children = SelectorEngine.find(CLASS_NAME_DEEPER_CHILDREN, this._config.parent);
+      // remove children if greater depth
+      return SelectorEngine.find(selector, this._config.parent).filter(element => !children.includes(element));
+    }
+    _addAriaAndCollapsedClass(triggerArray, isOpen) {
+      if (!triggerArray.length) {
+        return;
+      }
+      for (const element of triggerArray) {
+        element.classList.toggle(CLASS_NAME_COLLAPSED, !isOpen);
+        element.setAttribute('aria-expanded', isOpen);
+      }
+    }
+
+    // Static
+    static jQueryInterface(config) {
+      const _config = {};
+      if (typeof config === 'string' && /show|hide/.test(config)) {
+        _config.toggle = false;
+      }
+      return this.each(function () {
+        const data = Collapse.getOrCreateInstance(this, _config);
+        if (typeof config === 'string') {
+          if (typeof data[config] === 'undefined') {
+            throw new TypeError(`No method named "${config}"`);
+          }
+          data[config]();
+        }
+      });
+    }
+  }
+
+  /**
+   * Data API implementation
+   */
+
+  EventHandler.on(document, EVENT_CLICK_DATA_API$4, SELECTOR_DATA_TOGGLE$4, function (event) {
+    // preventDefault only for <a> elements (which change the URL) not inside the collapsible element
+    if (event.target.tagName === 'A' || event.delegateTarget && event.delegateTarget.tagName === 'A') {
+      event.preventDefault();
+    }
+    for (const element of SelectorEngine.getMultipleElementsFromSelector(this)) {
+      Collapse.getOrCreateInstance(element, {
+        toggle: false
+      }).toggle();
+    }
+  });
+
+  /**
+   * jQuery
+   */
+
+  defineJQueryPlugin(Collapse);
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap dropdown.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const NAME$a = 'dropdown';
+  const DATA_KEY$6 = 'bs.dropdown';
+  const EVENT_KEY$6 = `.${DATA_KEY$6}`;
+  const DATA_API_KEY$3 = '.data-api';
+  const ESCAPE_KEY$2 = 'Escape';
+  const TAB_KEY$1 = 'Tab';
+  const ARROW_UP_KEY$1 = 'ArrowUp';
+  const ARROW_DOWN_KEY$1 = 'ArrowDown';
+  const RIGHT_MOUSE_BUTTON = 2; // MouseEvent.button value for the secondary button, usually the right button
+
+  const EVENT_HIDE$5 = `hide${EVENT_KEY$6}`;
+  const EVENT_HIDDEN$5 = `hidden${EVENT_KEY$6}`;
+  const EVENT_SHOW$5 = `show${EVENT_KEY$6}`;
+  const EVENT_SHOWN$5 = `shown${EVENT_KEY$6}`;
+  const EVENT_CLICK_DATA_API$3 = `click${EVENT_KEY$6}${DATA_API_KEY$3}`;
+  const EVENT_KEYDOWN_DATA_API = `keydown${EVENT_KEY$6}${DATA_API_KEY$3}`;
+  const EVENT_KEYUP_DATA_API = `keyup${EVENT_KEY$6}${DATA_API_KEY$3}`;
+  const CLASS_NAME_SHOW$6 = 'show';
+  const CLASS_NAME_DROPUP = 'dropup';
+  const CLASS_NAME_DROPEND = 'dropend';
+  const CLASS_NAME_DROPSTART = 'dropstart';
+  const CLASS_NAME_DROPUP_CENTER = 'dropup-center';
+  const CLASS_NAME_DROPDOWN_CENTER = 'dropdown-center';
+  const SELECTOR_DATA_TOGGLE$3 = '[data-bs-toggle="dropdown"]:not(.disabled):not(:disabled)';
+  const SELECTOR_DATA_TOGGLE_SHOWN = `${SELECTOR_DATA_TOGGLE$3}.${CLASS_NAME_SHOW$6}`;
+  const SELECTOR_MENU = '.dropdown-menu';
+  const SELECTOR_NAVBAR = '.navbar';
+  const SELECTOR_NAVBAR_NAV = '.navbar-nav';
+  const SELECTOR_VISIBLE_ITEMS = '.dropdown-menu .dropdown-item:not(.disabled):not(:disabled)';
+  const PLACEMENT_TOP = isRTL() ? 'top-end' : 'top-start';
+  const PLACEMENT_TOPEND = isRTL() ? 'top-start' : 'top-end';
+  const PLACEMENT_BOTTOM = isRTL() ? 'bottom-end' : 'bottom-start';
+  const PLACEMENT_BOTTOMEND = isRTL() ? 'bottom-start' : 'bottom-end';
+  const PLACEMENT_RIGHT = isRTL() ? 'left-start' : 'right-start';
+  const PLACEMENT_LEFT = isRTL() ? 'right-start' : 'left-start';
+  const PLACEMENT_TOPCENTER = 'top';
+  const PLACEMENT_BOTTOMCENTER = 'bottom';
+  const Default$9 = {
+    autoClose: true,
+    boundary: 'clippingParents',
+    display: 'dynamic',
+    offset: [0, 2],
+    popperConfig: null,
+    reference: 'toggle'
+  };
+  const DefaultType$9 = {
+    autoClose: '(boolean|string)',
+    boundary: '(string|element)',
+    display: 'string',
+    offset: '(array|string|function)',
+    popperConfig: '(null|object|function)',
+    reference: '(string|element|object)'
+  };
+
+  /**
+   * Class definition
+   */
+
+  class Dropdown extends BaseComponent {
+    constructor(element, config) {
+      super(element, config);
+      this._popper = null;
+      this._parent = this._element.parentNode; // dropdown wrapper
+      // TODO: v6 revert #37011 & change markup https://getbootstrap.com/docs/5.3/forms/input-group/
+      this._menu = SelectorEngine.next(this._element, SELECTOR_MENU)[0] || SelectorEngine.prev(this._element, SELECTOR_MENU)[0] || SelectorEngine.findOne(SELECTOR_MENU, this._parent);
+      this._inNavbar = this._detectNavbar();
+    }
+
+    // Getters
+    static get Default() {
+      return Default$9;
+    }
+    static get DefaultType() {
+      return DefaultType$9;
+    }
+    static get NAME() {
+      return NAME$a;
+    }
+
+    // Public
+    toggle() {
+      return this._isShown() ? this.hide() : this.show();
+    }
+    show() {
+      if (isDisabled(this._element) || this._isShown()) {
+        return;
+      }
+      const relatedTarget = {
+        relatedTarget: this._element
+      };
+      const showEvent = EventHandler.trigger(this._element, EVENT_SHOW$5, relatedTarget);
+      if (showEvent.defaultPrevented) {
+        return;
+      }
+      this._createPopper();
+
+      // If this is a touch-enabled device we add extra
+      // empty mouseover listeners to the body's immediate children;
+      // only needed because of broken event delegation on iOS
+      // https://www.quirksmode.org/blog/archives/2014/02/mouse_event_bub.html
+      if ('ontouchstart' in document.documentElement && !this._parent.closest(SELECTOR_NAVBAR_NAV)) {
+        for (const element of [].concat(...document.body.children)) {
+          EventHandler.on(element, 'mouseover', noop);
+        }
+      }
+      this._element.focus();
+      this._element.setAttribute('aria-expanded', true);
+      this._menu.classList.add(CLASS_NAME_SHOW$6);
+      this._element.classList.add(CLASS_NAME_SHOW$6);
+      EventHandler.trigger(this._element, EVENT_SHOWN$5, relatedTarget);
+    }
+    hide() {
+      if (isDisabled(this._element) || !this._isShown()) {
+        return;
+      }
+      const relatedTarget = {
+        relatedTarget: this._element
+      };
+      this._completeHide(relatedTarget);
+    }
+    dispose() {
+      if (this._popper) {
+        this._popper.destroy();
+      }
+      super.dispose();
+    }
+    update() {
+      this._inNavbar = this._detectNavbar();
+      if (this._popper) {
+        this._popper.update();
+      }
+    }
+
+    // Private
+    _completeHide(relatedTarget) {
+      const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE$5, relatedTarget);
+      if (hideEvent.defaultPrevented) {
+        return;
+      }
+
+      // If this is a touch-enabled device we remove the extra
+      // empty mouseover listeners we added for iOS support
+      if ('ontouchstart' in document.documentElement) {
+        for (const element of [].concat(...document.body.children)) {
+          EventHandler.off(element, 'mouseover', noop);
+        }
+      }
+      if (this._popper) {
+        this._popper.destroy();
+      }
+      this._menu.classList.remove(CLASS_NAME_SHOW$6);
+      this._element.classList.remove(CLASS_NAME_SHOW$6);
+      this._element.setAttribute('aria-expanded', 'false');
+      Manipulator.removeDataAttribute(this._menu, 'popper');
+      EventHandler.trigger(this._element, EVENT_HIDDEN$5, relatedTarget);
+    }
+    _getConfig(config) {
+      config = super._getConfig(config);
+      if (typeof config.reference === 'object' && !isElement(config.reference) && typeof config.reference.getBoundingClientRect !== 'function') {
+        // Popper virtual elements require a getBoundingClientRect method
+        throw new TypeError(`${NAME$a.toUpperCase()}: Option "reference" provided type "object" without a required "getBoundingClientRect" method.`);
+      }
+      return config;
+    }
+    _createPopper() {
+      if (typeof Popper__namespace === 'undefined') {
+        throw new TypeError('Bootstrap\'s dropdowns require Popper (https://popper.js.org/docs/v2/)');
+      }
+      let referenceElement = this._element;
+      if (this._config.reference === 'parent') {
+        referenceElement = this._parent;
+      } else if (isElement(this._config.reference)) {
+        referenceElement = getElement(this._config.reference);
+      } else if (typeof this._config.reference === 'object') {
+        referenceElement = this._config.reference;
+      }
+      const popperConfig = this._getPopperConfig();
+      this._popper = Popper__namespace.createPopper(referenceElement, this._menu, popperConfig);
+    }
+    _isShown() {
+      return this._menu.classList.contains(CLASS_NAME_SHOW$6);
+    }
+    _getPlacement() {
+      const parentDropdown = this._parent;
+      if (parentDropdown.classList.contains(CLASS_NAME_DROPEND)) {
+        return PLACEMENT_RIGHT;
+      }
+      if (parentDropdown.classList.contains(CLASS_NAME_DROPSTART)) {
+        return PLACEMENT_LEFT;
+      }
+      if (parentDropdown.classList.contains(CLASS_NAME_DROPUP_CENTER)) {
+        return PLACEMENT_TOPCENTER;
+      }
+      if (parentDropdown.classList.contains(CLASS_NAME_DROPDOWN_CENTER)) {
+        return PLACEMENT_BOTTOMCENTER;
+      }
+
+      // We need to trim the value because custom properties can also include spaces
+      const isEnd = getComputedStyle(this._menu).getPropertyValue('--bs-position').trim() === 'end';
+      if (parentDropdown.classList.contains(CLASS_NAME_DROPUP)) {
+        return isEnd ? PLACEMENT_TOPEND : PLACEMENT_TOP;
+      }
+      return isEnd ? PLACEMENT_BOTTOMEND : PLACEMENT_BOTTOM;
+    }
+    _detectNavbar() {
+      return this._element.closest(SELECTOR_NAVBAR) !== null;
+    }
+    _getOffset() {
+      const {
+        offset
+      } = this._config;
+      if (typeof offset === 'string') {
+        return offset.split(',').map(value => Number.parseInt(value, 10));
+      }
+      if (typeof offset === 'function') {
+        return popperData => offset(popperData, this._element);
+      }
+      return offset;
+    }
+    _getPopperConfig() {
+      const defaultBsPopperConfig = {
+        placement: this._getPlacement(),
+        modifiers: [{
+          name: 'preventOverflow',
+          options: {
+            boundary: this._config.boundary
+          }
+        }, {
+          name: 'offset',
+          options: {
+            offset: this._getOffset()
+          }
+        }]
+      };
+
+      // Disable Popper if we have a static display or Dropdown is in Navbar
+      if (this._inNavbar || this._config.display === 'static') {
+        Manipulator.setDataAttribute(this._menu, 'popper', 'static'); // TODO: v6 remove
+        defaultBsPopperConfig.modifiers = [{
+          name: 'applyStyles',
+          enabled: false
+        }];
+      }
+      return {
+        ...defaultBsPopperConfig,
+        ...execute(this._config.popperConfig, [undefined, defaultBsPopperConfig])
+      };
+    }
+    _selectMenuItem({
+      key,
+      target
+    }) {
+      const items = SelectorEngine.find(SELECTOR_VISIBLE_ITEMS, this._menu).filter(element => isVisible(element));
+      if (!items.length) {
+        return;
+      }
+
+      // if target isn't included in items (e.g. when expanding the dropdown)
+      // allow cycling to get the last item in case key equals ARROW_UP_KEY
+      getNextActiveElement(items, target, key === ARROW_DOWN_KEY$1, !items.includes(target)).focus();
+    }
+
+    // Static
+    static jQueryInterface(config) {
+      return this.each(function () {
+        const data = Dropdown.getOrCreateInstance(this, config);
+        if (typeof config !== 'string') {
+          return;
+        }
+        if (typeof data[config] === 'undefined') {
+          throw new TypeError(`No method named "${config}"`);
+        }
+        data[config]();
+      });
+    }
+    static clearMenus(event) {
+      if (event.button === RIGHT_MOUSE_BUTTON || event.type === 'keyup' && event.key !== TAB_KEY$1) {
+        return;
+      }
+      const openToggles = SelectorEngine.find(SELECTOR_DATA_TOGGLE_SHOWN);
+      for (const toggle of openToggles) {
+        const context = Dropdown.getInstance(toggle);
+        if (!context || context._config.autoClose === false) {
+          continue;
+        }
+        const composedPath = event.composedPath();
+        const isMenuTarget = composedPath.includes(context._menu);
+        if (composedPath.includes(context._element) || context._config.autoClose === 'inside' && !isMenuTarget || context._config.autoClose === 'outside' && isMenuTarget) {
+          continue;
+        }
+
+        // Tab navigation through the dropdown menu or events from contained inputs shouldn't close the menu
+        if (context._menu.contains(event.target) && (event.type === 'keyup' && event.key === TAB_KEY$1 || /input|select|option|textarea|form/i.test(event.target.tagName))) {
+          continue;
+        }
+        const relatedTarget = {
+          relatedTarget: context._element
+        };
+        if (event.type === 'click') {
+          relatedTarget.clickEvent = event;
+        }
+        context._completeHide(relatedTarget);
+      }
+    }
+    static dataApiKeydownHandler(event) {
+      // If not an UP | DOWN | ESCAPE key => not a dropdown command
+      // If input/textarea && if key is other than ESCAPE => not a dropdown command
+
+      const isInput = /input|textarea/i.test(event.target.tagName);
+      const isEscapeEvent = event.key === ESCAPE_KEY$2;
+      const isUpOrDownEvent = [ARROW_UP_KEY$1, ARROW_DOWN_KEY$1].includes(event.key);
+      if (!isUpOrDownEvent && !isEscapeEvent) {
+        return;
+      }
+      if (isInput && !isEscapeEvent) {
+        return;
+      }
+      event.preventDefault();
+
+      // TODO: v6 revert #37011 & change markup https://getbootstrap.com/docs/5.3/forms/input-group/
+      const getToggleButton = this.matches(SELECTOR_DATA_TOGGLE$3) ? this : SelectorEngine.prev(this, SELECTOR_DATA_TOGGLE$3)[0] || SelectorEngine.next(this, SELECTOR_DATA_TOGGLE$3)[0] || SelectorEngine.findOne(SELECTOR_DATA_TOGGLE$3, event.delegateTarget.parentNode);
+      const instance = Dropdown.getOrCreateInstance(getToggleButton);
+      if (isUpOrDownEvent) {
+        event.stopPropagation();
+        instance.show();
+        instance._selectMenuItem(event);
+        return;
+      }
+      if (instance._isShown()) {
+        // else is escape and we check if it is shown
+        event.stopPropagation();
+        instance.hide();
+        getToggleButton.focus();
+      }
+    }
+  }
+
+  /**
+   * Data API implementation
+   */
+
+  EventHandler.on(document, EVENT_KEYDOWN_DATA_API, SELECTOR_DATA_TOGGLE$3, Dropdown.dataApiKeydownHandler);
+  EventHandler.on(document, EVENT_KEYDOWN_DATA_API, SELECTOR_MENU, Dropdown.dataApiKeydownHandler);
+  EventHandler.on(document, EVENT_CLICK_DATA_API$3, Dropdown.clearMenus);
+  EventHandler.on(document, EVENT_KEYUP_DATA_API, Dropdown.clearMenus);
+  EventHandler.on(document, EVENT_CLICK_DATA_API$3, SELECTOR_DATA_TOGGLE$3, function (event) {
+    event.preventDefault();
+    Dropdown.getOrCreateInstance(this).toggle();
+  });
+
+  /**
+   * jQuery
+   */
+
+  defineJQueryPlugin(Dropdown);
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap util/backdrop.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const NAME$9 = 'backdrop';
+  const CLASS_NAME_FADE$4 = 'fade';
+  const CLASS_NAME_SHOW$5 = 'show';
+  const EVENT_MOUSEDOWN = `mousedown.bs.${NAME$9}`;
+  const Default$8 = {
+    className: 'modal-backdrop',
+    clickCallback: null,
+    isAnimated: false,
+    isVisible: true,
+    // if false, we use the backdrop helper without adding any element to the dom
+    rootElement: 'body' // give the choice to place backdrop under different elements
+  };
+  const DefaultType$8 = {
+    className: 'string',
+    clickCallback: '(function|null)',
+    isAnimated: 'boolean',
+    isVisible: 'boolean',
+    rootElement: '(element|string)'
+  };
+
+  /**
+   * Class definition
+   */
+
+  class Backdrop extends Config {
+    constructor(config) {
+      super();
+      this._config = this._getConfig(config);
+      this._isAppended = false;
+      this._element = null;
+    }
+
+    // Getters
+    static get Default() {
+      return Default$8;
+    }
+    static get DefaultType() {
+      return DefaultType$8;
+    }
+    static get NAME() {
+      return NAME$9;
+    }
+
+    // Public
+    show(callback) {
+      if (!this._config.isVisible) {
+        execute(callback);
+        return;
+      }
+      this._append();
+      const element = this._getElement();
+      if (this._config.isAnimated) {
+        reflow(element);
+      }
+      element.classList.add(CLASS_NAME_SHOW$5);
+      this._emulateAnimation(() => {
+        execute(callback);
+      });
+    }
+    hide(callback) {
+      if (!this._config.isVisible) {
+        execute(callback);
+        return;
+      }
+      this._getElement().classList.remove(CLASS_NAME_SHOW$5);
+      this._emulateAnimation(() => {
+        this.dispose();
+        execute(callback);
+      });
+    }
+    dispose() {
+      if (!this._isAppended) {
+        return;
+      }
+      EventHandler.off(this._element, EVENT_MOUSEDOWN);
+      this._element.remove();
+      this._isAppended = false;
+    }
+
+    // Private
+    _getElement() {
+      if (!this._element) {
+        const backdrop = document.createElement('div');
+        backdrop.className = this._config.className;
+        if (this._config.isAnimated) {
+          backdrop.classList.add(CLASS_NAME_FADE$4);
+        }
+        this._element = backdrop;
+      }
+      return this._element;
+    }
+    _configAfterMerge(config) {
+      // use getElement() with the default "body" to get a fresh Element on each instantiation
+      config.rootElement = getElement(config.rootElement);
+      return config;
+    }
+    _append() {
+      if (this._isAppended) {
+        return;
+      }
+      const element = this._getElement();
+      this._config.rootElement.append(element);
+      EventHandler.on(element, EVENT_MOUSEDOWN, () => {
+        execute(this._config.clickCallback);
+      });
+      this._isAppended = true;
+    }
+    _emulateAnimation(callback) {
+      executeAfterTransition(callback, this._getElement(), this._config.isAnimated);
+    }
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap util/focustrap.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const NAME$8 = 'focustrap';
+  const DATA_KEY$5 = 'bs.focustrap';
+  const EVENT_KEY$5 = `.${DATA_KEY$5}`;
+  const EVENT_FOCUSIN$2 = `focusin${EVENT_KEY$5}`;
+  const EVENT_KEYDOWN_TAB = `keydown.tab${EVENT_KEY$5}`;
+  const TAB_KEY = 'Tab';
+  const TAB_NAV_FORWARD = 'forward';
+  const TAB_NAV_BACKWARD = 'backward';
+  const Default$7 = {
+    autofocus: true,
+    trapElement: null // The element to trap focus inside of
+  };
+  const DefaultType$7 = {
+    autofocus: 'boolean',
+    trapElement: 'element'
+  };
+
+  /**
+   * Class definition
+   */
+
+  class FocusTrap extends Config {
+    constructor(config) {
+      super();
+      this._config = this._getConfig(config);
+      this._isActive = false;
+      this._lastTabNavDirection = null;
+    }
+
+    // Getters
+    static get Default() {
+      return Default$7;
+    }
+    static get DefaultType() {
+      return DefaultType$7;
+    }
+    static get NAME() {
+      return NAME$8;
+    }
+
+    // Public
+    activate() {
+      if (this._isActive) {
+        return;
+      }
+      if (this._config.autofocus) {
+        this._config.trapElement.focus();
+      }
+      EventHandler.off(document, EVENT_KEY$5); // guard against infinite focus loop
+      EventHandler.on(document, EVENT_FOCUSIN$2, event => this._handleFocusin(event));
+      EventHandler.on(document, EVENT_KEYDOWN_TAB, event => this._handleKeydown(event));
+      this._isActive = true;
+    }
+    deactivate() {
+      if (!this._isActive) {
+        return;
+      }
+      this._isActive = false;
+      EventHandler.off(document, EVENT_KEY$5);
+    }
+
+    // Private
+    _handleFocusin(event) {
+      const {
+        trapElement
+      } = this._config;
+      if (event.target === document || event.target === trapElement || trapElement.contains(event.target)) {
+        return;
+      }
+      const elements = SelectorEngine.focusableChildren(trapElement);
+      if (elements.length === 0) {
+        trapElement.focus();
+      } else if (this._lastTabNavDirection === TAB_NAV_BACKWARD) {
+        elements[elements.length - 1].focus();
+      } else {
+        elements[0].focus();
+      }
+    }
+    _handleKeydown(event) {
+      if (event.key !== TAB_KEY) {
+        return;
+      }
+      this._lastTabNavDirection = event.shiftKey ? TAB_NAV_BACKWARD : TAB_NAV_FORWARD;
+    }
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap util/scrollBar.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const SELECTOR_FIXED_CONTENT = '.fixed-top, .fixed-bottom, .is-fixed, .sticky-top';
+  const SELECTOR_STICKY_CONTENT = '.sticky-top';
+  const PROPERTY_PADDING = 'padding-right';
+  const PROPERTY_MARGIN = 'margin-right';
+
+  /**
+   * Class definition
+   */
+
+  class ScrollBarHelper {
+    constructor() {
+      this._element = document.body;
+    }
+
+    // Public
+    getWidth() {
+      // https://developer.mozilla.org/en-US/docs/Web/API/Window/innerWidth#usage_notes
+      const documentWidth = document.documentElement.clientWidth;
+      return Math.abs(window.innerWidth - documentWidth);
+    }
+    hide() {
+      const width = this.getWidth();
+      this._disableOverFlow();
+      // give padding to element to balance the hidden scrollbar width
+      this._setElementAttributes(this._element, PROPERTY_PADDING, calculatedValue => calculatedValue + width);
+      // trick: We adjust positive paddingRight and negative marginRight to sticky-top elements to keep showing fullwidth
+      this._setElementAttributes(SELECTOR_FIXED_CONTENT, PROPERTY_PADDING, calculatedValue => calculatedValue + width);
+      this._setElementAttributes(SELECTOR_STICKY_CONTENT, PROPERTY_MARGIN, calculatedValue => calculatedValue - width);
+    }
+    reset() {
+      this._resetElementAttributes(this._element, 'overflow');
+      this._resetElementAttributes(this._element, PROPERTY_PADDING);
+      this._resetElementAttributes(SELECTOR_FIXED_CONTENT, PROPERTY_PADDING);
+      this._resetElementAttributes(SELECTOR_STICKY_CONTENT, PROPERTY_MARGIN);
+    }
+    isOverflowing() {
+      return this.getWidth() > 0;
+    }
+
+    // Private
+    _disableOverFlow() {
+      this._saveInitialAttribute(this._element, 'overflow');
+      this._element.style.overflow = 'hidden';
+    }
+    _setElementAttributes(selector, styleProperty, callback) {
+      const scrollbarWidth = this.getWidth();
+      const manipulationCallBack = element => {
+        if (element !== this._element && window.innerWidth > element.clientWidth + scrollbarWidth) {
+          return;
+        }
+        this._saveInitialAttribute(element, styleProperty);
+        const calculatedValue = window.getComputedStyle(element).getPropertyValue(styleProperty);
+        element.style.setProperty(styleProperty, `${callback(Number.parseFloat(calculatedValue))}px`);
+      };
+      this._applyManipulationCallback(selector, manipulationCallBack);
+    }
+    _saveInitialAttribute(element, styleProperty) {
+      const actualValue = element.style.getPropertyValue(styleProperty);
+      if (actualValue) {
+        Manipulator.setDataAttribute(element, styleProperty, actualValue);
+      }
+    }
+    _resetElementAttributes(selector, styleProperty) {
+      const manipulationCallBack = element => {
+        const value = Manipulator.getDataAttribute(element, styleProperty);
+        // We only want to remove the property if the value is `null`; the value can also be zero
+        if (value === null) {
+          element.style.removeProperty(styleProperty);
+          return;
+        }
+        Manipulator.removeDataAttribute(element, styleProperty);
+        element.style.setProperty(styleProperty, value);
+      };
+      this._applyManipulationCallback(selector, manipulationCallBack);
+    }
+    _applyManipulationCallback(selector, callBack) {
+      if (isElement(selector)) {
+        callBack(selector);
+        return;
+      }
+      for (const sel of SelectorEngine.find(selector, this._element)) {
+        callBack(sel);
+      }
+    }
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap modal.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const NAME$7 = 'modal';
+  const DATA_KEY$4 = 'bs.modal';
+  const EVENT_KEY$4 = `.${DATA_KEY$4}`;
+  const DATA_API_KEY$2 = '.data-api';
+  const ESCAPE_KEY$1 = 'Escape';
+  const EVENT_HIDE$4 = `hide${EVENT_KEY$4}`;
+  const EVENT_HIDE_PREVENTED$1 = `hidePrevented${EVENT_KEY$4}`;
+  const EVENT_HIDDEN$4 = `hidden${EVENT_KEY$4}`;
+  const EVENT_SHOW$4 = `show${EVENT_KEY$4}`;
+  const EVENT_SHOWN$4 = `shown${EVENT_KEY$4}`;
+  const EVENT_RESIZE$1 = `resize${EVENT_KEY$4}`;
+  const EVENT_CLICK_DISMISS = `click.dismiss${EVENT_KEY$4}`;
+  const EVENT_MOUSEDOWN_DISMISS = `mousedown.dismiss${EVENT_KEY$4}`;
+  const EVENT_KEYDOWN_DISMISS$1 = `keydown.dismiss${EVENT_KEY$4}`;
+  const EVENT_CLICK_DATA_API$2 = `click${EVENT_KEY$4}${DATA_API_KEY$2}`;
+  const CLASS_NAME_OPEN = 'modal-open';
+  const CLASS_NAME_FADE$3 = 'fade';
+  const CLASS_NAME_SHOW$4 = 'show';
+  const CLASS_NAME_STATIC = 'modal-static';
+  const OPEN_SELECTOR$1 = '.modal.show';
+  const SELECTOR_DIALOG = '.modal-dialog';
+  const SELECTOR_MODAL_BODY = '.modal-body';
+  const SELECTOR_DATA_TOGGLE$2 = '[data-bs-toggle="modal"]';
+  const Default$6 = {
+    backdrop: true,
+    focus: true,
+    keyboard: true
+  };
+  const DefaultType$6 = {
+    backdrop: '(boolean|string)',
+    focus: 'boolean',
+    keyboard: 'boolean'
+  };
+
+  /**
+   * Class definition
+   */
+
+  class Modal extends BaseComponent {
+    constructor(element, config) {
+      super(element, config);
+      this._dialog = SelectorEngine.findOne(SELECTOR_DIALOG, this._element);
+      this._backdrop = this._initializeBackDrop();
+      this._focustrap = this._initializeFocusTrap();
+      this._isShown = false;
+      this._isTransitioning = false;
+      this._scrollBar = new ScrollBarHelper();
+      this._addEventListeners();
+    }
+
+    // Getters
+    static get Default() {
+      return Default$6;
+    }
+    static get DefaultType() {
+      return DefaultType$6;
+    }
+    static get NAME() {
+      return NAME$7;
+    }
+
+    // Public
+    toggle(relatedTarget) {
+      return this._isShown ? this.hide() : this.show(relatedTarget);
+    }
+    show(relatedTarget) {
+      if (this._isShown || this._isTransitioning) {
+        return;
+      }
+      const showEvent = EventHandler.trigger(this._element, EVENT_SHOW$4, {
+        relatedTarget
+      });
+      if (showEvent.defaultPrevented) {
+        return;
+      }
+      this._isShown = true;
+      this._isTransitioning = true;
+      this._scrollBar.hide();
+      document.body.classList.add(CLASS_NAME_OPEN);
+      this._adjustDialog();
+      this._backdrop.show(() => this._showElement(relatedTarget));
+    }
+    hide() {
+      if (!this._isShown || this._isTransitioning) {
+        return;
+      }
+      const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE$4);
+      if (hideEvent.defaultPrevented) {
+        return;
+      }
+      this._isShown = false;
+      this._isTransitioning = true;
+      this._focustrap.deactivate();
+      this._element.classList.remove(CLASS_NAME_SHOW$4);
+      this._queueCallback(() => this._hideModal(), this._element, this._isAnimated());
+    }
+    dispose() {
+      EventHandler.off(window, EVENT_KEY$4);
+      EventHandler.off(this._dialog, EVENT_KEY$4);
+      this._backdrop.dispose();
+      this._focustrap.deactivate();
+      super.dispose();
+    }
+    handleUpdate() {
+      this._adjustDialog();
+    }
+
+    // Private
+    _initializeBackDrop() {
+      return new Backdrop({
+        isVisible: Boolean(this._config.backdrop),
+        // 'static' option will be translated to true, and booleans will keep their value,
+        isAnimated: this._isAnimated()
+      });
+    }
+    _initializeFocusTrap() {
+      return new FocusTrap({
+        trapElement: this._element
+      });
+    }
+    _showElement(relatedTarget) {
+      // try to append dynamic modal
+      if (!document.body.contains(this._element)) {
+        document.body.append(this._element);
+      }
+      this._element.style.display = 'block';
+      this._element.removeAttribute('aria-hidden');
+      this._element.setAttribute('aria-modal', true);
+      this._element.setAttribute('role', 'dialog');
+      this._element.scrollTop = 0;
+      const modalBody = SelectorEngine.findOne(SELECTOR_MODAL_BODY, this._dialog);
+      if (modalBody) {
+        modalBody.scrollTop = 0;
+      }
+      reflow(this._element);
+      this._element.classList.add(CLASS_NAME_SHOW$4);
+      const transitionComplete = () => {
+        if (this._config.focus) {
+          this._focustrap.activate();
+        }
+        this._isTransitioning = false;
+        EventHandler.trigger(this._element, EVENT_SHOWN$4, {
+          relatedTarget
+        });
+      };
+      this._queueCallback(transitionComplete, this._dialog, this._isAnimated());
+    }
+    _addEventListeners() {
+      EventHandler.on(this._element, EVENT_KEYDOWN_DISMISS$1, event => {
+        if (event.key !== ESCAPE_KEY$1) {
+          return;
+        }
+        if (this._config.keyboard) {
+          this.hide();
+          return;
+        }
+        this._triggerBackdropTransition();
+      });
+      EventHandler.on(window, EVENT_RESIZE$1, () => {
+        if (this._isShown && !this._isTransitioning) {
+          this._adjustDialog();
+        }
+      });
+      EventHandler.on(this._element, EVENT_MOUSEDOWN_DISMISS, event => {
+        // a bad trick to segregate clicks that may start inside dialog but end outside, and avoid listen to scrollbar clicks
+        EventHandler.one(this._element, EVENT_CLICK_DISMISS, event2 => {
+          if (this._element !== event.target || this._element !== event2.target) {
+            return;
+          }
+          if (this._config.backdrop === 'static') {
+            this._triggerBackdropTransition();
+            return;
+          }
+          if (this._config.backdrop) {
+            this.hide();
+          }
+        });
+      });
+    }
+    _hideModal() {
+      this._element.style.display = 'none';
+      this._element.setAttribute('aria-hidden', true);
+      this._element.removeAttribute('aria-modal');
+      this._element.removeAttribute('role');
+      this._isTransitioning = false;
+      this._backdrop.hide(() => {
+        document.body.classList.remove(CLASS_NAME_OPEN);
+        this._resetAdjustments();
+        this._scrollBar.reset();
+        EventHandler.trigger(this._element, EVENT_HIDDEN$4);
+      });
+    }
+    _isAnimated() {
+      return this._element.classList.contains(CLASS_NAME_FADE$3);
+    }
+    _triggerBackdropTransition() {
+      const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE_PREVENTED$1);
+      if (hideEvent.defaultPrevented) {
+        return;
+      }
+      const isModalOverflowing = this._element.scrollHeight > document.documentElement.clientHeight;
+      const initialOverflowY = this._element.style.overflowY;
+      // return if the following background transition hasn't yet completed
+      if (initialOverflowY === 'hidden' || this._element.classList.contains(CLASS_NAME_STATIC)) {
+        return;
+      }
+      if (!isModalOverflowing) {
+        this._element.style.overflowY = 'hidden';
+      }
+      this._element.classList.add(CLASS_NAME_STATIC);
+      this._queueCallback(() => {
+        this._element.classList.remove(CLASS_NAME_STATIC);
+        this._queueCallback(() => {
+          this._element.style.overflowY = initialOverflowY;
+        }, this._dialog);
+      }, this._dialog);
+      this._element.focus();
+    }
+
+    /**
+     * The following methods are used to handle overflowing modals
+     */
+
+    _adjustDialog() {
+      const isModalOverflowing = this._element.scrollHeight > document.documentElement.clientHeight;
+      const scrollbarWidth = this._scrollBar.getWidth();
+      const isBodyOverflowing = scrollbarWidth > 0;
+      if (isBodyOverflowing && !isModalOverflowing) {
+        const property = isRTL() ? 'paddingLeft' : 'paddingRight';
+        this._element.style[property] = `${scrollbarWidth}px`;
+      }
+      if (!isBodyOverflowing && isModalOverflowing) {
+        const property = isRTL() ? 'paddingRight' : 'paddingLeft';
+        this._element.style[property] = `${scrollbarWidth}px`;
+      }
+    }
+    _resetAdjustments() {
+      this._element.style.paddingLeft = '';
+      this._element.style.paddingRight = '';
+    }
+
+    // Static
+    static jQueryInterface(config, relatedTarget) {
+      return this.each(function () {
+        const data = Modal.getOrCreateInstance(this, config);
+        if (typeof config !== 'string') {
+          return;
+        }
+        if (typeof data[config] === 'undefined') {
+          throw new TypeError(`No method named "${config}"`);
+        }
+        data[config](relatedTarget);
+      });
+    }
+  }
+
+  /**
+   * Data API implementation
+   */
+
+  EventHandler.on(document, EVENT_CLICK_DATA_API$2, SELECTOR_DATA_TOGGLE$2, function (event) {
+    const target = SelectorEngine.getElementFromSelector(this);
+    if (['A', 'AREA'].includes(this.tagName)) {
+      event.preventDefault();
+    }
+    EventHandler.one(target, EVENT_SHOW$4, showEvent => {
+      if (showEvent.defaultPrevented) {
+        // only register focus restorer if modal will actually get shown
+        return;
+      }
+      EventHandler.one(target, EVENT_HIDDEN$4, () => {
+        if (isVisible(this)) {
+          this.focus();
+        }
+      });
+    });
+
+    // avoid conflict when clicking modal toggler while another one is open
+    const alreadyOpen = SelectorEngine.findOne(OPEN_SELECTOR$1);
+    if (alreadyOpen) {
+      Modal.getInstance(alreadyOpen).hide();
+    }
+    const data = Modal.getOrCreateInstance(target);
+    data.toggle(this);
+  });
+  enableDismissTrigger(Modal);
+
+  /**
+   * jQuery
+   */
+
+  defineJQueryPlugin(Modal);
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap offcanvas.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const NAME$6 = 'offcanvas';
+  const DATA_KEY$3 = 'bs.offcanvas';
+  const EVENT_KEY$3 = `.${DATA_KEY$3}`;
+  const DATA_API_KEY$1 = '.data-api';
+  const EVENT_LOAD_DATA_API$2 = `load${EVENT_KEY$3}${DATA_API_KEY$1}`;
+  const ESCAPE_KEY = 'Escape';
+  const CLASS_NAME_SHOW$3 = 'show';
+  const CLASS_NAME_SHOWING$1 = 'showing';
+  const CLASS_NAME_HIDING = 'hiding';
+  const CLASS_NAME_BACKDROP = 'offcanvas-backdrop';
+  const OPEN_SELECTOR = '.offcanvas.show';
+  const EVENT_SHOW$3 = `show${EVENT_KEY$3}`;
+  const EVENT_SHOWN$3 = `shown${EVENT_KEY$3}`;
+  const EVENT_HIDE$3 = `hide${EVENT_KEY$3}`;
+  const EVENT_HIDE_PREVENTED = `hidePrevented${EVENT_KEY$3}`;
+  const EVENT_HIDDEN$3 = `hidden${EVENT_KEY$3}`;
+  const EVENT_RESIZE = `resize${EVENT_KEY$3}`;
+  const EVENT_CLICK_DATA_API$1 = `click${EVENT_KEY$3}${DATA_API_KEY$1}`;
+  const EVENT_KEYDOWN_DISMISS = `keydown.dismiss${EVENT_KEY$3}`;
+  const SELECTOR_DATA_TOGGLE$1 = '[data-bs-toggle="offcanvas"]';
+  const Default$5 = {
+    backdrop: true,
+    keyboard: true,
+    scroll: false
+  };
+  const DefaultType$5 = {
+    backdrop: '(boolean|string)',
+    keyboard: 'boolean',
+    scroll: 'boolean'
+  };
+
+  /**
+   * Class definition
+   */
+
+  class Offcanvas extends BaseComponent {
+    constructor(element, config) {
+      super(element, config);
+      this._isShown = false;
+      this._backdrop = this._initializeBackDrop();
+      this._focustrap = this._initializeFocusTrap();
+      this._addEventListeners();
+    }
+
+    // Getters
+    static get Default() {
+      return Default$5;
+    }
+    static get DefaultType() {
+      return DefaultType$5;
+    }
+    static get NAME() {
+      return NAME$6;
+    }
+
+    // Public
+    toggle(relatedTarget) {
+      return this._isShown ? this.hide() : this.show(relatedTarget);
+    }
+    show(relatedTarget) {
+      if (this._isShown) {
+        return;
+      }
+      const showEvent = EventHandler.trigger(this._element, EVENT_SHOW$3, {
+        relatedTarget
+      });
+      if (showEvent.defaultPrevented) {
+        return;
+      }
+      this._isShown = true;
+      this._backdrop.show();
+      if (!this._config.scroll) {
+        new ScrollBarHelper().hide();
+      }
+      this._element.setAttribute('aria-modal', true);
+      this._element.setAttribute('role', 'dialog');
+      this._element.classList.add(CLASS_NAME_SHOWING$1);
+      const completeCallBack = () => {
+        if (!this._config.scroll || this._config.backdrop) {
+          this._focustrap.activate();
+        }
+        this._element.classList.add(CLASS_NAME_SHOW$3);
+        this._element.classList.remove(CLASS_NAME_SHOWING$1);
+        EventHandler.trigger(this._element, EVENT_SHOWN$3, {
+          relatedTarget
+        });
+      };
+      this._queueCallback(completeCallBack, this._element, true);
+    }
+    hide() {
+      if (!this._isShown) {
+        return;
+      }
+      const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE$3);
+      if (hideEvent.defaultPrevented) {
+        return;
+      }
+      this._focustrap.deactivate();
+      this._element.blur();
+      this._isShown = false;
+      this._element.classList.add(CLASS_NAME_HIDING);
+      this._backdrop.hide();
+      const completeCallback = () => {
+        this._element.classList.remove(CLASS_NAME_SHOW$3, CLASS_NAME_HIDING);
+        this._element.removeAttribute('aria-modal');
+        this._element.removeAttribute('role');
+        if (!this._config.scroll) {
+          new ScrollBarHelper().reset();
+        }
+        EventHandler.trigger(this._element, EVENT_HIDDEN$3);
+      };
+      this._queueCallback(completeCallback, this._element, true);
+    }
+    dispose() {
+      this._backdrop.dispose();
+      this._focustrap.deactivate();
+      super.dispose();
+    }
+
+    // Private
+    _initializeBackDrop() {
+      const clickCallback = () => {
+        if (this._config.backdrop === 'static') {
+          EventHandler.trigger(this._element, EVENT_HIDE_PREVENTED);
+          return;
+        }
+        this.hide();
+      };
+
+      // 'static' option will be translated to true, and booleans will keep their value
+      const isVisible = Boolean(this._config.backdrop);
+      return new Backdrop({
+        className: CLASS_NAME_BACKDROP,
+        isVisible,
+        isAnimated: true,
+        rootElement: this._element.parentNode,
+        clickCallback: isVisible ? clickCallback : null
+      });
+    }
+    _initializeFocusTrap() {
+      return new FocusTrap({
+        trapElement: this._element
+      });
+    }
+    _addEventListeners() {
+      EventHandler.on(this._element, EVENT_KEYDOWN_DISMISS, event => {
+        if (event.key !== ESCAPE_KEY) {
+          return;
+        }
+        if (this._config.keyboard) {
+          this.hide();
+          return;
+        }
+        EventHandler.trigger(this._element, EVENT_HIDE_PREVENTED);
+      });
+    }
+
+    // Static
+    static jQueryInterface(config) {
+      return this.each(function () {
+        const data = Offcanvas.getOrCreateInstance(this, config);
+        if (typeof config !== 'string') {
+          return;
+        }
+        if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
+          throw new TypeError(`No method named "${config}"`);
+        }
+        data[config](this);
+      });
+    }
+  }
+
+  /**
+   * Data API implementation
+   */
+
+  EventHandler.on(document, EVENT_CLICK_DATA_API$1, SELECTOR_DATA_TOGGLE$1, function (event) {
+    const target = SelectorEngine.getElementFromSelector(this);
+    if (['A', 'AREA'].includes(this.tagName)) {
+      event.preventDefault();
+    }
+    if (isDisabled(this)) {
+      return;
+    }
+    EventHandler.one(target, EVENT_HIDDEN$3, () => {
+      // focus on trigger when it is closed
+      if (isVisible(this)) {
+        this.focus();
+      }
+    });
+
+    // avoid conflict when clicking a toggler of an offcanvas, while another is open
+    const alreadyOpen = SelectorEngine.findOne(OPEN_SELECTOR);
+    if (alreadyOpen && alreadyOpen !== target) {
+      Offcanvas.getInstance(alreadyOpen).hide();
+    }
+    const data = Offcanvas.getOrCreateInstance(target);
+    data.toggle(this);
+  });
+  EventHandler.on(window, EVENT_LOAD_DATA_API$2, () => {
+    for (const selector of SelectorEngine.find(OPEN_SELECTOR)) {
+      Offcanvas.getOrCreateInstance(selector).show();
+    }
+  });
+  EventHandler.on(window, EVENT_RESIZE, () => {
+    for (const element of SelectorEngine.find('[aria-modal][class*=show][class*=offcanvas-]')) {
+      if (getComputedStyle(element).position !== 'fixed') {
+        Offcanvas.getOrCreateInstance(element).hide();
+      }
+    }
+  });
+  enableDismissTrigger(Offcanvas);
+
+  /**
+   * jQuery
+   */
+
+  defineJQueryPlugin(Offcanvas);
 
   /**
    * --------------------------------------------------------------------------
@@ -6971,126 +3029,6 @@ window['globalThis'] = window['bootstrap'];
     return createdDocument.body.innerHTML;
   }
 
-  exports.DefaultAllowlist = DefaultAllowlist;
-  exports.sanitizeHtml = sanitizeHtml;
-
-  Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-
-}));
-/*!
-  * Bootstrap selector-engine.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('../util/index.js')) :
-  typeof define === 'function' && define.amd ? define(['../util/index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.SelectorEngine = factory(global.Index));
-})(this, (function (index_js) { 'use strict';
-
-  /**
-   * --------------------------------------------------------------------------
-   * Bootstrap dom/selector-engine.js
-   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-   * --------------------------------------------------------------------------
-   */
-
-  const getSelector = element => {
-    let selector = element.getAttribute('data-bs-target');
-    if (!selector || selector === '#') {
-      let hrefAttribute = element.getAttribute('href');
-
-      // The only valid content that could double as a selector are IDs or classes,
-      // so everything starting with `#` or `.`. If a "real" URL is used as the selector,
-      // `document.querySelector` will rightfully complain it is invalid.
-      // See https://github.com/twbs/bootstrap/issues/32273
-      if (!hrefAttribute || !hrefAttribute.includes('#') && !hrefAttribute.startsWith('.')) {
-        return null;
-      }
-
-      // Just in case some CMS puts out a full URL with the anchor appended
-      if (hrefAttribute.includes('#') && !hrefAttribute.startsWith('#')) {
-        hrefAttribute = `#${hrefAttribute.split('#')[1]}`;
-      }
-      selector = hrefAttribute && hrefAttribute !== '#' ? hrefAttribute.trim() : null;
-    }
-    return selector ? selector.split(',').map(sel => index_js.parseSelector(sel)).join(',') : null;
-  };
-  const SelectorEngine = {
-    find(selector, element = document.documentElement) {
-      return [].concat(...Element.prototype.querySelectorAll.call(element, selector));
-    },
-    findOne(selector, element = document.documentElement) {
-      return Element.prototype.querySelector.call(element, selector);
-    },
-    children(element, selector) {
-      return [].concat(...element.children).filter(child => child.matches(selector));
-    },
-    parents(element, selector) {
-      const parents = [];
-      let ancestor = element.parentNode.closest(selector);
-      while (ancestor) {
-        parents.push(ancestor);
-        ancestor = ancestor.parentNode.closest(selector);
-      }
-      return parents;
-    },
-    prev(element, selector) {
-      let previous = element.previousElementSibling;
-      while (previous) {
-        if (previous.matches(selector)) {
-          return [previous];
-        }
-        previous = previous.previousElementSibling;
-      }
-      return [];
-    },
-    // TODO: this is now unused; remove later along with prev()
-    next(element, selector) {
-      let next = element.nextElementSibling;
-      while (next) {
-        if (next.matches(selector)) {
-          return [next];
-        }
-        next = next.nextElementSibling;
-      }
-      return [];
-    },
-    focusableChildren(element) {
-      const focusables = ['a', 'button', 'input', 'textarea', 'select', 'details', '[tabindex]', '[contenteditable="true"]'].map(selector => `${selector}:not([tabindex^="-"])`).join(',');
-      return this.find(focusables, element).filter(el => !index_js.isDisabled(el) && index_js.isVisible(el));
-    },
-    getSelectorFromElement(element) {
-      const selector = getSelector(element);
-      if (selector) {
-        return SelectorEngine.findOne(selector) ? selector : null;
-      }
-      return null;
-    },
-    getElementFromSelector(element) {
-      const selector = getSelector(element);
-      return selector ? SelectorEngine.findOne(selector) : null;
-    },
-    getMultipleElementsFromSelector(element) {
-      const selector = getSelector(element);
-      return selector ? SelectorEngine.find(selector) : [];
-    }
-  };
-
-  return SelectorEngine;
-
-}));
-/*!
-  * Bootstrap template-factory.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('../dom/selector-engine.js'), require('./config.js'), require('./sanitizer.js'), require('./index.js')) :
-  typeof define === 'function' && define.amd ? define(['../dom/selector-engine', './config', './sanitizer', './index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.TemplateFactory = factory(global.SelectorEngine, global.Config, global.Sanitizer, global.Index));
-})(this, (function (SelectorEngine, Config, sanitizer_js, index_js) { 'use strict';
-
   /**
    * --------------------------------------------------------------------------
    * Bootstrap util/template-factory.js
@@ -7103,9 +3041,9 @@ window['globalThis'] = window['bootstrap'];
    * Constants
    */
 
-  const NAME = 'TemplateFactory';
-  const Default = {
-    allowList: sanitizer_js.DefaultAllowlist,
+  const NAME$5 = 'TemplateFactory';
+  const Default$4 = {
+    allowList: DefaultAllowlist,
     content: {},
     // { selector : text ,  selector2 : text2 , }
     extraClass: '',
@@ -7114,7 +3052,7 @@ window['globalThis'] = window['bootstrap'];
     sanitizeFn: null,
     template: '<div></div>'
   };
-  const DefaultType = {
+  const DefaultType$4 = {
     allowList: 'object',
     content: 'object',
     extraClass: '(string|function)',
@@ -7140,13 +3078,13 @@ window['globalThis'] = window['bootstrap'];
 
     // Getters
     static get Default() {
-      return Default;
+      return Default$4;
     }
     static get DefaultType() {
-      return DefaultType;
+      return DefaultType$4;
     }
     static get NAME() {
-      return NAME;
+      return NAME$5;
     }
 
     // Public
@@ -7201,8 +3139,8 @@ window['globalThis'] = window['bootstrap'];
         templateElement.remove();
         return;
       }
-      if (index_js.isElement(content)) {
-        this._putElementInTemplate(index_js.getElement(content), templateElement);
+      if (isElement(content)) {
+        this._putElementInTemplate(getElement(content), templateElement);
         return;
       }
       if (this._config.html) {
@@ -7212,10 +3150,10 @@ window['globalThis'] = window['bootstrap'];
       templateElement.textContent = content;
     }
     _maybeSanitize(arg) {
-      return this._config.sanitize ? sanitizer_js.sanitizeHtml(arg, this._config.allowList, this._config.sanitizeFn) : arg;
+      return this._config.sanitize ? sanitizeHtml(arg, this._config.allowList, this._config.sanitizeFn) : arg;
     }
     _resolvePossibleFunction(arg) {
-      return index_js.execute(arg, [undefined, this]);
+      return execute(arg, [undefined, this]);
     }
     _putElementInTemplate(element, templateElement) {
       if (this._config.html) {
@@ -7226,39 +3164,6 @@ window['globalThis'] = window['bootstrap'];
       templateElement.textContent = element.textContent;
     }
   }
-
-  return TemplateFactory;
-
-}));
-/*!
-  * Bootstrap tooltip.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('@popperjs/core'), require('./base-component.js'), require('./dom/event-handler.js'), require('./dom/manipulator.js'), require('./util/index.js'), require('./util/sanitizer.js'), require('./util/template-factory.js')) :
-  typeof define === 'function' && define.amd ? define(['@popperjs/core', './base-component', './dom/event-handler', './dom/manipulator', './util/index', './util/sanitizer', './util/template-factory'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Tooltip = factory(global["@popperjs/core"], global.BaseComponent, global.EventHandler, global.Manipulator, global.Index, global.Sanitizer, global.TemplateFactory));
-})(this, (function (Popper, BaseComponent, EventHandler, Manipulator, index_js, sanitizer_js, TemplateFactory) { 'use strict';
-
-  function _interopNamespaceDefault(e) {
-    const n = Object.create(null, { [Symbol.toStringTag]: { value: 'Module' } });
-    if (e) {
-      for (const k in e) {
-        if (k !== 'default') {
-          const d = Object.getOwnPropertyDescriptor(e, k);
-          Object.defineProperty(n, k, d.get ? d : {
-            enumerable: true,
-            get: () => e[k]
-          });
-        }
-      }
-    }
-    n.default = e;
-    return Object.freeze(n);
-  }
-
-  const Popper__namespace = /*#__PURE__*/_interopNamespaceDefault(Popper);
 
   /**
    * --------------------------------------------------------------------------
@@ -7272,11 +3177,11 @@ window['globalThis'] = window['bootstrap'];
    * Constants
    */
 
-  const NAME = 'tooltip';
+  const NAME$4 = 'tooltip';
   const DISALLOWED_ATTRIBUTES = new Set(['sanitize', 'allowList', 'sanitizeFn']);
-  const CLASS_NAME_FADE = 'fade';
+  const CLASS_NAME_FADE$2 = 'fade';
   const CLASS_NAME_MODAL = 'modal';
-  const CLASS_NAME_SHOW = 'show';
+  const CLASS_NAME_SHOW$2 = 'show';
   const SELECTOR_TOOLTIP_INNER = '.tooltip-inner';
   const SELECTOR_MODAL = `.${CLASS_NAME_MODAL}`;
   const EVENT_MODAL_HIDE = 'hide.bs.modal';
@@ -7284,25 +3189,25 @@ window['globalThis'] = window['bootstrap'];
   const TRIGGER_FOCUS = 'focus';
   const TRIGGER_CLICK = 'click';
   const TRIGGER_MANUAL = 'manual';
-  const EVENT_HIDE = 'hide';
-  const EVENT_HIDDEN = 'hidden';
-  const EVENT_SHOW = 'show';
-  const EVENT_SHOWN = 'shown';
+  const EVENT_HIDE$2 = 'hide';
+  const EVENT_HIDDEN$2 = 'hidden';
+  const EVENT_SHOW$2 = 'show';
+  const EVENT_SHOWN$2 = 'shown';
   const EVENT_INSERTED = 'inserted';
-  const EVENT_CLICK = 'click';
-  const EVENT_FOCUSIN = 'focusin';
-  const EVENT_FOCUSOUT = 'focusout';
+  const EVENT_CLICK$1 = 'click';
+  const EVENT_FOCUSIN$1 = 'focusin';
+  const EVENT_FOCUSOUT$1 = 'focusout';
   const EVENT_MOUSEENTER = 'mouseenter';
   const EVENT_MOUSELEAVE = 'mouseleave';
   const AttachmentMap = {
     AUTO: 'auto',
     TOP: 'top',
-    RIGHT: index_js.isRTL() ? 'left' : 'right',
+    RIGHT: isRTL() ? 'left' : 'right',
     BOTTOM: 'bottom',
-    LEFT: index_js.isRTL() ? 'right' : 'left'
+    LEFT: isRTL() ? 'right' : 'left'
   };
-  const Default = {
-    allowList: sanitizer_js.DefaultAllowlist,
+  const Default$3 = {
+    allowList: DefaultAllowlist,
     animation: true,
     boundary: 'clippingParents',
     container: false,
@@ -7320,7 +3225,7 @@ window['globalThis'] = window['bootstrap'];
     title: '',
     trigger: 'hover focus'
   };
-  const DefaultType = {
+  const DefaultType$3 = {
     allowList: 'object',
     animation: 'boolean',
     boundary: '(string|element)',
@@ -7370,13 +3275,13 @@ window['globalThis'] = window['bootstrap'];
 
     // Getters
     static get Default() {
-      return Default;
+      return Default$3;
     }
     static get DefaultType() {
-      return DefaultType;
+      return DefaultType$3;
     }
     static get NAME() {
-      return NAME;
+      return NAME$4;
     }
 
     // Public
@@ -7415,8 +3320,8 @@ window['globalThis'] = window['bootstrap'];
       if (!(this._isWithContent() && this._isEnabled)) {
         return;
       }
-      const showEvent = EventHandler.trigger(this._element, this.constructor.eventName(EVENT_SHOW));
-      const shadowRoot = index_js.findShadowRoot(this._element);
+      const showEvent = EventHandler.trigger(this._element, this.constructor.eventName(EVENT_SHOW$2));
+      const shadowRoot = findShadowRoot(this._element);
       const isInTheDom = (shadowRoot || this._element.ownerDocument.documentElement).contains(this._element);
       if (showEvent.defaultPrevented || !isInTheDom) {
         return;
@@ -7434,7 +3339,7 @@ window['globalThis'] = window['bootstrap'];
         EventHandler.trigger(this._element, this.constructor.eventName(EVENT_INSERTED));
       }
       this._popper = this._createPopper(tip);
-      tip.classList.add(CLASS_NAME_SHOW);
+      tip.classList.add(CLASS_NAME_SHOW$2);
 
       // If this is a touch-enabled device we add extra
       // empty mouseover listeners to the body's immediate children;
@@ -7442,11 +3347,11 @@ window['globalThis'] = window['bootstrap'];
       // https://www.quirksmode.org/blog/archives/2014/02/mouse_event_bub.html
       if ('ontouchstart' in document.documentElement) {
         for (const element of [].concat(...document.body.children)) {
-          EventHandler.on(element, 'mouseover', index_js.noop);
+          EventHandler.on(element, 'mouseover', noop);
         }
       }
       const complete = () => {
-        EventHandler.trigger(this._element, this.constructor.eventName(EVENT_SHOWN));
+        EventHandler.trigger(this._element, this.constructor.eventName(EVENT_SHOWN$2));
         if (this._isHovered === false) {
           this._leave();
         }
@@ -7458,18 +3363,18 @@ window['globalThis'] = window['bootstrap'];
       if (!this._isShown()) {
         return;
       }
-      const hideEvent = EventHandler.trigger(this._element, this.constructor.eventName(EVENT_HIDE));
+      const hideEvent = EventHandler.trigger(this._element, this.constructor.eventName(EVENT_HIDE$2));
       if (hideEvent.defaultPrevented) {
         return;
       }
       const tip = this._getTipElement();
-      tip.classList.remove(CLASS_NAME_SHOW);
+      tip.classList.remove(CLASS_NAME_SHOW$2);
 
       // If this is a touch-enabled device we remove the extra
       // empty mouseover listeners we added for iOS support
       if ('ontouchstart' in document.documentElement) {
         for (const element of [].concat(...document.body.children)) {
-          EventHandler.off(element, 'mouseover', index_js.noop);
+          EventHandler.off(element, 'mouseover', noop);
         }
       }
       this._activeTrigger[TRIGGER_CLICK] = false;
@@ -7485,7 +3390,7 @@ window['globalThis'] = window['bootstrap'];
           this._disposePopper();
         }
         this._element.removeAttribute('aria-describedby');
-        EventHandler.trigger(this._element, this.constructor.eventName(EVENT_HIDDEN));
+        EventHandler.trigger(this._element, this.constructor.eventName(EVENT_HIDDEN$2));
       };
       this._queueCallback(complete, this.tip, this._isAnimated());
     }
@@ -7512,13 +3417,13 @@ window['globalThis'] = window['bootstrap'];
       if (!tip) {
         return null;
       }
-      tip.classList.remove(CLASS_NAME_FADE, CLASS_NAME_SHOW);
+      tip.classList.remove(CLASS_NAME_FADE$2, CLASS_NAME_SHOW$2);
       // TODO: v6 the following can be achieved with CSS only
       tip.classList.add(`bs-${this.constructor.NAME}-auto`);
-      const tipId = index_js.getUID(this.constructor.NAME).toString();
+      const tipId = getUID(this.constructor.NAME).toString();
       tip.setAttribute('id', tipId);
       if (this._isAnimated()) {
-        tip.classList.add(CLASS_NAME_FADE);
+        tip.classList.add(CLASS_NAME_FADE$2);
       }
       return tip;
     }
@@ -7557,13 +3462,13 @@ window['globalThis'] = window['bootstrap'];
       return this.constructor.getOrCreateInstance(event.delegateTarget, this._getDelegateConfig());
     }
     _isAnimated() {
-      return this._config.animation || this.tip && this.tip.classList.contains(CLASS_NAME_FADE);
+      return this._config.animation || this.tip && this.tip.classList.contains(CLASS_NAME_FADE$2);
     }
     _isShown() {
-      return this.tip && this.tip.classList.contains(CLASS_NAME_SHOW);
+      return this.tip && this.tip.classList.contains(CLASS_NAME_SHOW$2);
     }
     _createPopper(tip) {
-      const placement = index_js.execute(this._config.placement, [this, tip, this._element]);
+      const placement = execute(this._config.placement, [this, tip, this._element]);
       const attachment = AttachmentMap[placement.toUpperCase()];
       return Popper__namespace.createPopper(this._element, tip, this._getPopperConfig(attachment));
     }
@@ -7580,7 +3485,7 @@ window['globalThis'] = window['bootstrap'];
       return offset;
     }
     _resolvePossibleFunction(arg) {
-      return index_js.execute(arg, [this._element, this._element]);
+      return execute(arg, [this._element, this._element]);
     }
     _getPopperConfig(attachment) {
       const defaultBsPopperConfig = {
@@ -7618,21 +3523,21 @@ window['globalThis'] = window['bootstrap'];
       };
       return {
         ...defaultBsPopperConfig,
-        ...index_js.execute(this._config.popperConfig, [undefined, defaultBsPopperConfig])
+        ...execute(this._config.popperConfig, [undefined, defaultBsPopperConfig])
       };
     }
     _setListeners() {
       const triggers = this._config.trigger.split(' ');
       for (const trigger of triggers) {
         if (trigger === 'click') {
-          EventHandler.on(this._element, this.constructor.eventName(EVENT_CLICK), this._config.selector, event => {
+          EventHandler.on(this._element, this.constructor.eventName(EVENT_CLICK$1), this._config.selector, event => {
             const context = this._initializeOnDelegatedTarget(event);
             context._activeTrigger[TRIGGER_CLICK] = !(context._isShown() && context._activeTrigger[TRIGGER_CLICK]);
             context.toggle();
           });
         } else if (trigger !== TRIGGER_MANUAL) {
-          const eventIn = trigger === TRIGGER_HOVER ? this.constructor.eventName(EVENT_MOUSEENTER) : this.constructor.eventName(EVENT_FOCUSIN);
-          const eventOut = trigger === TRIGGER_HOVER ? this.constructor.eventName(EVENT_MOUSELEAVE) : this.constructor.eventName(EVENT_FOCUSOUT);
+          const eventIn = trigger === TRIGGER_HOVER ? this.constructor.eventName(EVENT_MOUSEENTER) : this.constructor.eventName(EVENT_FOCUSIN$1);
+          const eventOut = trigger === TRIGGER_HOVER ? this.constructor.eventName(EVENT_MOUSELEAVE) : this.constructor.eventName(EVENT_FOCUSOUT$1);
           EventHandler.on(this._element, eventIn, this._config.selector, event => {
             const context = this._initializeOnDelegatedTarget(event);
             context._activeTrigger[event.type === 'focusin' ? TRIGGER_FOCUS : TRIGGER_HOVER] = true;
@@ -7710,7 +3615,7 @@ window['globalThis'] = window['bootstrap'];
       return config;
     }
     _configAfterMerge(config) {
-      config.container = config.container === false ? document.body : index_js.getElement(config.container);
+      config.container = config.container === false ? document.body : getElement(config.container);
       if (typeof config.delay === 'number') {
         config.delay = {
           show: config.delay,
@@ -7770,21 +3675,7 @@ window['globalThis'] = window['bootstrap'];
    * jQuery
    */
 
-  index_js.defineJQueryPlugin(Tooltip);
-
-  return Tooltip;
-
-}));
-/*!
-  * Bootstrap popover.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('./tooltip.js'), require('./util/index.js')) :
-  typeof define === 'function' && define.amd ? define(['./tooltip', './util/index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Popover = factory(global.Tooltip, global.Index));
-})(this, (function (Tooltip, index_js) { 'use strict';
+  defineJQueryPlugin(Tooltip);
 
   /**
    * --------------------------------------------------------------------------
@@ -7798,10 +3689,10 @@ window['globalThis'] = window['bootstrap'];
    * Constants
    */
 
-  const NAME = 'popover';
+  const NAME$3 = 'popover';
   const SELECTOR_TITLE = '.popover-header';
   const SELECTOR_CONTENT = '.popover-body';
-  const Default = {
+  const Default$2 = {
     ...Tooltip.Default,
     content: '',
     offset: [0, 8],
@@ -7809,7 +3700,7 @@ window['globalThis'] = window['bootstrap'];
     template: '<div class="popover" role="tooltip">' + '<div class="popover-arrow"></div>' + '<h3 class="popover-header"></h3>' + '<div class="popover-body"></div>' + '</div>',
     trigger: 'click'
   };
-  const DefaultType = {
+  const DefaultType$2 = {
     ...Tooltip.DefaultType,
     content: '(null|string|element|function)'
   };
@@ -7821,13 +3712,13 @@ window['globalThis'] = window['bootstrap'];
   class Popover extends Tooltip {
     // Getters
     static get Default() {
-      return Default;
+      return Default$2;
     }
     static get DefaultType() {
-      return DefaultType;
+      return DefaultType$2;
     }
     static get NAME() {
-      return NAME;
+      return NAME$3;
     }
 
     // Overrides
@@ -7865,66 +3756,11 @@ window['globalThis'] = window['bootstrap'];
    * jQuery
    */
 
-  index_js.defineJQueryPlugin(Popover);
-
-  return Popover;
-
-}));
-/*!
-  * Bootstrap component-functions.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('../dom/event-handler.js'), require('../dom/selector-engine.js'), require('./index.js')) :
-  typeof define === 'function' && define.amd ? define(['exports', '../dom/event-handler', '../dom/selector-engine', './index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.ComponentFunctions = {}, global.EventHandler, global.SelectorEngine, global.Index));
-})(this, (function (exports, EventHandler, SelectorEngine, index_js) { 'use strict';
+  defineJQueryPlugin(Popover);
 
   /**
    * --------------------------------------------------------------------------
-   * Bootstrap util/component-functions.js
-   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-   * --------------------------------------------------------------------------
-   */
-
-  const enableDismissTrigger = (component, method = 'hide') => {
-    const clickEvent = `click.dismiss${component.EVENT_KEY}`;
-    const name = component.NAME;
-    EventHandler.on(document, clickEvent, `[data-bs-dismiss="${name}"]`, function (event) {
-      if (['A', 'AREA'].includes(this.tagName)) {
-        event.preventDefault();
-      }
-      if (index_js.isDisabled(this)) {
-        return;
-      }
-      const target = SelectorEngine.getElementFromSelector(this) || this.closest(`.${name}`);
-      const instance = component.getOrCreateInstance(target);
-
-      // Method argument is left, for Alert and only, as it doesn't implement the 'hide' method
-      instance[method]();
-    });
-  };
-
-  exports.enableDismissTrigger = enableDismissTrigger;
-
-  Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-
-}));
-/*!
-  * Bootstrap alert.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('./base-component.js'), require('./dom/event-handler.js'), require('./util/component-functions.js'), require('./util/index.js')) :
-  typeof define === 'function' && define.amd ? define(['./base-component', './dom/event-handler', './util/component-functions', './util/index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Alert = factory(global.BaseComponent, global.EventHandler, global.ComponentFunctions, global.Index));
-})(this, (function (BaseComponent, EventHandler, componentFunctions_js, index_js) { 'use strict';
-
-  /**
-   * --------------------------------------------------------------------------
-   * Bootstrap alert.js
+   * Bootstrap scrollspy.js
    * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
    * --------------------------------------------------------------------------
    */
@@ -7934,53 +3770,234 @@ window['globalThis'] = window['bootstrap'];
    * Constants
    */
 
-  const NAME = 'alert';
-  const DATA_KEY = 'bs.alert';
-  const EVENT_KEY = `.${DATA_KEY}`;
-  const EVENT_CLOSE = `close${EVENT_KEY}`;
-  const EVENT_CLOSED = `closed${EVENT_KEY}`;
-  const CLASS_NAME_FADE = 'fade';
-  const CLASS_NAME_SHOW = 'show';
+  const NAME$2 = 'scrollspy';
+  const DATA_KEY$2 = 'bs.scrollspy';
+  const EVENT_KEY$2 = `.${DATA_KEY$2}`;
+  const DATA_API_KEY = '.data-api';
+  const EVENT_ACTIVATE = `activate${EVENT_KEY$2}`;
+  const EVENT_CLICK = `click${EVENT_KEY$2}`;
+  const EVENT_LOAD_DATA_API$1 = `load${EVENT_KEY$2}${DATA_API_KEY}`;
+  const CLASS_NAME_DROPDOWN_ITEM = 'dropdown-item';
+  const CLASS_NAME_ACTIVE$1 = 'active';
+  const SELECTOR_DATA_SPY = '[data-bs-spy="scroll"]';
+  const SELECTOR_TARGET_LINKS = '[href]';
+  const SELECTOR_NAV_LIST_GROUP = '.nav, .list-group';
+  const SELECTOR_NAV_LINKS = '.nav-link';
+  const SELECTOR_NAV_ITEMS = '.nav-item';
+  const SELECTOR_LIST_ITEMS = '.list-group-item';
+  const SELECTOR_LINK_ITEMS = `${SELECTOR_NAV_LINKS}, ${SELECTOR_NAV_ITEMS} > ${SELECTOR_NAV_LINKS}, ${SELECTOR_LIST_ITEMS}`;
+  const SELECTOR_DROPDOWN = '.dropdown';
+  const SELECTOR_DROPDOWN_TOGGLE$1 = '.dropdown-toggle';
+  const Default$1 = {
+    offset: null,
+    // TODO: v6 @deprecated, keep it for backwards compatibility reasons
+    rootMargin: '0px 0px -25%',
+    smoothScroll: false,
+    target: null,
+    threshold: [0.1, 0.5, 1]
+  };
+  const DefaultType$1 = {
+    offset: '(number|null)',
+    // TODO v6 @deprecated, keep it for backwards compatibility reasons
+    rootMargin: 'string',
+    smoothScroll: 'boolean',
+    target: 'element',
+    threshold: 'array'
+  };
 
   /**
    * Class definition
    */
 
-  class Alert extends BaseComponent {
+  class ScrollSpy extends BaseComponent {
+    constructor(element, config) {
+      super(element, config);
+
+      // this._element is the observablesContainer and config.target the menu links wrapper
+      this._targetLinks = new Map();
+      this._observableSections = new Map();
+      this._rootElement = getComputedStyle(this._element).overflowY === 'visible' ? null : this._element;
+      this._activeTarget = null;
+      this._observer = null;
+      this._previousScrollData = {
+        visibleEntryTop: 0,
+        parentScrollTop: 0
+      };
+      this.refresh(); // initialize
+    }
+
     // Getters
+    static get Default() {
+      return Default$1;
+    }
+    static get DefaultType() {
+      return DefaultType$1;
+    }
     static get NAME() {
-      return NAME;
+      return NAME$2;
     }
 
     // Public
-    close() {
-      const closeEvent = EventHandler.trigger(this._element, EVENT_CLOSE);
-      if (closeEvent.defaultPrevented) {
-        return;
+    refresh() {
+      this._initializeTargetsAndObservables();
+      this._maybeEnableSmoothScroll();
+      if (this._observer) {
+        this._observer.disconnect();
+      } else {
+        this._observer = this._getNewObserver();
       }
-      this._element.classList.remove(CLASS_NAME_SHOW);
-      const isAnimated = this._element.classList.contains(CLASS_NAME_FADE);
-      this._queueCallback(() => this._destroyElement(), this._element, isAnimated);
+      for (const section of this._observableSections.values()) {
+        this._observer.observe(section);
+      }
+    }
+    dispose() {
+      this._observer.disconnect();
+      super.dispose();
     }
 
     // Private
-    _destroyElement() {
-      this._element.remove();
-      EventHandler.trigger(this._element, EVENT_CLOSED);
-      this.dispose();
+    _configAfterMerge(config) {
+      // TODO: on v6 target should be given explicitly & remove the {target: 'ss-target'} case
+      config.target = getElement(config.target) || document.body;
+
+      // TODO: v6 Only for backwards compatibility reasons. Use rootMargin only
+      config.rootMargin = config.offset ? `${config.offset}px 0px -30%` : config.rootMargin;
+      if (typeof config.threshold === 'string') {
+        config.threshold = config.threshold.split(',').map(value => Number.parseFloat(value));
+      }
+      return config;
+    }
+    _maybeEnableSmoothScroll() {
+      if (!this._config.smoothScroll) {
+        return;
+      }
+
+      // unregister any previous listeners
+      EventHandler.off(this._config.target, EVENT_CLICK);
+      EventHandler.on(this._config.target, EVENT_CLICK, SELECTOR_TARGET_LINKS, event => {
+        const observableSection = this._observableSections.get(event.target.hash);
+        if (observableSection) {
+          event.preventDefault();
+          const root = this._rootElement || window;
+          const height = observableSection.offsetTop - this._element.offsetTop;
+          if (root.scrollTo) {
+            root.scrollTo({
+              top: height,
+              behavior: 'smooth'
+            });
+            return;
+          }
+
+          // Chrome 60 doesn't support `scrollTo`
+          root.scrollTop = height;
+        }
+      });
+    }
+    _getNewObserver() {
+      const options = {
+        root: this._rootElement,
+        threshold: this._config.threshold,
+        rootMargin: this._config.rootMargin
+      };
+      return new IntersectionObserver(entries => this._observerCallback(entries), options);
+    }
+
+    // The logic of selection
+    _observerCallback(entries) {
+      const targetElement = entry => this._targetLinks.get(`#${entry.target.id}`);
+      const activate = entry => {
+        this._previousScrollData.visibleEntryTop = entry.target.offsetTop;
+        this._process(targetElement(entry));
+      };
+      const parentScrollTop = (this._rootElement || document.documentElement).scrollTop;
+      const userScrollsDown = parentScrollTop >= this._previousScrollData.parentScrollTop;
+      this._previousScrollData.parentScrollTop = parentScrollTop;
+      for (const entry of entries) {
+        if (!entry.isIntersecting) {
+          this._activeTarget = null;
+          this._clearActiveClass(targetElement(entry));
+          continue;
+        }
+        const entryIsLowerThanPrevious = entry.target.offsetTop >= this._previousScrollData.visibleEntryTop;
+        // if we are scrolling down, pick the bigger offsetTop
+        if (userScrollsDown && entryIsLowerThanPrevious) {
+          activate(entry);
+          // if parent isn't scrolled, let's keep the first visible item, breaking the iteration
+          if (!parentScrollTop) {
+            return;
+          }
+          continue;
+        }
+
+        // if we are scrolling up, pick the smallest offsetTop
+        if (!userScrollsDown && !entryIsLowerThanPrevious) {
+          activate(entry);
+        }
+      }
+    }
+    _initializeTargetsAndObservables() {
+      this._targetLinks = new Map();
+      this._observableSections = new Map();
+      const targetLinks = SelectorEngine.find(SELECTOR_TARGET_LINKS, this._config.target);
+      for (const anchor of targetLinks) {
+        // ensure that the anchor has an id and is not disabled
+        if (!anchor.hash || isDisabled(anchor)) {
+          continue;
+        }
+        const observableSection = SelectorEngine.findOne(decodeURI(anchor.hash), this._element);
+
+        // ensure that the observableSection exists & is visible
+        if (isVisible(observableSection)) {
+          this._targetLinks.set(decodeURI(anchor.hash), anchor);
+          this._observableSections.set(anchor.hash, observableSection);
+        }
+      }
+    }
+    _process(target) {
+      if (this._activeTarget === target) {
+        return;
+      }
+      this._clearActiveClass(this._config.target);
+      this._activeTarget = target;
+      target.classList.add(CLASS_NAME_ACTIVE$1);
+      this._activateParents(target);
+      EventHandler.trigger(this._element, EVENT_ACTIVATE, {
+        relatedTarget: target
+      });
+    }
+    _activateParents(target) {
+      // Activate dropdown parents
+      if (target.classList.contains(CLASS_NAME_DROPDOWN_ITEM)) {
+        SelectorEngine.findOne(SELECTOR_DROPDOWN_TOGGLE$1, target.closest(SELECTOR_DROPDOWN)).classList.add(CLASS_NAME_ACTIVE$1);
+        return;
+      }
+      for (const listGroup of SelectorEngine.parents(target, SELECTOR_NAV_LIST_GROUP)) {
+        // Set triggered links parents as active
+        // With both <ul> and <nav> markup a parent is the previous sibling of any nav ancestor
+        for (const item of SelectorEngine.prev(listGroup, SELECTOR_LINK_ITEMS)) {
+          item.classList.add(CLASS_NAME_ACTIVE$1);
+        }
+      }
+    }
+    _clearActiveClass(parent) {
+      parent.classList.remove(CLASS_NAME_ACTIVE$1);
+      const activeNodes = SelectorEngine.find(`${SELECTOR_TARGET_LINKS}.${CLASS_NAME_ACTIVE$1}`, parent);
+      for (const node of activeNodes) {
+        node.classList.remove(CLASS_NAME_ACTIVE$1);
+      }
     }
 
     // Static
     static jQueryInterface(config) {
       return this.each(function () {
-        const data = Alert.getOrCreateInstance(this);
+        const data = ScrollSpy.getOrCreateInstance(this, config);
         if (typeof config !== 'string') {
           return;
         }
         if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
           throw new TypeError(`No method named "${config}"`);
         }
-        data[config](this);
+        data[config]();
       });
     }
   }
@@ -7989,27 +4006,287 @@ window['globalThis'] = window['bootstrap'];
    * Data API implementation
    */
 
-  componentFunctions_js.enableDismissTrigger(Alert, 'close');
+  EventHandler.on(window, EVENT_LOAD_DATA_API$1, () => {
+    for (const spy of SelectorEngine.find(SELECTOR_DATA_SPY)) {
+      ScrollSpy.getOrCreateInstance(spy);
+    }
+  });
 
   /**
    * jQuery
    */
 
-  index_js.defineJQueryPlugin(Alert);
+  defineJQueryPlugin(ScrollSpy);
 
-  return Alert;
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap tab.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
 
-}));
-/*!
-  * Bootstrap toast.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('./base-component.js'), require('./dom/event-handler.js'), require('./util/component-functions.js'), require('./util/index.js')) :
-  typeof define === 'function' && define.amd ? define(['./base-component', './dom/event-handler', './util/component-functions', './util/index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Toast = factory(global.BaseComponent, global.EventHandler, global.ComponentFunctions, global.Index));
-})(this, (function (BaseComponent, EventHandler, componentFunctions_js, index_js) { 'use strict';
+
+  /**
+   * Constants
+   */
+
+  const NAME$1 = 'tab';
+  const DATA_KEY$1 = 'bs.tab';
+  const EVENT_KEY$1 = `.${DATA_KEY$1}`;
+  const EVENT_HIDE$1 = `hide${EVENT_KEY$1}`;
+  const EVENT_HIDDEN$1 = `hidden${EVENT_KEY$1}`;
+  const EVENT_SHOW$1 = `show${EVENT_KEY$1}`;
+  const EVENT_SHOWN$1 = `shown${EVENT_KEY$1}`;
+  const EVENT_CLICK_DATA_API = `click${EVENT_KEY$1}`;
+  const EVENT_KEYDOWN = `keydown${EVENT_KEY$1}`;
+  const EVENT_LOAD_DATA_API = `load${EVENT_KEY$1}`;
+  const ARROW_LEFT_KEY = 'ArrowLeft';
+  const ARROW_RIGHT_KEY = 'ArrowRight';
+  const ARROW_UP_KEY = 'ArrowUp';
+  const ARROW_DOWN_KEY = 'ArrowDown';
+  const HOME_KEY = 'Home';
+  const END_KEY = 'End';
+  const CLASS_NAME_ACTIVE = 'active';
+  const CLASS_NAME_FADE$1 = 'fade';
+  const CLASS_NAME_SHOW$1 = 'show';
+  const CLASS_DROPDOWN = 'dropdown';
+  const SELECTOR_DROPDOWN_TOGGLE = '.dropdown-toggle';
+  const SELECTOR_DROPDOWN_MENU = '.dropdown-menu';
+  const NOT_SELECTOR_DROPDOWN_TOGGLE = `:not(${SELECTOR_DROPDOWN_TOGGLE})`;
+  const SELECTOR_TAB_PANEL = '.list-group, .nav, [role="tablist"]';
+  const SELECTOR_OUTER = '.nav-item, .list-group-item';
+  const SELECTOR_INNER = `.nav-link${NOT_SELECTOR_DROPDOWN_TOGGLE}, .list-group-item${NOT_SELECTOR_DROPDOWN_TOGGLE}, [role="tab"]${NOT_SELECTOR_DROPDOWN_TOGGLE}`;
+  const SELECTOR_DATA_TOGGLE = '[data-bs-toggle="tab"], [data-bs-toggle="pill"], [data-bs-toggle="list"]'; // TODO: could only be `tab` in v6
+  const SELECTOR_INNER_ELEM = `${SELECTOR_INNER}, ${SELECTOR_DATA_TOGGLE}`;
+  const SELECTOR_DATA_TOGGLE_ACTIVE = `.${CLASS_NAME_ACTIVE}[data-bs-toggle="tab"], .${CLASS_NAME_ACTIVE}[data-bs-toggle="pill"], .${CLASS_NAME_ACTIVE}[data-bs-toggle="list"]`;
+
+  /**
+   * Class definition
+   */
+
+  class Tab extends BaseComponent {
+    constructor(element) {
+      super(element);
+      this._parent = this._element.closest(SELECTOR_TAB_PANEL);
+      if (!this._parent) {
+        return;
+        // TODO: should throw exception in v6
+        // throw new TypeError(`${element.outerHTML} has not a valid parent ${SELECTOR_INNER_ELEM}`)
+      }
+
+      // Set up initial aria attributes
+      this._setInitialAttributes(this._parent, this._getChildren());
+      EventHandler.on(this._element, EVENT_KEYDOWN, event => this._keydown(event));
+    }
+
+    // Getters
+    static get NAME() {
+      return NAME$1;
+    }
+
+    // Public
+    show() {
+      // Shows this elem and deactivate the active sibling if exists
+      const innerElem = this._element;
+      if (this._elemIsActive(innerElem)) {
+        return;
+      }
+
+      // Search for active tab on same parent to deactivate it
+      const active = this._getActiveElem();
+      const hideEvent = active ? EventHandler.trigger(active, EVENT_HIDE$1, {
+        relatedTarget: innerElem
+      }) : null;
+      const showEvent = EventHandler.trigger(innerElem, EVENT_SHOW$1, {
+        relatedTarget: active
+      });
+      if (showEvent.defaultPrevented || hideEvent && hideEvent.defaultPrevented) {
+        return;
+      }
+      this._deactivate(active, innerElem);
+      this._activate(innerElem, active);
+    }
+
+    // Private
+    _activate(element, relatedElem) {
+      if (!element) {
+        return;
+      }
+      element.classList.add(CLASS_NAME_ACTIVE);
+      this._activate(SelectorEngine.getElementFromSelector(element)); // Search and activate/show the proper section
+
+      const complete = () => {
+        if (element.getAttribute('role') !== 'tab') {
+          element.classList.add(CLASS_NAME_SHOW$1);
+          return;
+        }
+        element.removeAttribute('tabindex');
+        element.setAttribute('aria-selected', true);
+        this._toggleDropDown(element, true);
+        EventHandler.trigger(element, EVENT_SHOWN$1, {
+          relatedTarget: relatedElem
+        });
+      };
+      this._queueCallback(complete, element, element.classList.contains(CLASS_NAME_FADE$1));
+    }
+    _deactivate(element, relatedElem) {
+      if (!element) {
+        return;
+      }
+      element.classList.remove(CLASS_NAME_ACTIVE);
+      element.blur();
+      this._deactivate(SelectorEngine.getElementFromSelector(element)); // Search and deactivate the shown section too
+
+      const complete = () => {
+        if (element.getAttribute('role') !== 'tab') {
+          element.classList.remove(CLASS_NAME_SHOW$1);
+          return;
+        }
+        element.setAttribute('aria-selected', false);
+        element.setAttribute('tabindex', '-1');
+        this._toggleDropDown(element, false);
+        EventHandler.trigger(element, EVENT_HIDDEN$1, {
+          relatedTarget: relatedElem
+        });
+      };
+      this._queueCallback(complete, element, element.classList.contains(CLASS_NAME_FADE$1));
+    }
+    _keydown(event) {
+      if (![ARROW_LEFT_KEY, ARROW_RIGHT_KEY, ARROW_UP_KEY, ARROW_DOWN_KEY, HOME_KEY, END_KEY].includes(event.key)) {
+        return;
+      }
+      event.stopPropagation(); // stopPropagation/preventDefault both added to support up/down keys without scrolling the page
+      event.preventDefault();
+      const children = this._getChildren().filter(element => !isDisabled(element));
+      let nextActiveElement;
+      if ([HOME_KEY, END_KEY].includes(event.key)) {
+        nextActiveElement = children[event.key === HOME_KEY ? 0 : children.length - 1];
+      } else {
+        const isNext = [ARROW_RIGHT_KEY, ARROW_DOWN_KEY].includes(event.key);
+        nextActiveElement = getNextActiveElement(children, event.target, isNext, true);
+      }
+      if (nextActiveElement) {
+        nextActiveElement.focus({
+          preventScroll: true
+        });
+        Tab.getOrCreateInstance(nextActiveElement).show();
+      }
+    }
+    _getChildren() {
+      // collection of inner elements
+      return SelectorEngine.find(SELECTOR_INNER_ELEM, this._parent);
+    }
+    _getActiveElem() {
+      return this._getChildren().find(child => this._elemIsActive(child)) || null;
+    }
+    _setInitialAttributes(parent, children) {
+      this._setAttributeIfNotExists(parent, 'role', 'tablist');
+      for (const child of children) {
+        this._setInitialAttributesOnChild(child);
+      }
+    }
+    _setInitialAttributesOnChild(child) {
+      child = this._getInnerElement(child);
+      const isActive = this._elemIsActive(child);
+      const outerElem = this._getOuterElement(child);
+      child.setAttribute('aria-selected', isActive);
+      if (outerElem !== child) {
+        this._setAttributeIfNotExists(outerElem, 'role', 'presentation');
+      }
+      if (!isActive) {
+        child.setAttribute('tabindex', '-1');
+      }
+      this._setAttributeIfNotExists(child, 'role', 'tab');
+
+      // set attributes to the related panel too
+      this._setInitialAttributesOnTargetPanel(child);
+    }
+    _setInitialAttributesOnTargetPanel(child) {
+      const target = SelectorEngine.getElementFromSelector(child);
+      if (!target) {
+        return;
+      }
+      this._setAttributeIfNotExists(target, 'role', 'tabpanel');
+      if (child.id) {
+        this._setAttributeIfNotExists(target, 'aria-labelledby', `${child.id}`);
+      }
+    }
+    _toggleDropDown(element, open) {
+      const outerElem = this._getOuterElement(element);
+      if (!outerElem.classList.contains(CLASS_DROPDOWN)) {
+        return;
+      }
+      const toggle = (selector, className) => {
+        const element = SelectorEngine.findOne(selector, outerElem);
+        if (element) {
+          element.classList.toggle(className, open);
+        }
+      };
+      toggle(SELECTOR_DROPDOWN_TOGGLE, CLASS_NAME_ACTIVE);
+      toggle(SELECTOR_DROPDOWN_MENU, CLASS_NAME_SHOW$1);
+      outerElem.setAttribute('aria-expanded', open);
+    }
+    _setAttributeIfNotExists(element, attribute, value) {
+      if (!element.hasAttribute(attribute)) {
+        element.setAttribute(attribute, value);
+      }
+    }
+    _elemIsActive(elem) {
+      return elem.classList.contains(CLASS_NAME_ACTIVE);
+    }
+
+    // Try to get the inner element (usually the .nav-link)
+    _getInnerElement(elem) {
+      return elem.matches(SELECTOR_INNER_ELEM) ? elem : SelectorEngine.findOne(SELECTOR_INNER_ELEM, elem);
+    }
+
+    // Try to get the outer element (usually the .nav-item)
+    _getOuterElement(elem) {
+      return elem.closest(SELECTOR_OUTER) || elem;
+    }
+
+    // Static
+    static jQueryInterface(config) {
+      return this.each(function () {
+        const data = Tab.getOrCreateInstance(this);
+        if (typeof config !== 'string') {
+          return;
+        }
+        if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
+          throw new TypeError(`No method named "${config}"`);
+        }
+        data[config]();
+      });
+    }
+  }
+
+  /**
+   * Data API implementation
+   */
+
+  EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_TOGGLE, function (event) {
+    if (['A', 'AREA'].includes(this.tagName)) {
+      event.preventDefault();
+    }
+    if (isDisabled(this)) {
+      return;
+    }
+    Tab.getOrCreateInstance(this).show();
+  });
+
+  /**
+   * Initialize on focus
+   */
+  EventHandler.on(window, EVENT_LOAD_DATA_API, () => {
+    for (const element of SelectorEngine.find(SELECTOR_DATA_TOGGLE_ACTIVE)) {
+      Tab.getOrCreateInstance(element);
+    }
+  });
+  /**
+   * jQuery
+   */
+
+  defineJQueryPlugin(Tab);
 
   /**
    * --------------------------------------------------------------------------
@@ -8089,7 +4366,7 @@ window['globalThis'] = window['bootstrap'];
         this._maybeScheduleHide();
       };
       this._element.classList.remove(CLASS_NAME_HIDE); // @deprecated
-      index_js.reflow(this._element);
+      reflow(this._element);
       this._element.classList.add(CLASS_NAME_SHOW, CLASS_NAME_SHOWING);
       this._queueCallback(complete, this._element, this._config.animation);
     }
@@ -8186,2779 +4463,39 @@ window['globalThis'] = window['bootstrap'];
    * Data API implementation
    */
 
-  componentFunctions_js.enableDismissTrigger(Toast);
+  enableDismissTrigger(Toast);
 
   /**
    * jQuery
    */
 
-  index_js.defineJQueryPlugin(Toast);
-
-  return Toast;
-
-}));
-/*!
-  * Bootstrap button.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('./base-component.js'), require('./dom/event-handler.js'), require('./util/index.js')) :
-  typeof define === 'function' && define.amd ? define(['./base-component', './dom/event-handler', './util/index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Button = factory(global.BaseComponent, global.EventHandler, global.Index));
-})(this, (function (BaseComponent, EventHandler, index_js) { 'use strict';
+  defineJQueryPlugin(Toast);
 
   /**
    * --------------------------------------------------------------------------
-   * Bootstrap button.js
+   * Bootstrap index.umd.js
    * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
    * --------------------------------------------------------------------------
    */
 
+  const index_umd = {
+    Alert,
+    Button,
+    Carousel,
+    Collapse,
+    Dropdown,
+    Modal,
+    Offcanvas,
+    Popover,
+    ScrollSpy,
+    Tab,
+    Toast,
+    Tooltip
+  };
 
-  /**
-   * Constants
-   */
-
-  const NAME = 'button';
-  const DATA_KEY = 'bs.button';
-  const EVENT_KEY = `.${DATA_KEY}`;
-  const DATA_API_KEY = '.data-api';
-  const CLASS_NAME_ACTIVE = 'active';
-  const SELECTOR_DATA_TOGGLE = '[data-bs-toggle="button"]';
-  const EVENT_CLICK_DATA_API = `click${EVENT_KEY}${DATA_API_KEY}`;
-
-  /**
-   * Class definition
-   */
-
-  class Button extends BaseComponent {
-    // Getters
-    static get NAME() {
-      return NAME;
-    }
-
-    // Public
-    toggle() {
-      // Toggle class and sync the `aria-pressed` attribute with the return value of the `.toggle()` method
-      this._element.setAttribute('aria-pressed', this._element.classList.toggle(CLASS_NAME_ACTIVE));
-    }
-
-    // Static
-    static jQueryInterface(config) {
-      return this.each(function () {
-        const data = Button.getOrCreateInstance(this);
-        if (config === 'toggle') {
-          data[config]();
-        }
-      });
-    }
-  }
-
-  /**
-   * Data API implementation
-   */
-
-  EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_TOGGLE, event => {
-    event.preventDefault();
-    const button = event.target.closest(SELECTOR_DATA_TOGGLE);
-    const data = Button.getOrCreateInstance(button);
-    data.toggle();
-  });
-
-  /**
-   * jQuery
-   */
-
-  index_js.defineJQueryPlugin(Button);
-
-  return Button;
+  return index_umd;
 
 }));
-/*!
-  * Bootstrap collapse.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('./base-component.js'), require('./dom/event-handler.js'), require('./dom/selector-engine.js'), require('./util/index.js')) :
-  typeof define === 'function' && define.amd ? define(['./base-component', './dom/event-handler', './dom/selector-engine', './util/index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Collapse = factory(global.BaseComponent, global.EventHandler, global.SelectorEngine, global.Index));
-})(this, (function (BaseComponent, EventHandler, SelectorEngine, index_js) { 'use strict';
-
-  /**
-   * --------------------------------------------------------------------------
-   * Bootstrap collapse.js
-   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-   * --------------------------------------------------------------------------
-   */
-
-
-  /**
-   * Constants
-   */
-
-  const NAME = 'collapse';
-  const DATA_KEY = 'bs.collapse';
-  const EVENT_KEY = `.${DATA_KEY}`;
-  const DATA_API_KEY = '.data-api';
-  const EVENT_SHOW = `show${EVENT_KEY}`;
-  const EVENT_SHOWN = `shown${EVENT_KEY}`;
-  const EVENT_HIDE = `hide${EVENT_KEY}`;
-  const EVENT_HIDDEN = `hidden${EVENT_KEY}`;
-  const EVENT_CLICK_DATA_API = `click${EVENT_KEY}${DATA_API_KEY}`;
-  const CLASS_NAME_SHOW = 'show';
-  const CLASS_NAME_COLLAPSE = 'collapse';
-  const CLASS_NAME_COLLAPSING = 'collapsing';
-  const CLASS_NAME_COLLAPSED = 'collapsed';
-  const CLASS_NAME_DEEPER_CHILDREN = `:scope .${CLASS_NAME_COLLAPSE} .${CLASS_NAME_COLLAPSE}`;
-  const CLASS_NAME_HORIZONTAL = 'collapse-horizontal';
-  const WIDTH = 'width';
-  const HEIGHT = 'height';
-  const SELECTOR_ACTIVES = '.collapse.show, .collapse.collapsing';
-  const SELECTOR_DATA_TOGGLE = '[data-bs-toggle="collapse"]';
-  const Default = {
-    parent: null,
-    toggle: true
-  };
-  const DefaultType = {
-    parent: '(null|element)',
-    toggle: 'boolean'
-  };
-
-  /**
-   * Class definition
-   */
-
-  class Collapse extends BaseComponent {
-    constructor(element, config) {
-      super(element, config);
-      this._isTransitioning = false;
-      this._triggerArray = [];
-      const toggleList = SelectorEngine.find(SELECTOR_DATA_TOGGLE);
-      for (const elem of toggleList) {
-        const selector = SelectorEngine.getSelectorFromElement(elem);
-        const filterElement = SelectorEngine.find(selector).filter(foundElement => foundElement === this._element);
-        if (selector !== null && filterElement.length) {
-          this._triggerArray.push(elem);
-        }
-      }
-      this._initializeChildren();
-      if (!this._config.parent) {
-        this._addAriaAndCollapsedClass(this._triggerArray, this._isShown());
-      }
-      if (this._config.toggle) {
-        this.toggle();
-      }
-    }
-
-    // Getters
-    static get Default() {
-      return Default;
-    }
-    static get DefaultType() {
-      return DefaultType;
-    }
-    static get NAME() {
-      return NAME;
-    }
-
-    // Public
-    toggle() {
-      if (this._isShown()) {
-        this.hide();
-      } else {
-        this.show();
-      }
-    }
-    show() {
-      if (this._isTransitioning || this._isShown()) {
-        return;
-      }
-      let activeChildren = [];
-
-      // find active children
-      if (this._config.parent) {
-        activeChildren = this._getFirstLevelChildren(SELECTOR_ACTIVES).filter(element => element !== this._element).map(element => Collapse.getOrCreateInstance(element, {
-          toggle: false
-        }));
-      }
-      if (activeChildren.length && activeChildren[0]._isTransitioning) {
-        return;
-      }
-      const startEvent = EventHandler.trigger(this._element, EVENT_SHOW);
-      if (startEvent.defaultPrevented) {
-        return;
-      }
-      for (const activeInstance of activeChildren) {
-        activeInstance.hide();
-      }
-      const dimension = this._getDimension();
-      this._element.classList.remove(CLASS_NAME_COLLAPSE);
-      this._element.classList.add(CLASS_NAME_COLLAPSING);
-      this._element.style[dimension] = 0;
-      this._addAriaAndCollapsedClass(this._triggerArray, true);
-      this._isTransitioning = true;
-      const complete = () => {
-        this._isTransitioning = false;
-        this._element.classList.remove(CLASS_NAME_COLLAPSING);
-        this._element.classList.add(CLASS_NAME_COLLAPSE, CLASS_NAME_SHOW);
-        this._element.style[dimension] = '';
-        EventHandler.trigger(this._element, EVENT_SHOWN);
-      };
-      const capitalizedDimension = dimension[0].toUpperCase() + dimension.slice(1);
-      const scrollSize = `scroll${capitalizedDimension}`;
-      this._queueCallback(complete, this._element, true);
-      this._element.style[dimension] = `${this._element[scrollSize]}px`;
-    }
-    hide() {
-      if (this._isTransitioning || !this._isShown()) {
-        return;
-      }
-      const startEvent = EventHandler.trigger(this._element, EVENT_HIDE);
-      if (startEvent.defaultPrevented) {
-        return;
-      }
-      const dimension = this._getDimension();
-      this._element.style[dimension] = `${this._element.getBoundingClientRect()[dimension]}px`;
-      index_js.reflow(this._element);
-      this._element.classList.add(CLASS_NAME_COLLAPSING);
-      this._element.classList.remove(CLASS_NAME_COLLAPSE, CLASS_NAME_SHOW);
-      for (const trigger of this._triggerArray) {
-        const element = SelectorEngine.getElementFromSelector(trigger);
-        if (element && !this._isShown(element)) {
-          this._addAriaAndCollapsedClass([trigger], false);
-        }
-      }
-      this._isTransitioning = true;
-      const complete = () => {
-        this._isTransitioning = false;
-        this._element.classList.remove(CLASS_NAME_COLLAPSING);
-        this._element.classList.add(CLASS_NAME_COLLAPSE);
-        EventHandler.trigger(this._element, EVENT_HIDDEN);
-      };
-      this._element.style[dimension] = '';
-      this._queueCallback(complete, this._element, true);
-    }
-
-    // Private
-    _isShown(element = this._element) {
-      return element.classList.contains(CLASS_NAME_SHOW);
-    }
-    _configAfterMerge(config) {
-      config.toggle = Boolean(config.toggle); // Coerce string values
-      config.parent = index_js.getElement(config.parent);
-      return config;
-    }
-    _getDimension() {
-      return this._element.classList.contains(CLASS_NAME_HORIZONTAL) ? WIDTH : HEIGHT;
-    }
-    _initializeChildren() {
-      if (!this._config.parent) {
-        return;
-      }
-      const children = this._getFirstLevelChildren(SELECTOR_DATA_TOGGLE);
-      for (const element of children) {
-        const selected = SelectorEngine.getElementFromSelector(element);
-        if (selected) {
-          this._addAriaAndCollapsedClass([element], this._isShown(selected));
-        }
-      }
-    }
-    _getFirstLevelChildren(selector) {
-      const children = SelectorEngine.find(CLASS_NAME_DEEPER_CHILDREN, this._config.parent);
-      // remove children if greater depth
-      return SelectorEngine.find(selector, this._config.parent).filter(element => !children.includes(element));
-    }
-    _addAriaAndCollapsedClass(triggerArray, isOpen) {
-      if (!triggerArray.length) {
-        return;
-      }
-      for (const element of triggerArray) {
-        element.classList.toggle(CLASS_NAME_COLLAPSED, !isOpen);
-        element.setAttribute('aria-expanded', isOpen);
-      }
-    }
-
-    // Static
-    static jQueryInterface(config) {
-      const _config = {};
-      if (typeof config === 'string' && /show|hide/.test(config)) {
-        _config.toggle = false;
-      }
-      return this.each(function () {
-        const data = Collapse.getOrCreateInstance(this, _config);
-        if (typeof config === 'string') {
-          if (typeof data[config] === 'undefined') {
-            throw new TypeError(`No method named "${config}"`);
-          }
-          data[config]();
-        }
-      });
-    }
-  }
-
-  /**
-   * Data API implementation
-   */
-
-  EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_TOGGLE, function (event) {
-    // preventDefault only for <a> elements (which change the URL) not inside the collapsible element
-    if (event.target.tagName === 'A' || event.delegateTarget && event.delegateTarget.tagName === 'A') {
-      event.preventDefault();
-    }
-    for (const element of SelectorEngine.getMultipleElementsFromSelector(this)) {
-      Collapse.getOrCreateInstance(element, {
-        toggle: false
-      }).toggle();
-    }
-  });
-
-  /**
-   * jQuery
-   */
-
-  index_js.defineJQueryPlugin(Collapse);
-
-  return Collapse;
-
-}));
-/*!
-  * Bootstrap scrollbar.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('../dom/manipulator.js'), require('../dom/selector-engine.js'), require('./index.js')) :
-  typeof define === 'function' && define.amd ? define(['../dom/manipulator', '../dom/selector-engine', './index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Scrollbar = factory(global.Manipulator, global.SelectorEngine, global.Index));
-})(this, (function (Manipulator, SelectorEngine, index_js) { 'use strict';
-
-  /**
-   * --------------------------------------------------------------------------
-   * Bootstrap util/scrollBar.js
-   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-   * --------------------------------------------------------------------------
-   */
-
-
-  /**
-   * Constants
-   */
-
-  const SELECTOR_FIXED_CONTENT = '.fixed-top, .fixed-bottom, .is-fixed, .sticky-top';
-  const SELECTOR_STICKY_CONTENT = '.sticky-top';
-  const PROPERTY_PADDING = 'padding-right';
-  const PROPERTY_MARGIN = 'margin-right';
-
-  /**
-   * Class definition
-   */
-
-  class ScrollBarHelper {
-    constructor() {
-      this._element = document.body;
-    }
-
-    // Public
-    getWidth() {
-      // https://developer.mozilla.org/en-US/docs/Web/API/Window/innerWidth#usage_notes
-      const documentWidth = document.documentElement.clientWidth;
-      return Math.abs(window.innerWidth - documentWidth);
-    }
-    hide() {
-      const width = this.getWidth();
-      this._disableOverFlow();
-      // give padding to element to balance the hidden scrollbar width
-      this._setElementAttributes(this._element, PROPERTY_PADDING, calculatedValue => calculatedValue + width);
-      // trick: We adjust positive paddingRight and negative marginRight to sticky-top elements to keep showing fullwidth
-      this._setElementAttributes(SELECTOR_FIXED_CONTENT, PROPERTY_PADDING, calculatedValue => calculatedValue + width);
-      this._setElementAttributes(SELECTOR_STICKY_CONTENT, PROPERTY_MARGIN, calculatedValue => calculatedValue - width);
-    }
-    reset() {
-      this._resetElementAttributes(this._element, 'overflow');
-      this._resetElementAttributes(this._element, PROPERTY_PADDING);
-      this._resetElementAttributes(SELECTOR_FIXED_CONTENT, PROPERTY_PADDING);
-      this._resetElementAttributes(SELECTOR_STICKY_CONTENT, PROPERTY_MARGIN);
-    }
-    isOverflowing() {
-      return this.getWidth() > 0;
-    }
-
-    // Private
-    _disableOverFlow() {
-      this._saveInitialAttribute(this._element, 'overflow');
-      this._element.style.overflow = 'hidden';
-    }
-    _setElementAttributes(selector, styleProperty, callback) {
-      const scrollbarWidth = this.getWidth();
-      const manipulationCallBack = element => {
-        if (element !== this._element && window.innerWidth > element.clientWidth + scrollbarWidth) {
-          return;
-        }
-        this._saveInitialAttribute(element, styleProperty);
-        const calculatedValue = window.getComputedStyle(element).getPropertyValue(styleProperty);
-        element.style.setProperty(styleProperty, `${callback(Number.parseFloat(calculatedValue))}px`);
-      };
-      this._applyManipulationCallback(selector, manipulationCallBack);
-    }
-    _saveInitialAttribute(element, styleProperty) {
-      const actualValue = element.style.getPropertyValue(styleProperty);
-      if (actualValue) {
-        Manipulator.setDataAttribute(element, styleProperty, actualValue);
-      }
-    }
-    _resetElementAttributes(selector, styleProperty) {
-      const manipulationCallBack = element => {
-        const value = Manipulator.getDataAttribute(element, styleProperty);
-        // We only want to remove the property if the value is `null`; the value can also be zero
-        if (value === null) {
-          element.style.removeProperty(styleProperty);
-          return;
-        }
-        Manipulator.removeDataAttribute(element, styleProperty);
-        element.style.setProperty(styleProperty, value);
-      };
-      this._applyManipulationCallback(selector, manipulationCallBack);
-    }
-    _applyManipulationCallback(selector, callBack) {
-      if (index_js.isElement(selector)) {
-        callBack(selector);
-        return;
-      }
-      for (const sel of SelectorEngine.find(selector, this._element)) {
-        callBack(sel);
-      }
-    }
-  }
-
-  return ScrollBarHelper;
-
-}));
-/*!
-  * Bootstrap tab.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('./base-component.js'), require('./dom/event-handler.js'), require('./dom/selector-engine.js'), require('./util/index.js')) :
-  typeof define === 'function' && define.amd ? define(['./base-component', './dom/event-handler', './dom/selector-engine', './util/index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Tab = factory(global.BaseComponent, global.EventHandler, global.SelectorEngine, global.Index));
-})(this, (function (BaseComponent, EventHandler, SelectorEngine, index_js) { 'use strict';
-
-  /**
-   * --------------------------------------------------------------------------
-   * Bootstrap tab.js
-   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-   * --------------------------------------------------------------------------
-   */
-
-
-  /**
-   * Constants
-   */
-
-  const NAME = 'tab';
-  const DATA_KEY = 'bs.tab';
-  const EVENT_KEY = `.${DATA_KEY}`;
-  const EVENT_HIDE = `hide${EVENT_KEY}`;
-  const EVENT_HIDDEN = `hidden${EVENT_KEY}`;
-  const EVENT_SHOW = `show${EVENT_KEY}`;
-  const EVENT_SHOWN = `shown${EVENT_KEY}`;
-  const EVENT_CLICK_DATA_API = `click${EVENT_KEY}`;
-  const EVENT_KEYDOWN = `keydown${EVENT_KEY}`;
-  const EVENT_LOAD_DATA_API = `load${EVENT_KEY}`;
-  const ARROW_LEFT_KEY = 'ArrowLeft';
-  const ARROW_RIGHT_KEY = 'ArrowRight';
-  const ARROW_UP_KEY = 'ArrowUp';
-  const ARROW_DOWN_KEY = 'ArrowDown';
-  const HOME_KEY = 'Home';
-  const END_KEY = 'End';
-  const CLASS_NAME_ACTIVE = 'active';
-  const CLASS_NAME_FADE = 'fade';
-  const CLASS_NAME_SHOW = 'show';
-  const CLASS_DROPDOWN = 'dropdown';
-  const SELECTOR_DROPDOWN_TOGGLE = '.dropdown-toggle';
-  const SELECTOR_DROPDOWN_MENU = '.dropdown-menu';
-  const NOT_SELECTOR_DROPDOWN_TOGGLE = `:not(${SELECTOR_DROPDOWN_TOGGLE})`;
-  const SELECTOR_TAB_PANEL = '.list-group, .nav, [role="tablist"]';
-  const SELECTOR_OUTER = '.nav-item, .list-group-item';
-  const SELECTOR_INNER = `.nav-link${NOT_SELECTOR_DROPDOWN_TOGGLE}, .list-group-item${NOT_SELECTOR_DROPDOWN_TOGGLE}, [role="tab"]${NOT_SELECTOR_DROPDOWN_TOGGLE}`;
-  const SELECTOR_DATA_TOGGLE = '[data-bs-toggle="tab"], [data-bs-toggle="pill"], [data-bs-toggle="list"]'; // TODO: could only be `tab` in v6
-  const SELECTOR_INNER_ELEM = `${SELECTOR_INNER}, ${SELECTOR_DATA_TOGGLE}`;
-  const SELECTOR_DATA_TOGGLE_ACTIVE = `.${CLASS_NAME_ACTIVE}[data-bs-toggle="tab"], .${CLASS_NAME_ACTIVE}[data-bs-toggle="pill"], .${CLASS_NAME_ACTIVE}[data-bs-toggle="list"]`;
-
-  /**
-   * Class definition
-   */
-
-  class Tab extends BaseComponent {
-    constructor(element) {
-      super(element);
-      this._parent = this._element.closest(SELECTOR_TAB_PANEL);
-      if (!this._parent) {
-        return;
-        // TODO: should throw exception in v6
-        // throw new TypeError(`${element.outerHTML} has not a valid parent ${SELECTOR_INNER_ELEM}`)
-      }
-
-      // Set up initial aria attributes
-      this._setInitialAttributes(this._parent, this._getChildren());
-      EventHandler.on(this._element, EVENT_KEYDOWN, event => this._keydown(event));
-    }
-
-    // Getters
-    static get NAME() {
-      return NAME;
-    }
-
-    // Public
-    show() {
-      // Shows this elem and deactivate the active sibling if exists
-      const innerElem = this._element;
-      if (this._elemIsActive(innerElem)) {
-        return;
-      }
-
-      // Search for active tab on same parent to deactivate it
-      const active = this._getActiveElem();
-      const hideEvent = active ? EventHandler.trigger(active, EVENT_HIDE, {
-        relatedTarget: innerElem
-      }) : null;
-      const showEvent = EventHandler.trigger(innerElem, EVENT_SHOW, {
-        relatedTarget: active
-      });
-      if (showEvent.defaultPrevented || hideEvent && hideEvent.defaultPrevented) {
-        return;
-      }
-      this._deactivate(active, innerElem);
-      this._activate(innerElem, active);
-    }
-
-    // Private
-    _activate(element, relatedElem) {
-      if (!element) {
-        return;
-      }
-      element.classList.add(CLASS_NAME_ACTIVE);
-      this._activate(SelectorEngine.getElementFromSelector(element)); // Search and activate/show the proper section
-
-      const complete = () => {
-        if (element.getAttribute('role') !== 'tab') {
-          element.classList.add(CLASS_NAME_SHOW);
-          return;
-        }
-        element.removeAttribute('tabindex');
-        element.setAttribute('aria-selected', true);
-        this._toggleDropDown(element, true);
-        EventHandler.trigger(element, EVENT_SHOWN, {
-          relatedTarget: relatedElem
-        });
-      };
-      this._queueCallback(complete, element, element.classList.contains(CLASS_NAME_FADE));
-    }
-    _deactivate(element, relatedElem) {
-      if (!element) {
-        return;
-      }
-      element.classList.remove(CLASS_NAME_ACTIVE);
-      element.blur();
-      this._deactivate(SelectorEngine.getElementFromSelector(element)); // Search and deactivate the shown section too
-
-      const complete = () => {
-        if (element.getAttribute('role') !== 'tab') {
-          element.classList.remove(CLASS_NAME_SHOW);
-          return;
-        }
-        element.setAttribute('aria-selected', false);
-        element.setAttribute('tabindex', '-1');
-        this._toggleDropDown(element, false);
-        EventHandler.trigger(element, EVENT_HIDDEN, {
-          relatedTarget: relatedElem
-        });
-      };
-      this._queueCallback(complete, element, element.classList.contains(CLASS_NAME_FADE));
-    }
-    _keydown(event) {
-      if (![ARROW_LEFT_KEY, ARROW_RIGHT_KEY, ARROW_UP_KEY, ARROW_DOWN_KEY, HOME_KEY, END_KEY].includes(event.key)) {
-        return;
-      }
-      event.stopPropagation(); // stopPropagation/preventDefault both added to support up/down keys without scrolling the page
-      event.preventDefault();
-      const children = this._getChildren().filter(element => !index_js.isDisabled(element));
-      let nextActiveElement;
-      if ([HOME_KEY, END_KEY].includes(event.key)) {
-        nextActiveElement = children[event.key === HOME_KEY ? 0 : children.length - 1];
-      } else {
-        const isNext = [ARROW_RIGHT_KEY, ARROW_DOWN_KEY].includes(event.key);
-        nextActiveElement = index_js.getNextActiveElement(children, event.target, isNext, true);
-      }
-      if (nextActiveElement) {
-        nextActiveElement.focus({
-          preventScroll: true
-        });
-        Tab.getOrCreateInstance(nextActiveElement).show();
-      }
-    }
-    _getChildren() {
-      // collection of inner elements
-      return SelectorEngine.find(SELECTOR_INNER_ELEM, this._parent);
-    }
-    _getActiveElem() {
-      return this._getChildren().find(child => this._elemIsActive(child)) || null;
-    }
-    _setInitialAttributes(parent, children) {
-      this._setAttributeIfNotExists(parent, 'role', 'tablist');
-      for (const child of children) {
-        this._setInitialAttributesOnChild(child);
-      }
-    }
-    _setInitialAttributesOnChild(child) {
-      child = this._getInnerElement(child);
-      const isActive = this._elemIsActive(child);
-      const outerElem = this._getOuterElement(child);
-      child.setAttribute('aria-selected', isActive);
-      if (outerElem !== child) {
-        this._setAttributeIfNotExists(outerElem, 'role', 'presentation');
-      }
-      if (!isActive) {
-        child.setAttribute('tabindex', '-1');
-      }
-      this._setAttributeIfNotExists(child, 'role', 'tab');
-
-      // set attributes to the related panel too
-      this._setInitialAttributesOnTargetPanel(child);
-    }
-    _setInitialAttributesOnTargetPanel(child) {
-      const target = SelectorEngine.getElementFromSelector(child);
-      if (!target) {
-        return;
-      }
-      this._setAttributeIfNotExists(target, 'role', 'tabpanel');
-      if (child.id) {
-        this._setAttributeIfNotExists(target, 'aria-labelledby', `${child.id}`);
-      }
-    }
-    _toggleDropDown(element, open) {
-      const outerElem = this._getOuterElement(element);
-      if (!outerElem.classList.contains(CLASS_DROPDOWN)) {
-        return;
-      }
-      const toggle = (selector, className) => {
-        const element = SelectorEngine.findOne(selector, outerElem);
-        if (element) {
-          element.classList.toggle(className, open);
-        }
-      };
-      toggle(SELECTOR_DROPDOWN_TOGGLE, CLASS_NAME_ACTIVE);
-      toggle(SELECTOR_DROPDOWN_MENU, CLASS_NAME_SHOW);
-      outerElem.setAttribute('aria-expanded', open);
-    }
-    _setAttributeIfNotExists(element, attribute, value) {
-      if (!element.hasAttribute(attribute)) {
-        element.setAttribute(attribute, value);
-      }
-    }
-    _elemIsActive(elem) {
-      return elem.classList.contains(CLASS_NAME_ACTIVE);
-    }
-
-    // Try to get the inner element (usually the .nav-link)
-    _getInnerElement(elem) {
-      return elem.matches(SELECTOR_INNER_ELEM) ? elem : SelectorEngine.findOne(SELECTOR_INNER_ELEM, elem);
-    }
-
-    // Try to get the outer element (usually the .nav-item)
-    _getOuterElement(elem) {
-      return elem.closest(SELECTOR_OUTER) || elem;
-    }
-
-    // Static
-    static jQueryInterface(config) {
-      return this.each(function () {
-        const data = Tab.getOrCreateInstance(this);
-        if (typeof config !== 'string') {
-          return;
-        }
-        if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
-          throw new TypeError(`No method named "${config}"`);
-        }
-        data[config]();
-      });
-    }
-  }
-
-  /**
-   * Data API implementation
-   */
-
-  EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_TOGGLE, function (event) {
-    if (['A', 'AREA'].includes(this.tagName)) {
-      event.preventDefault();
-    }
-    if (index_js.isDisabled(this)) {
-      return;
-    }
-    Tab.getOrCreateInstance(this).show();
-  });
-
-  /**
-   * Initialize on focus
-   */
-  EventHandler.on(window, EVENT_LOAD_DATA_API, () => {
-    for (const element of SelectorEngine.find(SELECTOR_DATA_TOGGLE_ACTIVE)) {
-      Tab.getOrCreateInstance(element);
-    }
-  });
-  /**
-   * jQuery
-   */
-
-  index_js.defineJQueryPlugin(Tab);
-
-  return Tab;
-
-}));
-/*!
-  * Bootstrap focustrap.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('../dom/event-handler.js'), require('../dom/selector-engine.js'), require('./config.js')) :
-  typeof define === 'function' && define.amd ? define(['../dom/event-handler', '../dom/selector-engine', './config'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Focustrap = factory(global.EventHandler, global.SelectorEngine, global.Config));
-})(this, (function (EventHandler, SelectorEngine, Config) { 'use strict';
-
-  /**
-   * --------------------------------------------------------------------------
-   * Bootstrap util/focustrap.js
-   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-   * --------------------------------------------------------------------------
-   */
-
-
-  /**
-   * Constants
-   */
-
-  const NAME = 'focustrap';
-  const DATA_KEY = 'bs.focustrap';
-  const EVENT_KEY = `.${DATA_KEY}`;
-  const EVENT_FOCUSIN = `focusin${EVENT_KEY}`;
-  const EVENT_KEYDOWN_TAB = `keydown.tab${EVENT_KEY}`;
-  const TAB_KEY = 'Tab';
-  const TAB_NAV_FORWARD = 'forward';
-  const TAB_NAV_BACKWARD = 'backward';
-  const Default = {
-    autofocus: true,
-    trapElement: null // The element to trap focus inside of
-  };
-  const DefaultType = {
-    autofocus: 'boolean',
-    trapElement: 'element'
-  };
-
-  /**
-   * Class definition
-   */
-
-  class FocusTrap extends Config {
-    constructor(config) {
-      super();
-      this._config = this._getConfig(config);
-      this._isActive = false;
-      this._lastTabNavDirection = null;
-    }
-
-    // Getters
-    static get Default() {
-      return Default;
-    }
-    static get DefaultType() {
-      return DefaultType;
-    }
-    static get NAME() {
-      return NAME;
-    }
-
-    // Public
-    activate() {
-      if (this._isActive) {
-        return;
-      }
-      if (this._config.autofocus) {
-        this._config.trapElement.focus();
-      }
-      EventHandler.off(document, EVENT_KEY); // guard against infinite focus loop
-      EventHandler.on(document, EVENT_FOCUSIN, event => this._handleFocusin(event));
-      EventHandler.on(document, EVENT_KEYDOWN_TAB, event => this._handleKeydown(event));
-      this._isActive = true;
-    }
-    deactivate() {
-      if (!this._isActive) {
-        return;
-      }
-      this._isActive = false;
-      EventHandler.off(document, EVENT_KEY);
-    }
-
-    // Private
-    _handleFocusin(event) {
-      const {
-        trapElement
-      } = this._config;
-      if (event.target === document || event.target === trapElement || trapElement.contains(event.target)) {
-        return;
-      }
-      const elements = SelectorEngine.focusableChildren(trapElement);
-      if (elements.length === 0) {
-        trapElement.focus();
-      } else if (this._lastTabNavDirection === TAB_NAV_BACKWARD) {
-        elements[elements.length - 1].focus();
-      } else {
-        elements[0].focus();
-      }
-    }
-    _handleKeydown(event) {
-      if (event.key !== TAB_KEY) {
-        return;
-      }
-      this._lastTabNavDirection = event.shiftKey ? TAB_NAV_BACKWARD : TAB_NAV_FORWARD;
-    }
-  }
-
-  return FocusTrap;
-
-}));
-/*!
-  * Bootstrap backdrop.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('../dom/event-handler.js'), require('./config.js'), require('./index.js')) :
-  typeof define === 'function' && define.amd ? define(['../dom/event-handler', './config', './index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Backdrop = factory(global.EventHandler, global.Config, global.Index));
-})(this, (function (EventHandler, Config, index_js) { 'use strict';
-
-  /**
-   * --------------------------------------------------------------------------
-   * Bootstrap util/backdrop.js
-   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-   * --------------------------------------------------------------------------
-   */
-
-
-  /**
-   * Constants
-   */
-
-  const NAME = 'backdrop';
-  const CLASS_NAME_FADE = 'fade';
-  const CLASS_NAME_SHOW = 'show';
-  const EVENT_MOUSEDOWN = `mousedown.bs.${NAME}`;
-  const Default = {
-    className: 'modal-backdrop',
-    clickCallback: null,
-    isAnimated: false,
-    isVisible: true,
-    // if false, we use the backdrop helper without adding any element to the dom
-    rootElement: 'body' // give the choice to place backdrop under different elements
-  };
-  const DefaultType = {
-    className: 'string',
-    clickCallback: '(function|null)',
-    isAnimated: 'boolean',
-    isVisible: 'boolean',
-    rootElement: '(element|string)'
-  };
-
-  /**
-   * Class definition
-   */
-
-  class Backdrop extends Config {
-    constructor(config) {
-      super();
-      this._config = this._getConfig(config);
-      this._isAppended = false;
-      this._element = null;
-    }
-
-    // Getters
-    static get Default() {
-      return Default;
-    }
-    static get DefaultType() {
-      return DefaultType;
-    }
-    static get NAME() {
-      return NAME;
-    }
-
-    // Public
-    show(callback) {
-      if (!this._config.isVisible) {
-        index_js.execute(callback);
-        return;
-      }
-      this._append();
-      const element = this._getElement();
-      if (this._config.isAnimated) {
-        index_js.reflow(element);
-      }
-      element.classList.add(CLASS_NAME_SHOW);
-      this._emulateAnimation(() => {
-        index_js.execute(callback);
-      });
-    }
-    hide(callback) {
-      if (!this._config.isVisible) {
-        index_js.execute(callback);
-        return;
-      }
-      this._getElement().classList.remove(CLASS_NAME_SHOW);
-      this._emulateAnimation(() => {
-        this.dispose();
-        index_js.execute(callback);
-      });
-    }
-    dispose() {
-      if (!this._isAppended) {
-        return;
-      }
-      EventHandler.off(this._element, EVENT_MOUSEDOWN);
-      this._element.remove();
-      this._isAppended = false;
-    }
-
-    // Private
-    _getElement() {
-      if (!this._element) {
-        const backdrop = document.createElement('div');
-        backdrop.className = this._config.className;
-        if (this._config.isAnimated) {
-          backdrop.classList.add(CLASS_NAME_FADE);
-        }
-        this._element = backdrop;
-      }
-      return this._element;
-    }
-    _configAfterMerge(config) {
-      // use getElement() with the default "body" to get a fresh Element on each instantiation
-      config.rootElement = index_js.getElement(config.rootElement);
-      return config;
-    }
-    _append() {
-      if (this._isAppended) {
-        return;
-      }
-      const element = this._getElement();
-      this._config.rootElement.append(element);
-      EventHandler.on(element, EVENT_MOUSEDOWN, () => {
-        index_js.execute(this._config.clickCallback);
-      });
-      this._isAppended = true;
-    }
-    _emulateAnimation(callback) {
-      index_js.executeAfterTransition(callback, this._getElement(), this._config.isAnimated);
-    }
-  }
-
-  return Backdrop;
-
-}));
-/*!
-  * Bootstrap scrollspy.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('./base-component.js'), require('./dom/event-handler.js'), require('./dom/selector-engine.js'), require('./util/index.js')) :
-  typeof define === 'function' && define.amd ? define(['./base-component', './dom/event-handler', './dom/selector-engine', './util/index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Scrollspy = factory(global.BaseComponent, global.EventHandler, global.SelectorEngine, global.Index));
-})(this, (function (BaseComponent, EventHandler, SelectorEngine, index_js) { 'use strict';
-
-  /**
-   * --------------------------------------------------------------------------
-   * Bootstrap scrollspy.js
-   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-   * --------------------------------------------------------------------------
-   */
-
-
-  /**
-   * Constants
-   */
-
-  const NAME = 'scrollspy';
-  const DATA_KEY = 'bs.scrollspy';
-  const EVENT_KEY = `.${DATA_KEY}`;
-  const DATA_API_KEY = '.data-api';
-  const EVENT_ACTIVATE = `activate${EVENT_KEY}`;
-  const EVENT_CLICK = `click${EVENT_KEY}`;
-  const EVENT_LOAD_DATA_API = `load${EVENT_KEY}${DATA_API_KEY}`;
-  const CLASS_NAME_DROPDOWN_ITEM = 'dropdown-item';
-  const CLASS_NAME_ACTIVE = 'active';
-  const SELECTOR_DATA_SPY = '[data-bs-spy="scroll"]';
-  const SELECTOR_TARGET_LINKS = '[href]';
-  const SELECTOR_NAV_LIST_GROUP = '.nav, .list-group';
-  const SELECTOR_NAV_LINKS = '.nav-link';
-  const SELECTOR_NAV_ITEMS = '.nav-item';
-  const SELECTOR_LIST_ITEMS = '.list-group-item';
-  const SELECTOR_LINK_ITEMS = `${SELECTOR_NAV_LINKS}, ${SELECTOR_NAV_ITEMS} > ${SELECTOR_NAV_LINKS}, ${SELECTOR_LIST_ITEMS}`;
-  const SELECTOR_DROPDOWN = '.dropdown';
-  const SELECTOR_DROPDOWN_TOGGLE = '.dropdown-toggle';
-  const Default = {
-    offset: null,
-    // TODO: v6 @deprecated, keep it for backwards compatibility reasons
-    rootMargin: '0px 0px -25%',
-    smoothScroll: false,
-    target: null,
-    threshold: [0.1, 0.5, 1]
-  };
-  const DefaultType = {
-    offset: '(number|null)',
-    // TODO v6 @deprecated, keep it for backwards compatibility reasons
-    rootMargin: 'string',
-    smoothScroll: 'boolean',
-    target: 'element',
-    threshold: 'array'
-  };
-
-  /**
-   * Class definition
-   */
-
-  class ScrollSpy extends BaseComponent {
-    constructor(element, config) {
-      super(element, config);
-
-      // this._element is the observablesContainer and config.target the menu links wrapper
-      this._targetLinks = new Map();
-      this._observableSections = new Map();
-      this._rootElement = getComputedStyle(this._element).overflowY === 'visible' ? null : this._element;
-      this._activeTarget = null;
-      this._observer = null;
-      this._previousScrollData = {
-        visibleEntryTop: 0,
-        parentScrollTop: 0
-      };
-      this.refresh(); // initialize
-    }
-
-    // Getters
-    static get Default() {
-      return Default;
-    }
-    static get DefaultType() {
-      return DefaultType;
-    }
-    static get NAME() {
-      return NAME;
-    }
-
-    // Public
-    refresh() {
-      this._initializeTargetsAndObservables();
-      this._maybeEnableSmoothScroll();
-      if (this._observer) {
-        this._observer.disconnect();
-      } else {
-        this._observer = this._getNewObserver();
-      }
-      for (const section of this._observableSections.values()) {
-        this._observer.observe(section);
-      }
-    }
-    dispose() {
-      this._observer.disconnect();
-      super.dispose();
-    }
-
-    // Private
-    _configAfterMerge(config) {
-      // TODO: on v6 target should be given explicitly & remove the {target: 'ss-target'} case
-      config.target = index_js.getElement(config.target) || document.body;
-
-      // TODO: v6 Only for backwards compatibility reasons. Use rootMargin only
-      config.rootMargin = config.offset ? `${config.offset}px 0px -30%` : config.rootMargin;
-      if (typeof config.threshold === 'string') {
-        config.threshold = config.threshold.split(',').map(value => Number.parseFloat(value));
-      }
-      return config;
-    }
-    _maybeEnableSmoothScroll() {
-      if (!this._config.smoothScroll) {
-        return;
-      }
-
-      // unregister any previous listeners
-      EventHandler.off(this._config.target, EVENT_CLICK);
-      EventHandler.on(this._config.target, EVENT_CLICK, SELECTOR_TARGET_LINKS, event => {
-        const observableSection = this._observableSections.get(event.target.hash);
-        if (observableSection) {
-          event.preventDefault();
-          const root = this._rootElement || window;
-          const height = observableSection.offsetTop - this._element.offsetTop;
-          if (root.scrollTo) {
-            root.scrollTo({
-              top: height,
-              behavior: 'smooth'
-            });
-            return;
-          }
-
-          // Chrome 60 doesn't support `scrollTo`
-          root.scrollTop = height;
-        }
-      });
-    }
-    _getNewObserver() {
-      const options = {
-        root: this._rootElement,
-        threshold: this._config.threshold,
-        rootMargin: this._config.rootMargin
-      };
-      return new IntersectionObserver(entries => this._observerCallback(entries), options);
-    }
-
-    // The logic of selection
-    _observerCallback(entries) {
-      const targetElement = entry => this._targetLinks.get(`#${entry.target.id}`);
-      const activate = entry => {
-        this._previousScrollData.visibleEntryTop = entry.target.offsetTop;
-        this._process(targetElement(entry));
-      };
-      const parentScrollTop = (this._rootElement || document.documentElement).scrollTop;
-      const userScrollsDown = parentScrollTop >= this._previousScrollData.parentScrollTop;
-      this._previousScrollData.parentScrollTop = parentScrollTop;
-      for (const entry of entries) {
-        if (!entry.isIntersecting) {
-          this._activeTarget = null;
-          this._clearActiveClass(targetElement(entry));
-          continue;
-        }
-        const entryIsLowerThanPrevious = entry.target.offsetTop >= this._previousScrollData.visibleEntryTop;
-        // if we are scrolling down, pick the bigger offsetTop
-        if (userScrollsDown && entryIsLowerThanPrevious) {
-          activate(entry);
-          // if parent isn't scrolled, let's keep the first visible item, breaking the iteration
-          if (!parentScrollTop) {
-            return;
-          }
-          continue;
-        }
-
-        // if we are scrolling up, pick the smallest offsetTop
-        if (!userScrollsDown && !entryIsLowerThanPrevious) {
-          activate(entry);
-        }
-      }
-    }
-    _initializeTargetsAndObservables() {
-      this._targetLinks = new Map();
-      this._observableSections = new Map();
-      const targetLinks = SelectorEngine.find(SELECTOR_TARGET_LINKS, this._config.target);
-      for (const anchor of targetLinks) {
-        // ensure that the anchor has an id and is not disabled
-        if (!anchor.hash || index_js.isDisabled(anchor)) {
-          continue;
-        }
-        const observableSection = SelectorEngine.findOne(decodeURI(anchor.hash), this._element);
-
-        // ensure that the observableSection exists & is visible
-        if (index_js.isVisible(observableSection)) {
-          this._targetLinks.set(decodeURI(anchor.hash), anchor);
-          this._observableSections.set(anchor.hash, observableSection);
-        }
-      }
-    }
-    _process(target) {
-      if (this._activeTarget === target) {
-        return;
-      }
-      this._clearActiveClass(this._config.target);
-      this._activeTarget = target;
-      target.classList.add(CLASS_NAME_ACTIVE);
-      this._activateParents(target);
-      EventHandler.trigger(this._element, EVENT_ACTIVATE, {
-        relatedTarget: target
-      });
-    }
-    _activateParents(target) {
-      // Activate dropdown parents
-      if (target.classList.contains(CLASS_NAME_DROPDOWN_ITEM)) {
-        SelectorEngine.findOne(SELECTOR_DROPDOWN_TOGGLE, target.closest(SELECTOR_DROPDOWN)).classList.add(CLASS_NAME_ACTIVE);
-        return;
-      }
-      for (const listGroup of SelectorEngine.parents(target, SELECTOR_NAV_LIST_GROUP)) {
-        // Set triggered links parents as active
-        // With both <ul> and <nav> markup a parent is the previous sibling of any nav ancestor
-        for (const item of SelectorEngine.prev(listGroup, SELECTOR_LINK_ITEMS)) {
-          item.classList.add(CLASS_NAME_ACTIVE);
-        }
-      }
-    }
-    _clearActiveClass(parent) {
-      parent.classList.remove(CLASS_NAME_ACTIVE);
-      const activeNodes = SelectorEngine.find(`${SELECTOR_TARGET_LINKS}.${CLASS_NAME_ACTIVE}`, parent);
-      for (const node of activeNodes) {
-        node.classList.remove(CLASS_NAME_ACTIVE);
-      }
-    }
-
-    // Static
-    static jQueryInterface(config) {
-      return this.each(function () {
-        const data = ScrollSpy.getOrCreateInstance(this, config);
-        if (typeof config !== 'string') {
-          return;
-        }
-        if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
-          throw new TypeError(`No method named "${config}"`);
-        }
-        data[config]();
-      });
-    }
-  }
-
-  /**
-   * Data API implementation
-   */
-
-  EventHandler.on(window, EVENT_LOAD_DATA_API, () => {
-    for (const spy of SelectorEngine.find(SELECTOR_DATA_SPY)) {
-      ScrollSpy.getOrCreateInstance(spy);
-    }
-  });
-
-  /**
-   * jQuery
-   */
-
-  index_js.defineJQueryPlugin(ScrollSpy);
-
-  return ScrollSpy;
-
-}));
-/*!
-  * Bootstrap modal.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('./base-component.js'), require('./dom/event-handler.js'), require('./dom/selector-engine.js'), require('./util/backdrop.js'), require('./util/component-functions.js'), require('./util/focustrap.js'), require('./util/index.js'), require('./util/scrollbar.js')) :
-  typeof define === 'function' && define.amd ? define(['./base-component', './dom/event-handler', './dom/selector-engine', './util/backdrop', './util/component-functions', './util/focustrap', './util/index', './util/scrollbar'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Modal = factory(global.BaseComponent, global.EventHandler, global.SelectorEngine, global.Backdrop, global.ComponentFunctions, global.Focustrap, global.Index, global.Scrollbar));
-})(this, (function (BaseComponent, EventHandler, SelectorEngine, Backdrop, componentFunctions_js, FocusTrap, index_js, ScrollBarHelper) { 'use strict';
-
-  /**
-   * --------------------------------------------------------------------------
-   * Bootstrap modal.js
-   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-   * --------------------------------------------------------------------------
-   */
-
-
-  /**
-   * Constants
-   */
-
-  const NAME = 'modal';
-  const DATA_KEY = 'bs.modal';
-  const EVENT_KEY = `.${DATA_KEY}`;
-  const DATA_API_KEY = '.data-api';
-  const ESCAPE_KEY = 'Escape';
-  const EVENT_HIDE = `hide${EVENT_KEY}`;
-  const EVENT_HIDE_PREVENTED = `hidePrevented${EVENT_KEY}`;
-  const EVENT_HIDDEN = `hidden${EVENT_KEY}`;
-  const EVENT_SHOW = `show${EVENT_KEY}`;
-  const EVENT_SHOWN = `shown${EVENT_KEY}`;
-  const EVENT_RESIZE = `resize${EVENT_KEY}`;
-  const EVENT_CLICK_DISMISS = `click.dismiss${EVENT_KEY}`;
-  const EVENT_MOUSEDOWN_DISMISS = `mousedown.dismiss${EVENT_KEY}`;
-  const EVENT_KEYDOWN_DISMISS = `keydown.dismiss${EVENT_KEY}`;
-  const EVENT_CLICK_DATA_API = `click${EVENT_KEY}${DATA_API_KEY}`;
-  const CLASS_NAME_OPEN = 'modal-open';
-  const CLASS_NAME_FADE = 'fade';
-  const CLASS_NAME_SHOW = 'show';
-  const CLASS_NAME_STATIC = 'modal-static';
-  const OPEN_SELECTOR = '.modal.show';
-  const SELECTOR_DIALOG = '.modal-dialog';
-  const SELECTOR_MODAL_BODY = '.modal-body';
-  const SELECTOR_DATA_TOGGLE = '[data-bs-toggle="modal"]';
-  const Default = {
-    backdrop: true,
-    focus: true,
-    keyboard: true
-  };
-  const DefaultType = {
-    backdrop: '(boolean|string)',
-    focus: 'boolean',
-    keyboard: 'boolean'
-  };
-
-  /**
-   * Class definition
-   */
-
-  class Modal extends BaseComponent {
-    constructor(element, config) {
-      super(element, config);
-      this._dialog = SelectorEngine.findOne(SELECTOR_DIALOG, this._element);
-      this._backdrop = this._initializeBackDrop();
-      this._focustrap = this._initializeFocusTrap();
-      this._isShown = false;
-      this._isTransitioning = false;
-      this._scrollBar = new ScrollBarHelper();
-      this._addEventListeners();
-    }
-
-    // Getters
-    static get Default() {
-      return Default;
-    }
-    static get DefaultType() {
-      return DefaultType;
-    }
-    static get NAME() {
-      return NAME;
-    }
-
-    // Public
-    toggle(relatedTarget) {
-      return this._isShown ? this.hide() : this.show(relatedTarget);
-    }
-    show(relatedTarget) {
-      if (this._isShown || this._isTransitioning) {
-        return;
-      }
-      const showEvent = EventHandler.trigger(this._element, EVENT_SHOW, {
-        relatedTarget
-      });
-      if (showEvent.defaultPrevented) {
-        return;
-      }
-      this._isShown = true;
-      this._isTransitioning = true;
-      this._scrollBar.hide();
-      document.body.classList.add(CLASS_NAME_OPEN);
-      this._adjustDialog();
-      this._backdrop.show(() => this._showElement(relatedTarget));
-    }
-    hide() {
-      if (!this._isShown || this._isTransitioning) {
-        return;
-      }
-      const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE);
-      if (hideEvent.defaultPrevented) {
-        return;
-      }
-      this._isShown = false;
-      this._isTransitioning = true;
-      this._focustrap.deactivate();
-      this._element.classList.remove(CLASS_NAME_SHOW);
-      this._queueCallback(() => this._hideModal(), this._element, this._isAnimated());
-    }
-    dispose() {
-      EventHandler.off(window, EVENT_KEY);
-      EventHandler.off(this._dialog, EVENT_KEY);
-      this._backdrop.dispose();
-      this._focustrap.deactivate();
-      super.dispose();
-    }
-    handleUpdate() {
-      this._adjustDialog();
-    }
-
-    // Private
-    _initializeBackDrop() {
-      return new Backdrop({
-        isVisible: Boolean(this._config.backdrop),
-        // 'static' option will be translated to true, and booleans will keep their value,
-        isAnimated: this._isAnimated()
-      });
-    }
-    _initializeFocusTrap() {
-      return new FocusTrap({
-        trapElement: this._element
-      });
-    }
-    _showElement(relatedTarget) {
-      // try to append dynamic modal
-      if (!document.body.contains(this._element)) {
-        document.body.append(this._element);
-      }
-      this._element.style.display = 'block';
-      this._element.removeAttribute('aria-hidden');
-      this._element.setAttribute('aria-modal', true);
-      this._element.setAttribute('role', 'dialog');
-      this._element.scrollTop = 0;
-      const modalBody = SelectorEngine.findOne(SELECTOR_MODAL_BODY, this._dialog);
-      if (modalBody) {
-        modalBody.scrollTop = 0;
-      }
-      index_js.reflow(this._element);
-      this._element.classList.add(CLASS_NAME_SHOW);
-      const transitionComplete = () => {
-        if (this._config.focus) {
-          this._focustrap.activate();
-        }
-        this._isTransitioning = false;
-        EventHandler.trigger(this._element, EVENT_SHOWN, {
-          relatedTarget
-        });
-      };
-      this._queueCallback(transitionComplete, this._dialog, this._isAnimated());
-    }
-    _addEventListeners() {
-      EventHandler.on(this._element, EVENT_KEYDOWN_DISMISS, event => {
-        if (event.key !== ESCAPE_KEY) {
-          return;
-        }
-        if (this._config.keyboard) {
-          this.hide();
-          return;
-        }
-        this._triggerBackdropTransition();
-      });
-      EventHandler.on(window, EVENT_RESIZE, () => {
-        if (this._isShown && !this._isTransitioning) {
-          this._adjustDialog();
-        }
-      });
-      EventHandler.on(this._element, EVENT_MOUSEDOWN_DISMISS, event => {
-        // a bad trick to segregate clicks that may start inside dialog but end outside, and avoid listen to scrollbar clicks
-        EventHandler.one(this._element, EVENT_CLICK_DISMISS, event2 => {
-          if (this._element !== event.target || this._element !== event2.target) {
-            return;
-          }
-          if (this._config.backdrop === 'static') {
-            this._triggerBackdropTransition();
-            return;
-          }
-          if (this._config.backdrop) {
-            this.hide();
-          }
-        });
-      });
-    }
-    _hideModal() {
-      this._element.style.display = 'none';
-      this._element.setAttribute('aria-hidden', true);
-      this._element.removeAttribute('aria-modal');
-      this._element.removeAttribute('role');
-      this._isTransitioning = false;
-      this._backdrop.hide(() => {
-        document.body.classList.remove(CLASS_NAME_OPEN);
-        this._resetAdjustments();
-        this._scrollBar.reset();
-        EventHandler.trigger(this._element, EVENT_HIDDEN);
-      });
-    }
-    _isAnimated() {
-      return this._element.classList.contains(CLASS_NAME_FADE);
-    }
-    _triggerBackdropTransition() {
-      const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE_PREVENTED);
-      if (hideEvent.defaultPrevented) {
-        return;
-      }
-      const isModalOverflowing = this._element.scrollHeight > document.documentElement.clientHeight;
-      const initialOverflowY = this._element.style.overflowY;
-      // return if the following background transition hasn't yet completed
-      if (initialOverflowY === 'hidden' || this._element.classList.contains(CLASS_NAME_STATIC)) {
-        return;
-      }
-      if (!isModalOverflowing) {
-        this._element.style.overflowY = 'hidden';
-      }
-      this._element.classList.add(CLASS_NAME_STATIC);
-      this._queueCallback(() => {
-        this._element.classList.remove(CLASS_NAME_STATIC);
-        this._queueCallback(() => {
-          this._element.style.overflowY = initialOverflowY;
-        }, this._dialog);
-      }, this._dialog);
-      this._element.focus();
-    }
-
-    /**
-     * The following methods are used to handle overflowing modals
-     */
-
-    _adjustDialog() {
-      const isModalOverflowing = this._element.scrollHeight > document.documentElement.clientHeight;
-      const scrollbarWidth = this._scrollBar.getWidth();
-      const isBodyOverflowing = scrollbarWidth > 0;
-      if (isBodyOverflowing && !isModalOverflowing) {
-        const property = index_js.isRTL() ? 'paddingLeft' : 'paddingRight';
-        this._element.style[property] = `${scrollbarWidth}px`;
-      }
-      if (!isBodyOverflowing && isModalOverflowing) {
-        const property = index_js.isRTL() ? 'paddingRight' : 'paddingLeft';
-        this._element.style[property] = `${scrollbarWidth}px`;
-      }
-    }
-    _resetAdjustments() {
-      this._element.style.paddingLeft = '';
-      this._element.style.paddingRight = '';
-    }
-
-    // Static
-    static jQueryInterface(config, relatedTarget) {
-      return this.each(function () {
-        const data = Modal.getOrCreateInstance(this, config);
-        if (typeof config !== 'string') {
-          return;
-        }
-        if (typeof data[config] === 'undefined') {
-          throw new TypeError(`No method named "${config}"`);
-        }
-        data[config](relatedTarget);
-      });
-    }
-  }
-
-  /**
-   * Data API implementation
-   */
-
-  EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_TOGGLE, function (event) {
-    const target = SelectorEngine.getElementFromSelector(this);
-    if (['A', 'AREA'].includes(this.tagName)) {
-      event.preventDefault();
-    }
-    EventHandler.one(target, EVENT_SHOW, showEvent => {
-      if (showEvent.defaultPrevented) {
-        // only register focus restorer if modal will actually get shown
-        return;
-      }
-      EventHandler.one(target, EVENT_HIDDEN, () => {
-        if (index_js.isVisible(this)) {
-          this.focus();
-        }
-      });
-    });
-
-    // avoid conflict when clicking modal toggler while another one is open
-    const alreadyOpen = SelectorEngine.findOne(OPEN_SELECTOR);
-    if (alreadyOpen) {
-      Modal.getInstance(alreadyOpen).hide();
-    }
-    const data = Modal.getOrCreateInstance(target);
-    data.toggle(this);
-  });
-  componentFunctions_js.enableDismissTrigger(Modal);
-
-  /**
-   * jQuery
-   */
-
-  index_js.defineJQueryPlugin(Modal);
-
-  return Modal;
-
-}));
-/*!
-  * Bootstrap offcanvas.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('./base-component.js'), require('./dom/event-handler.js'), require('./dom/selector-engine.js'), require('./util/backdrop.js'), require('./util/component-functions.js'), require('./util/focustrap.js'), require('./util/index.js'), require('./util/scrollbar.js')) :
-  typeof define === 'function' && define.amd ? define(['./base-component', './dom/event-handler', './dom/selector-engine', './util/backdrop', './util/component-functions', './util/focustrap', './util/index', './util/scrollbar'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Offcanvas = factory(global.BaseComponent, global.EventHandler, global.SelectorEngine, global.Backdrop, global.ComponentFunctions, global.Focustrap, global.Index, global.Scrollbar));
-})(this, (function (BaseComponent, EventHandler, SelectorEngine, Backdrop, componentFunctions_js, FocusTrap, index_js, ScrollBarHelper) { 'use strict';
-
-  /**
-   * --------------------------------------------------------------------------
-   * Bootstrap offcanvas.js
-   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-   * --------------------------------------------------------------------------
-   */
-
-
-  /**
-   * Constants
-   */
-
-  const NAME = 'offcanvas';
-  const DATA_KEY = 'bs.offcanvas';
-  const EVENT_KEY = `.${DATA_KEY}`;
-  const DATA_API_KEY = '.data-api';
-  const EVENT_LOAD_DATA_API = `load${EVENT_KEY}${DATA_API_KEY}`;
-  const ESCAPE_KEY = 'Escape';
-  const CLASS_NAME_SHOW = 'show';
-  const CLASS_NAME_SHOWING = 'showing';
-  const CLASS_NAME_HIDING = 'hiding';
-  const CLASS_NAME_BACKDROP = 'offcanvas-backdrop';
-  const OPEN_SELECTOR = '.offcanvas.show';
-  const EVENT_SHOW = `show${EVENT_KEY}`;
-  const EVENT_SHOWN = `shown${EVENT_KEY}`;
-  const EVENT_HIDE = `hide${EVENT_KEY}`;
-  const EVENT_HIDE_PREVENTED = `hidePrevented${EVENT_KEY}`;
-  const EVENT_HIDDEN = `hidden${EVENT_KEY}`;
-  const EVENT_RESIZE = `resize${EVENT_KEY}`;
-  const EVENT_CLICK_DATA_API = `click${EVENT_KEY}${DATA_API_KEY}`;
-  const EVENT_KEYDOWN_DISMISS = `keydown.dismiss${EVENT_KEY}`;
-  const SELECTOR_DATA_TOGGLE = '[data-bs-toggle="offcanvas"]';
-  const Default = {
-    backdrop: true,
-    keyboard: true,
-    scroll: false
-  };
-  const DefaultType = {
-    backdrop: '(boolean|string)',
-    keyboard: 'boolean',
-    scroll: 'boolean'
-  };
-
-  /**
-   * Class definition
-   */
-
-  class Offcanvas extends BaseComponent {
-    constructor(element, config) {
-      super(element, config);
-      this._isShown = false;
-      this._backdrop = this._initializeBackDrop();
-      this._focustrap = this._initializeFocusTrap();
-      this._addEventListeners();
-    }
-
-    // Getters
-    static get Default() {
-      return Default;
-    }
-    static get DefaultType() {
-      return DefaultType;
-    }
-    static get NAME() {
-      return NAME;
-    }
-
-    // Public
-    toggle(relatedTarget) {
-      return this._isShown ? this.hide() : this.show(relatedTarget);
-    }
-    show(relatedTarget) {
-      if (this._isShown) {
-        return;
-      }
-      const showEvent = EventHandler.trigger(this._element, EVENT_SHOW, {
-        relatedTarget
-      });
-      if (showEvent.defaultPrevented) {
-        return;
-      }
-      this._isShown = true;
-      this._backdrop.show();
-      if (!this._config.scroll) {
-        new ScrollBarHelper().hide();
-      }
-      this._element.setAttribute('aria-modal', true);
-      this._element.setAttribute('role', 'dialog');
-      this._element.classList.add(CLASS_NAME_SHOWING);
-      const completeCallBack = () => {
-        if (!this._config.scroll || this._config.backdrop) {
-          this._focustrap.activate();
-        }
-        this._element.classList.add(CLASS_NAME_SHOW);
-        this._element.classList.remove(CLASS_NAME_SHOWING);
-        EventHandler.trigger(this._element, EVENT_SHOWN, {
-          relatedTarget
-        });
-      };
-      this._queueCallback(completeCallBack, this._element, true);
-    }
-    hide() {
-      if (!this._isShown) {
-        return;
-      }
-      const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE);
-      if (hideEvent.defaultPrevented) {
-        return;
-      }
-      this._focustrap.deactivate();
-      this._element.blur();
-      this._isShown = false;
-      this._element.classList.add(CLASS_NAME_HIDING);
-      this._backdrop.hide();
-      const completeCallback = () => {
-        this._element.classList.remove(CLASS_NAME_SHOW, CLASS_NAME_HIDING);
-        this._element.removeAttribute('aria-modal');
-        this._element.removeAttribute('role');
-        if (!this._config.scroll) {
-          new ScrollBarHelper().reset();
-        }
-        EventHandler.trigger(this._element, EVENT_HIDDEN);
-      };
-      this._queueCallback(completeCallback, this._element, true);
-    }
-    dispose() {
-      this._backdrop.dispose();
-      this._focustrap.deactivate();
-      super.dispose();
-    }
-
-    // Private
-    _initializeBackDrop() {
-      const clickCallback = () => {
-        if (this._config.backdrop === 'static') {
-          EventHandler.trigger(this._element, EVENT_HIDE_PREVENTED);
-          return;
-        }
-        this.hide();
-      };
-
-      // 'static' option will be translated to true, and booleans will keep their value
-      const isVisible = Boolean(this._config.backdrop);
-      return new Backdrop({
-        className: CLASS_NAME_BACKDROP,
-        isVisible,
-        isAnimated: true,
-        rootElement: this._element.parentNode,
-        clickCallback: isVisible ? clickCallback : null
-      });
-    }
-    _initializeFocusTrap() {
-      return new FocusTrap({
-        trapElement: this._element
-      });
-    }
-    _addEventListeners() {
-      EventHandler.on(this._element, EVENT_KEYDOWN_DISMISS, event => {
-        if (event.key !== ESCAPE_KEY) {
-          return;
-        }
-        if (this._config.keyboard) {
-          this.hide();
-          return;
-        }
-        EventHandler.trigger(this._element, EVENT_HIDE_PREVENTED);
-      });
-    }
-
-    // Static
-    static jQueryInterface(config) {
-      return this.each(function () {
-        const data = Offcanvas.getOrCreateInstance(this, config);
-        if (typeof config !== 'string') {
-          return;
-        }
-        if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
-          throw new TypeError(`No method named "${config}"`);
-        }
-        data[config](this);
-      });
-    }
-  }
-
-  /**
-   * Data API implementation
-   */
-
-  EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_TOGGLE, function (event) {
-    const target = SelectorEngine.getElementFromSelector(this);
-    if (['A', 'AREA'].includes(this.tagName)) {
-      event.preventDefault();
-    }
-    if (index_js.isDisabled(this)) {
-      return;
-    }
-    EventHandler.one(target, EVENT_HIDDEN, () => {
-      // focus on trigger when it is closed
-      if (index_js.isVisible(this)) {
-        this.focus();
-      }
-    });
-
-    // avoid conflict when clicking a toggler of an offcanvas, while another is open
-    const alreadyOpen = SelectorEngine.findOne(OPEN_SELECTOR);
-    if (alreadyOpen && alreadyOpen !== target) {
-      Offcanvas.getInstance(alreadyOpen).hide();
-    }
-    const data = Offcanvas.getOrCreateInstance(target);
-    data.toggle(this);
-  });
-  EventHandler.on(window, EVENT_LOAD_DATA_API, () => {
-    for (const selector of SelectorEngine.find(OPEN_SELECTOR)) {
-      Offcanvas.getOrCreateInstance(selector).show();
-    }
-  });
-  EventHandler.on(window, EVENT_RESIZE, () => {
-    for (const element of SelectorEngine.find('[aria-modal][class*=show][class*=offcanvas-]')) {
-      if (getComputedStyle(element).position !== 'fixed') {
-        Offcanvas.getOrCreateInstance(element).hide();
-      }
-    }
-  });
-  componentFunctions_js.enableDismissTrigger(Offcanvas);
-
-  /**
-   * jQuery
-   */
-
-  index_js.defineJQueryPlugin(Offcanvas);
-
-  return Offcanvas;
-
-}));
-/*!
-  * Bootstrap swipe.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('../dom/event-handler.js'), require('./config.js'), require('./index.js')) :
-  typeof define === 'function' && define.amd ? define(['../dom/event-handler', './config', './index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Swipe = factory(global.EventHandler, global.Config, global.Index));
-})(this, (function (EventHandler, Config, index_js) { 'use strict';
-
-  /**
-   * --------------------------------------------------------------------------
-   * Bootstrap util/swipe.js
-   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-   * --------------------------------------------------------------------------
-   */
-
-
-  /**
-   * Constants
-   */
-
-  const NAME = 'swipe';
-  const EVENT_KEY = '.bs.swipe';
-  const EVENT_TOUCHSTART = `touchstart${EVENT_KEY}`;
-  const EVENT_TOUCHMOVE = `touchmove${EVENT_KEY}`;
-  const EVENT_TOUCHEND = `touchend${EVENT_KEY}`;
-  const EVENT_POINTERDOWN = `pointerdown${EVENT_KEY}`;
-  const EVENT_POINTERUP = `pointerup${EVENT_KEY}`;
-  const POINTER_TYPE_TOUCH = 'touch';
-  const POINTER_TYPE_PEN = 'pen';
-  const CLASS_NAME_POINTER_EVENT = 'pointer-event';
-  const SWIPE_THRESHOLD = 40;
-  const Default = {
-    endCallback: null,
-    leftCallback: null,
-    rightCallback: null
-  };
-  const DefaultType = {
-    endCallback: '(function|null)',
-    leftCallback: '(function|null)',
-    rightCallback: '(function|null)'
-  };
-
-  /**
-   * Class definition
-   */
-
-  class Swipe extends Config {
-    constructor(element, config) {
-      super();
-      this._element = element;
-      if (!element || !Swipe.isSupported()) {
-        return;
-      }
-      this._config = this._getConfig(config);
-      this._deltaX = 0;
-      this._supportPointerEvents = Boolean(window.PointerEvent);
-      this._initEvents();
-    }
-
-    // Getters
-    static get Default() {
-      return Default;
-    }
-    static get DefaultType() {
-      return DefaultType;
-    }
-    static get NAME() {
-      return NAME;
-    }
-
-    // Public
-    dispose() {
-      EventHandler.off(this._element, EVENT_KEY);
-    }
-
-    // Private
-    _start(event) {
-      if (!this._supportPointerEvents) {
-        this._deltaX = event.touches[0].clientX;
-        return;
-      }
-      if (this._eventIsPointerPenTouch(event)) {
-        this._deltaX = event.clientX;
-      }
-    }
-    _end(event) {
-      if (this._eventIsPointerPenTouch(event)) {
-        this._deltaX = event.clientX - this._deltaX;
-      }
-      this._handleSwipe();
-      index_js.execute(this._config.endCallback);
-    }
-    _move(event) {
-      this._deltaX = event.touches && event.touches.length > 1 ? 0 : event.touches[0].clientX - this._deltaX;
-    }
-    _handleSwipe() {
-      const absDeltaX = Math.abs(this._deltaX);
-      if (absDeltaX <= SWIPE_THRESHOLD) {
-        return;
-      }
-      const direction = absDeltaX / this._deltaX;
-      this._deltaX = 0;
-      if (!direction) {
-        return;
-      }
-      index_js.execute(direction > 0 ? this._config.rightCallback : this._config.leftCallback);
-    }
-    _initEvents() {
-      if (this._supportPointerEvents) {
-        EventHandler.on(this._element, EVENT_POINTERDOWN, event => this._start(event));
-        EventHandler.on(this._element, EVENT_POINTERUP, event => this._end(event));
-        this._element.classList.add(CLASS_NAME_POINTER_EVENT);
-      } else {
-        EventHandler.on(this._element, EVENT_TOUCHSTART, event => this._start(event));
-        EventHandler.on(this._element, EVENT_TOUCHMOVE, event => this._move(event));
-        EventHandler.on(this._element, EVENT_TOUCHEND, event => this._end(event));
-      }
-    }
-    _eventIsPointerPenTouch(event) {
-      return this._supportPointerEvents && (event.pointerType === POINTER_TYPE_PEN || event.pointerType === POINTER_TYPE_TOUCH);
-    }
-
-    // Static
-    static isSupported() {
-      return 'ontouchstart' in document.documentElement || navigator.maxTouchPoints > 0;
-    }
-  }
-
-  return Swipe;
-
-}));
-/*!
-  * Bootstrap carousel.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('./base-component.js'), require('./dom/event-handler.js'), require('./dom/manipulator.js'), require('./dom/selector-engine.js'), require('./util/index.js'), require('./util/swipe.js')) :
-  typeof define === 'function' && define.amd ? define(['./base-component', './dom/event-handler', './dom/manipulator', './dom/selector-engine', './util/index', './util/swipe'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Carousel = factory(global.BaseComponent, global.EventHandler, global.Manipulator, global.SelectorEngine, global.Index, global.Swipe));
-})(this, (function (BaseComponent, EventHandler, Manipulator, SelectorEngine, index_js, Swipe) { 'use strict';
-
-  /**
-   * --------------------------------------------------------------------------
-   * Bootstrap carousel.js
-   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-   * --------------------------------------------------------------------------
-   */
-
-
-  /**
-   * Constants
-   */
-
-  const NAME = 'carousel';
-  const DATA_KEY = 'bs.carousel';
-  const EVENT_KEY = `.${DATA_KEY}`;
-  const DATA_API_KEY = '.data-api';
-  const ARROW_LEFT_KEY = 'ArrowLeft';
-  const ARROW_RIGHT_KEY = 'ArrowRight';
-  const TOUCHEVENT_COMPAT_WAIT = 500; // Time for mouse compat events to fire after touch
-
-  const ORDER_NEXT = 'next';
-  const ORDER_PREV = 'prev';
-  const DIRECTION_LEFT = 'left';
-  const DIRECTION_RIGHT = 'right';
-  const EVENT_SLIDE = `slide${EVENT_KEY}`;
-  const EVENT_SLID = `slid${EVENT_KEY}`;
-  const EVENT_KEYDOWN = `keydown${EVENT_KEY}`;
-  const EVENT_MOUSEENTER = `mouseenter${EVENT_KEY}`;
-  const EVENT_MOUSELEAVE = `mouseleave${EVENT_KEY}`;
-  const EVENT_DRAG_START = `dragstart${EVENT_KEY}`;
-  const EVENT_LOAD_DATA_API = `load${EVENT_KEY}${DATA_API_KEY}`;
-  const EVENT_CLICK_DATA_API = `click${EVENT_KEY}${DATA_API_KEY}`;
-  const CLASS_NAME_CAROUSEL = 'carousel';
-  const CLASS_NAME_ACTIVE = 'active';
-  const CLASS_NAME_SLIDE = 'slide';
-  const CLASS_NAME_END = 'carousel-item-end';
-  const CLASS_NAME_START = 'carousel-item-start';
-  const CLASS_NAME_NEXT = 'carousel-item-next';
-  const CLASS_NAME_PREV = 'carousel-item-prev';
-  const SELECTOR_ACTIVE = '.active';
-  const SELECTOR_ITEM = '.carousel-item';
-  const SELECTOR_ACTIVE_ITEM = SELECTOR_ACTIVE + SELECTOR_ITEM;
-  const SELECTOR_ITEM_IMG = '.carousel-item img';
-  const SELECTOR_INDICATORS = '.carousel-indicators';
-  const SELECTOR_DATA_SLIDE = '[data-bs-slide], [data-bs-slide-to]';
-  const SELECTOR_DATA_RIDE = '[data-bs-ride="carousel"]';
-  const KEY_TO_DIRECTION = {
-    [ARROW_LEFT_KEY]: DIRECTION_RIGHT,
-    [ARROW_RIGHT_KEY]: DIRECTION_LEFT
-  };
-  const Default = {
-    interval: 5000,
-    keyboard: true,
-    pause: 'hover',
-    ride: false,
-    touch: true,
-    wrap: true
-  };
-  const DefaultType = {
-    interval: '(number|boolean)',
-    // TODO:v6 remove boolean support
-    keyboard: 'boolean',
-    pause: '(string|boolean)',
-    ride: '(boolean|string)',
-    touch: 'boolean',
-    wrap: 'boolean'
-  };
-
-  /**
-   * Class definition
-   */
-
-  class Carousel extends BaseComponent {
-    constructor(element, config) {
-      super(element, config);
-      this._interval = null;
-      this._activeElement = null;
-      this._isSliding = false;
-      this.touchTimeout = null;
-      this._swipeHelper = null;
-      this._indicatorsElement = SelectorEngine.findOne(SELECTOR_INDICATORS, this._element);
-      this._addEventListeners();
-      if (this._config.ride === CLASS_NAME_CAROUSEL) {
-        this.cycle();
-      }
-    }
-
-    // Getters
-    static get Default() {
-      return Default;
-    }
-    static get DefaultType() {
-      return DefaultType;
-    }
-    static get NAME() {
-      return NAME;
-    }
-
-    // Public
-    next() {
-      this._slide(ORDER_NEXT);
-    }
-    nextWhenVisible() {
-      // FIXME TODO use `document.visibilityState`
-      // Don't call next when the page isn't visible
-      // or the carousel or its parent isn't visible
-      if (!document.hidden && index_js.isVisible(this._element)) {
-        this.next();
-      }
-    }
-    prev() {
-      this._slide(ORDER_PREV);
-    }
-    pause() {
-      if (this._isSliding) {
-        index_js.triggerTransitionEnd(this._element);
-      }
-      this._clearInterval();
-    }
-    cycle() {
-      this._clearInterval();
-      this._updateInterval();
-      this._interval = setInterval(() => this.nextWhenVisible(), this._config.interval);
-    }
-    _maybeEnableCycle() {
-      if (!this._config.ride) {
-        return;
-      }
-      if (this._isSliding) {
-        EventHandler.one(this._element, EVENT_SLID, () => this.cycle());
-        return;
-      }
-      this.cycle();
-    }
-    to(index) {
-      const items = this._getItems();
-      if (index > items.length - 1 || index < 0) {
-        return;
-      }
-      if (this._isSliding) {
-        EventHandler.one(this._element, EVENT_SLID, () => this.to(index));
-        return;
-      }
-      const activeIndex = this._getItemIndex(this._getActive());
-      if (activeIndex === index) {
-        return;
-      }
-      const order = index > activeIndex ? ORDER_NEXT : ORDER_PREV;
-      this._slide(order, items[index]);
-    }
-    dispose() {
-      if (this._swipeHelper) {
-        this._swipeHelper.dispose();
-      }
-      super.dispose();
-    }
-
-    // Private
-    _configAfterMerge(config) {
-      config.defaultInterval = config.interval;
-      return config;
-    }
-    _addEventListeners() {
-      if (this._config.keyboard) {
-        EventHandler.on(this._element, EVENT_KEYDOWN, event => this._keydown(event));
-      }
-      if (this._config.pause === 'hover') {
-        EventHandler.on(this._element, EVENT_MOUSEENTER, () => this.pause());
-        EventHandler.on(this._element, EVENT_MOUSELEAVE, () => this._maybeEnableCycle());
-      }
-      if (this._config.touch && Swipe.isSupported()) {
-        this._addTouchEventListeners();
-      }
-    }
-    _addTouchEventListeners() {
-      for (const img of SelectorEngine.find(SELECTOR_ITEM_IMG, this._element)) {
-        EventHandler.on(img, EVENT_DRAG_START, event => event.preventDefault());
-      }
-      const endCallBack = () => {
-        if (this._config.pause !== 'hover') {
-          return;
-        }
-
-        // If it's a touch-enabled device, mouseenter/leave are fired as
-        // part of the mouse compatibility events on first tap - the carousel
-        // would stop cycling until user tapped out of it;
-        // here, we listen for touchend, explicitly pause the carousel
-        // (as if it's the second time we tap on it, mouseenter compat event
-        // is NOT fired) and after a timeout (to allow for mouse compatibility
-        // events to fire) we explicitly restart cycling
-
-        this.pause();
-        if (this.touchTimeout) {
-          clearTimeout(this.touchTimeout);
-        }
-        this.touchTimeout = setTimeout(() => this._maybeEnableCycle(), TOUCHEVENT_COMPAT_WAIT + this._config.interval);
-      };
-      const swipeConfig = {
-        leftCallback: () => this._slide(this._directionToOrder(DIRECTION_LEFT)),
-        rightCallback: () => this._slide(this._directionToOrder(DIRECTION_RIGHT)),
-        endCallback: endCallBack
-      };
-      this._swipeHelper = new Swipe(this._element, swipeConfig);
-    }
-    _keydown(event) {
-      if (/input|textarea/i.test(event.target.tagName)) {
-        return;
-      }
-      const direction = KEY_TO_DIRECTION[event.key];
-      if (direction) {
-        event.preventDefault();
-        this._slide(this._directionToOrder(direction));
-      }
-    }
-    _getItemIndex(element) {
-      return this._getItems().indexOf(element);
-    }
-    _setActiveIndicatorElement(index) {
-      if (!this._indicatorsElement) {
-        return;
-      }
-      const activeIndicator = SelectorEngine.findOne(SELECTOR_ACTIVE, this._indicatorsElement);
-      activeIndicator.classList.remove(CLASS_NAME_ACTIVE);
-      activeIndicator.removeAttribute('aria-current');
-      const newActiveIndicator = SelectorEngine.findOne(`[data-bs-slide-to="${index}"]`, this._indicatorsElement);
-      if (newActiveIndicator) {
-        newActiveIndicator.classList.add(CLASS_NAME_ACTIVE);
-        newActiveIndicator.setAttribute('aria-current', 'true');
-      }
-    }
-    _updateInterval() {
-      const element = this._activeElement || this._getActive();
-      if (!element) {
-        return;
-      }
-      const elementInterval = Number.parseInt(element.getAttribute('data-bs-interval'), 10);
-      this._config.interval = elementInterval || this._config.defaultInterval;
-    }
-    _slide(order, element = null) {
-      if (this._isSliding) {
-        return;
-      }
-      const activeElement = this._getActive();
-      const isNext = order === ORDER_NEXT;
-      const nextElement = element || index_js.getNextActiveElement(this._getItems(), activeElement, isNext, this._config.wrap);
-      if (nextElement === activeElement) {
-        return;
-      }
-      const nextElementIndex = this._getItemIndex(nextElement);
-      const triggerEvent = eventName => {
-        return EventHandler.trigger(this._element, eventName, {
-          relatedTarget: nextElement,
-          direction: this._orderToDirection(order),
-          from: this._getItemIndex(activeElement),
-          to: nextElementIndex
-        });
-      };
-      const slideEvent = triggerEvent(EVENT_SLIDE);
-      if (slideEvent.defaultPrevented) {
-        return;
-      }
-      if (!activeElement || !nextElement) {
-        // Some weirdness is happening, so we bail
-        // TODO: change tests that use empty divs to avoid this check
-        return;
-      }
-      const isCycling = Boolean(this._interval);
-      this.pause();
-      this._isSliding = true;
-      this._setActiveIndicatorElement(nextElementIndex);
-      this._activeElement = nextElement;
-      const directionalClassName = isNext ? CLASS_NAME_START : CLASS_NAME_END;
-      const orderClassName = isNext ? CLASS_NAME_NEXT : CLASS_NAME_PREV;
-      nextElement.classList.add(orderClassName);
-      index_js.reflow(nextElement);
-      activeElement.classList.add(directionalClassName);
-      nextElement.classList.add(directionalClassName);
-      const completeCallBack = () => {
-        nextElement.classList.remove(directionalClassName, orderClassName);
-        nextElement.classList.add(CLASS_NAME_ACTIVE);
-        activeElement.classList.remove(CLASS_NAME_ACTIVE, orderClassName, directionalClassName);
-        this._isSliding = false;
-        triggerEvent(EVENT_SLID);
-      };
-      this._queueCallback(completeCallBack, activeElement, this._isAnimated());
-      if (isCycling) {
-        this.cycle();
-      }
-    }
-    _isAnimated() {
-      return this._element.classList.contains(CLASS_NAME_SLIDE);
-    }
-    _getActive() {
-      return SelectorEngine.findOne(SELECTOR_ACTIVE_ITEM, this._element);
-    }
-    _getItems() {
-      return SelectorEngine.find(SELECTOR_ITEM, this._element);
-    }
-    _clearInterval() {
-      if (this._interval) {
-        clearInterval(this._interval);
-        this._interval = null;
-      }
-    }
-    _directionToOrder(direction) {
-      if (index_js.isRTL()) {
-        return direction === DIRECTION_LEFT ? ORDER_PREV : ORDER_NEXT;
-      }
-      return direction === DIRECTION_LEFT ? ORDER_NEXT : ORDER_PREV;
-    }
-    _orderToDirection(order) {
-      if (index_js.isRTL()) {
-        return order === ORDER_PREV ? DIRECTION_LEFT : DIRECTION_RIGHT;
-      }
-      return order === ORDER_PREV ? DIRECTION_RIGHT : DIRECTION_LEFT;
-    }
-
-    // Static
-    static jQueryInterface(config) {
-      return this.each(function () {
-        const data = Carousel.getOrCreateInstance(this, config);
-        if (typeof config === 'number') {
-          data.to(config);
-          return;
-        }
-        if (typeof config === 'string') {
-          if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
-            throw new TypeError(`No method named "${config}"`);
-          }
-          data[config]();
-        }
-      });
-    }
-  }
-
-  /**
-   * Data API implementation
-   */
-
-  EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_SLIDE, function (event) {
-    const target = SelectorEngine.getElementFromSelector(this);
-    if (!target || !target.classList.contains(CLASS_NAME_CAROUSEL)) {
-      return;
-    }
-    event.preventDefault();
-    const carousel = Carousel.getOrCreateInstance(target);
-    const slideIndex = this.getAttribute('data-bs-slide-to');
-    if (slideIndex) {
-      carousel.to(slideIndex);
-      carousel._maybeEnableCycle();
-      return;
-    }
-    if (Manipulator.getDataAttribute(this, 'slide') === 'next') {
-      carousel.next();
-      carousel._maybeEnableCycle();
-      return;
-    }
-    carousel.prev();
-    carousel._maybeEnableCycle();
-  });
-  EventHandler.on(window, EVENT_LOAD_DATA_API, () => {
-    const carousels = SelectorEngine.find(SELECTOR_DATA_RIDE);
-    for (const carousel of carousels) {
-      Carousel.getOrCreateInstance(carousel);
-    }
-  });
-
-  /**
-   * jQuery
-   */
-
-  index_js.defineJQueryPlugin(Carousel);
-
-  return Carousel;
-
-}));
-/*!
-  * Bootstrap dropdown.js v5.3.8 (https://getbootstrap.com/)
-  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('@popperjs/core'), require('./base-component.js'), require('./dom/event-handler.js'), require('./dom/manipulator.js'), require('./dom/selector-engine.js'), require('./util/index.js')) :
-  typeof define === 'function' && define.amd ? define(['@popperjs/core', './base-component', './dom/event-handler', './dom/manipulator', './dom/selector-engine', './util/index'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Dropdown = factory(global["@popperjs/core"], global.BaseComponent, global.EventHandler, global.Manipulator, global.SelectorEngine, global.Index));
-})(this, (function (Popper, BaseComponent, EventHandler, Manipulator, SelectorEngine, index_js) { 'use strict';
-
-  function _interopNamespaceDefault(e) {
-    const n = Object.create(null, { [Symbol.toStringTag]: { value: 'Module' } });
-    if (e) {
-      for (const k in e) {
-        if (k !== 'default') {
-          const d = Object.getOwnPropertyDescriptor(e, k);
-          Object.defineProperty(n, k, d.get ? d : {
-            enumerable: true,
-            get: () => e[k]
-          });
-        }
-      }
-    }
-    n.default = e;
-    return Object.freeze(n);
-  }
-
-  const Popper__namespace = /*#__PURE__*/_interopNamespaceDefault(Popper);
-
-  /**
-   * --------------------------------------------------------------------------
-   * Bootstrap dropdown.js
-   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-   * --------------------------------------------------------------------------
-   */
-
-
-  /**
-   * Constants
-   */
-
-  const NAME = 'dropdown';
-  const DATA_KEY = 'bs.dropdown';
-  const EVENT_KEY = `.${DATA_KEY}`;
-  const DATA_API_KEY = '.data-api';
-  const ESCAPE_KEY = 'Escape';
-  const TAB_KEY = 'Tab';
-  const ARROW_UP_KEY = 'ArrowUp';
-  const ARROW_DOWN_KEY = 'ArrowDown';
-  const RIGHT_MOUSE_BUTTON = 2; // MouseEvent.button value for the secondary button, usually the right button
-
-  const EVENT_HIDE = `hide${EVENT_KEY}`;
-  const EVENT_HIDDEN = `hidden${EVENT_KEY}`;
-  const EVENT_SHOW = `show${EVENT_KEY}`;
-  const EVENT_SHOWN = `shown${EVENT_KEY}`;
-  const EVENT_CLICK_DATA_API = `click${EVENT_KEY}${DATA_API_KEY}`;
-  const EVENT_KEYDOWN_DATA_API = `keydown${EVENT_KEY}${DATA_API_KEY}`;
-  const EVENT_KEYUP_DATA_API = `keyup${EVENT_KEY}${DATA_API_KEY}`;
-  const CLASS_NAME_SHOW = 'show';
-  const CLASS_NAME_DROPUP = 'dropup';
-  const CLASS_NAME_DROPEND = 'dropend';
-  const CLASS_NAME_DROPSTART = 'dropstart';
-  const CLASS_NAME_DROPUP_CENTER = 'dropup-center';
-  const CLASS_NAME_DROPDOWN_CENTER = 'dropdown-center';
-  const SELECTOR_DATA_TOGGLE = '[data-bs-toggle="dropdown"]:not(.disabled):not(:disabled)';
-  const SELECTOR_DATA_TOGGLE_SHOWN = `${SELECTOR_DATA_TOGGLE}.${CLASS_NAME_SHOW}`;
-  const SELECTOR_MENU = '.dropdown-menu';
-  const SELECTOR_NAVBAR = '.navbar';
-  const SELECTOR_NAVBAR_NAV = '.navbar-nav';
-  const SELECTOR_VISIBLE_ITEMS = '.dropdown-menu .dropdown-item:not(.disabled):not(:disabled)';
-  const PLACEMENT_TOP = index_js.isRTL() ? 'top-end' : 'top-start';
-  const PLACEMENT_TOPEND = index_js.isRTL() ? 'top-start' : 'top-end';
-  const PLACEMENT_BOTTOM = index_js.isRTL() ? 'bottom-end' : 'bottom-start';
-  const PLACEMENT_BOTTOMEND = index_js.isRTL() ? 'bottom-start' : 'bottom-end';
-  const PLACEMENT_RIGHT = index_js.isRTL() ? 'left-start' : 'right-start';
-  const PLACEMENT_LEFT = index_js.isRTL() ? 'right-start' : 'left-start';
-  const PLACEMENT_TOPCENTER = 'top';
-  const PLACEMENT_BOTTOMCENTER = 'bottom';
-  const Default = {
-    autoClose: true,
-    boundary: 'clippingParents',
-    display: 'dynamic',
-    offset: [0, 2],
-    popperConfig: null,
-    reference: 'toggle'
-  };
-  const DefaultType = {
-    autoClose: '(boolean|string)',
-    boundary: '(string|element)',
-    display: 'string',
-    offset: '(array|string|function)',
-    popperConfig: '(null|object|function)',
-    reference: '(string|element|object)'
-  };
-
-  /**
-   * Class definition
-   */
-
-  class Dropdown extends BaseComponent {
-    constructor(element, config) {
-      super(element, config);
-      this._popper = null;
-      this._parent = this._element.parentNode; // dropdown wrapper
-      // TODO: v6 revert #37011 & change markup https://getbootstrap.com/docs/5.3/forms/input-group/
-      this._menu = SelectorEngine.next(this._element, SELECTOR_MENU)[0] || SelectorEngine.prev(this._element, SELECTOR_MENU)[0] || SelectorEngine.findOne(SELECTOR_MENU, this._parent);
-      this._inNavbar = this._detectNavbar();
-    }
-
-    // Getters
-    static get Default() {
-      return Default;
-    }
-    static get DefaultType() {
-      return DefaultType;
-    }
-    static get NAME() {
-      return NAME;
-    }
-
-    // Public
-    toggle() {
-      return this._isShown() ? this.hide() : this.show();
-    }
-    show() {
-      if (index_js.isDisabled(this._element) || this._isShown()) {
-        return;
-      }
-      const relatedTarget = {
-        relatedTarget: this._element
-      };
-      const showEvent = EventHandler.trigger(this._element, EVENT_SHOW, relatedTarget);
-      if (showEvent.defaultPrevented) {
-        return;
-      }
-      this._createPopper();
-
-      // If this is a touch-enabled device we add extra
-      // empty mouseover listeners to the body's immediate children;
-      // only needed because of broken event delegation on iOS
-      // https://www.quirksmode.org/blog/archives/2014/02/mouse_event_bub.html
-      if ('ontouchstart' in document.documentElement && !this._parent.closest(SELECTOR_NAVBAR_NAV)) {
-        for (const element of [].concat(...document.body.children)) {
-          EventHandler.on(element, 'mouseover', index_js.noop);
-        }
-      }
-      this._element.focus();
-      this._element.setAttribute('aria-expanded', true);
-      this._menu.classList.add(CLASS_NAME_SHOW);
-      this._element.classList.add(CLASS_NAME_SHOW);
-      EventHandler.trigger(this._element, EVENT_SHOWN, relatedTarget);
-    }
-    hide() {
-      if (index_js.isDisabled(this._element) || !this._isShown()) {
-        return;
-      }
-      const relatedTarget = {
-        relatedTarget: this._element
-      };
-      this._completeHide(relatedTarget);
-    }
-    dispose() {
-      if (this._popper) {
-        this._popper.destroy();
-      }
-      super.dispose();
-    }
-    update() {
-      this._inNavbar = this._detectNavbar();
-      if (this._popper) {
-        this._popper.update();
-      }
-    }
-
-    // Private
-    _completeHide(relatedTarget) {
-      const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE, relatedTarget);
-      if (hideEvent.defaultPrevented) {
-        return;
-      }
-
-      // If this is a touch-enabled device we remove the extra
-      // empty mouseover listeners we added for iOS support
-      if ('ontouchstart' in document.documentElement) {
-        for (const element of [].concat(...document.body.children)) {
-          EventHandler.off(element, 'mouseover', index_js.noop);
-        }
-      }
-      if (this._popper) {
-        this._popper.destroy();
-      }
-      this._menu.classList.remove(CLASS_NAME_SHOW);
-      this._element.classList.remove(CLASS_NAME_SHOW);
-      this._element.setAttribute('aria-expanded', 'false');
-      Manipulator.removeDataAttribute(this._menu, 'popper');
-      EventHandler.trigger(this._element, EVENT_HIDDEN, relatedTarget);
-    }
-    _getConfig(config) {
-      config = super._getConfig(config);
-      if (typeof config.reference === 'object' && !index_js.isElement(config.reference) && typeof config.reference.getBoundingClientRect !== 'function') {
-        // Popper virtual elements require a getBoundingClientRect method
-        throw new TypeError(`${NAME.toUpperCase()}: Option "reference" provided type "object" without a required "getBoundingClientRect" method.`);
-      }
-      return config;
-    }
-    _createPopper() {
-      if (typeof Popper__namespace === 'undefined') {
-        throw new TypeError('Bootstrap\'s dropdowns require Popper (https://popper.js.org/docs/v2/)');
-      }
-      let referenceElement = this._element;
-      if (this._config.reference === 'parent') {
-        referenceElement = this._parent;
-      } else if (index_js.isElement(this._config.reference)) {
-        referenceElement = index_js.getElement(this._config.reference);
-      } else if (typeof this._config.reference === 'object') {
-        referenceElement = this._config.reference;
-      }
-      const popperConfig = this._getPopperConfig();
-      this._popper = Popper__namespace.createPopper(referenceElement, this._menu, popperConfig);
-    }
-    _isShown() {
-      return this._menu.classList.contains(CLASS_NAME_SHOW);
-    }
-    _getPlacement() {
-      const parentDropdown = this._parent;
-      if (parentDropdown.classList.contains(CLASS_NAME_DROPEND)) {
-        return PLACEMENT_RIGHT;
-      }
-      if (parentDropdown.classList.contains(CLASS_NAME_DROPSTART)) {
-        return PLACEMENT_LEFT;
-      }
-      if (parentDropdown.classList.contains(CLASS_NAME_DROPUP_CENTER)) {
-        return PLACEMENT_TOPCENTER;
-      }
-      if (parentDropdown.classList.contains(CLASS_NAME_DROPDOWN_CENTER)) {
-        return PLACEMENT_BOTTOMCENTER;
-      }
-
-      // We need to trim the value because custom properties can also include spaces
-      const isEnd = getComputedStyle(this._menu).getPropertyValue('--bs-position').trim() === 'end';
-      if (parentDropdown.classList.contains(CLASS_NAME_DROPUP)) {
-        return isEnd ? PLACEMENT_TOPEND : PLACEMENT_TOP;
-      }
-      return isEnd ? PLACEMENT_BOTTOMEND : PLACEMENT_BOTTOM;
-    }
-    _detectNavbar() {
-      return this._element.closest(SELECTOR_NAVBAR) !== null;
-    }
-    _getOffset() {
-      const {
-        offset
-      } = this._config;
-      if (typeof offset === 'string') {
-        return offset.split(',').map(value => Number.parseInt(value, 10));
-      }
-      if (typeof offset === 'function') {
-        return popperData => offset(popperData, this._element);
-      }
-      return offset;
-    }
-    _getPopperConfig() {
-      const defaultBsPopperConfig = {
-        placement: this._getPlacement(),
-        modifiers: [{
-          name: 'preventOverflow',
-          options: {
-            boundary: this._config.boundary
-          }
-        }, {
-          name: 'offset',
-          options: {
-            offset: this._getOffset()
-          }
-        }]
-      };
-
-      // Disable Popper if we have a static display or Dropdown is in Navbar
-      if (this._inNavbar || this._config.display === 'static') {
-        Manipulator.setDataAttribute(this._menu, 'popper', 'static'); // TODO: v6 remove
-        defaultBsPopperConfig.modifiers = [{
-          name: 'applyStyles',
-          enabled: false
-        }];
-      }
-      return {
-        ...defaultBsPopperConfig,
-        ...index_js.execute(this._config.popperConfig, [undefined, defaultBsPopperConfig])
-      };
-    }
-    _selectMenuItem({
-      key,
-      target
-    }) {
-      const items = SelectorEngine.find(SELECTOR_VISIBLE_ITEMS, this._menu).filter(element => index_js.isVisible(element));
-      if (!items.length) {
-        return;
-      }
-
-      // if target isn't included in items (e.g. when expanding the dropdown)
-      // allow cycling to get the last item in case key equals ARROW_UP_KEY
-      index_js.getNextActiveElement(items, target, key === ARROW_DOWN_KEY, !items.includes(target)).focus();
-    }
-
-    // Static
-    static jQueryInterface(config) {
-      return this.each(function () {
-        const data = Dropdown.getOrCreateInstance(this, config);
-        if (typeof config !== 'string') {
-          return;
-        }
-        if (typeof data[config] === 'undefined') {
-          throw new TypeError(`No method named "${config}"`);
-        }
-        data[config]();
-      });
-    }
-    static clearMenus(event) {
-      if (event.button === RIGHT_MOUSE_BUTTON || event.type === 'keyup' && event.key !== TAB_KEY) {
-        return;
-      }
-      const openToggles = SelectorEngine.find(SELECTOR_DATA_TOGGLE_SHOWN);
-      for (const toggle of openToggles) {
-        const context = Dropdown.getInstance(toggle);
-        if (!context || context._config.autoClose === false) {
-          continue;
-        }
-        const composedPath = event.composedPath();
-        const isMenuTarget = composedPath.includes(context._menu);
-        if (composedPath.includes(context._element) || context._config.autoClose === 'inside' && !isMenuTarget || context._config.autoClose === 'outside' && isMenuTarget) {
-          continue;
-        }
-
-        // Tab navigation through the dropdown menu or events from contained inputs shouldn't close the menu
-        if (context._menu.contains(event.target) && (event.type === 'keyup' && event.key === TAB_KEY || /input|select|option|textarea|form/i.test(event.target.tagName))) {
-          continue;
-        }
-        const relatedTarget = {
-          relatedTarget: context._element
-        };
-        if (event.type === 'click') {
-          relatedTarget.clickEvent = event;
-        }
-        context._completeHide(relatedTarget);
-      }
-    }
-    static dataApiKeydownHandler(event) {
-      // If not an UP | DOWN | ESCAPE key => not a dropdown command
-      // If input/textarea && if key is other than ESCAPE => not a dropdown command
-
-      const isInput = /input|textarea/i.test(event.target.tagName);
-      const isEscapeEvent = event.key === ESCAPE_KEY;
-      const isUpOrDownEvent = [ARROW_UP_KEY, ARROW_DOWN_KEY].includes(event.key);
-      if (!isUpOrDownEvent && !isEscapeEvent) {
-        return;
-      }
-      if (isInput && !isEscapeEvent) {
-        return;
-      }
-      event.preventDefault();
-
-      // TODO: v6 revert #37011 & change markup https://getbootstrap.com/docs/5.3/forms/input-group/
-      const getToggleButton = this.matches(SELECTOR_DATA_TOGGLE) ? this : SelectorEngine.prev(this, SELECTOR_DATA_TOGGLE)[0] || SelectorEngine.next(this, SELECTOR_DATA_TOGGLE)[0] || SelectorEngine.findOne(SELECTOR_DATA_TOGGLE, event.delegateTarget.parentNode);
-      const instance = Dropdown.getOrCreateInstance(getToggleButton);
-      if (isUpOrDownEvent) {
-        event.stopPropagation();
-        instance.show();
-        instance._selectMenuItem(event);
-        return;
-      }
-      if (instance._isShown()) {
-        // else is escape and we check if it is shown
-        event.stopPropagation();
-        instance.hide();
-        getToggleButton.focus();
-      }
-    }
-  }
-
-  /**
-   * Data API implementation
-   */
-
-  EventHandler.on(document, EVENT_KEYDOWN_DATA_API, SELECTOR_DATA_TOGGLE, Dropdown.dataApiKeydownHandler);
-  EventHandler.on(document, EVENT_KEYDOWN_DATA_API, SELECTOR_MENU, Dropdown.dataApiKeydownHandler);
-  EventHandler.on(document, EVENT_CLICK_DATA_API, Dropdown.clearMenus);
-  EventHandler.on(document, EVENT_KEYUP_DATA_API, Dropdown.clearMenus);
-  EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_TOGGLE, function (event) {
-    event.preventDefault();
-    Dropdown.getOrCreateInstance(this).toggle();
-  });
-
-  /**
-   * jQuery
-   */
-
-  index_js.defineJQueryPlugin(Dropdown);
-
-  return Dropdown;
-
-}));
-window['globalThis'] = window['bootstrap']._originalGlobalThis;
-window['bootstrap']._originalGlobalThis = null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*!
  * Chartkick.js v5.0.1
  * Create beautiful charts with one line of JavaScript
@@ -38280,57 +31817,4 @@ window['bootstrap']._originalGlobalThis = null;
 
 
 
-
-const domElements = {
-    childMain: document.getElementsByClassName('child-main'),
-    choreMain: document.getElementsByClassName('chore-main'),
-    appointmentMain: document.getElementsByClassName('appointment-main'),
-    appointmentShow: document.getElementsByClassName('appointment-show')
-}
-
-window.addEventListener('load', function(e) {
-    windowWidth = window.innerWidth;
-    childView = domElements.childMain[0];
-    choreView = domElements.choreMain[0];
-    appointmentView = domElements.appointmentMain[0];
-    appointmentShow = domElements.appointmentShow[0];
-    if (windowWidth < 768) {
-        // mobile view
-        if (childView) {
-            domElements.childMain[0].style.width = '100%';
-        }
-        if (choreView) {
-            domElements.choreMain[0].style.width = '100%';
-        }
-        if (appointmentView) {
-            domElements.appointmentMain[0].style.width = '100%';
-        }
-    }
-    if (windowWidth > 768 && windowWidth < 1024) {
-        // tablet view
-        if (childView) {
-            domElements.childMain[0].style.width = '720px';
-        }
-        if (choreView) {
-            domElements.choreMain[0].style.width = '720px';
-        }
-        if (appointmentView) {
-            domElements.appointmentMain[0].style.width = '720px';
-        }
-    }
-    if (windowWidth > 1280) {
-        // large desktop view
-        if (childView) {
-            domElements.childMain[0].style.width = '50%';
-        }
-        if (choreView) {
-            domElements.choreMain[0].style.width = '50%';
-        }
-        if (appointmentShow) {
-            domElements.appointmentMain[0].style.width = '50%';
-        }
-        else {
-            domElements.appointmentMain[0].style.width = '75%';
-        }
-    }
-});
+;
